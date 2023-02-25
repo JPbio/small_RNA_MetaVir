@@ -217,9 +217,6 @@ if (not -e $step10){
 	`mkdir $step10`;
 }
 
-open (REPORT,">$step8/completeReport");
-
-
 open (metrics,">$step8/full_metrics.txt");
 
 open (interest,">$step8/metrics_of_interest.txt");
@@ -229,7 +226,7 @@ open (interest,">$step8/metrics_of_interest.txt");
 open(LOG,">$log");
 
 
-our $binary = "/home/ubuntu/bin";
+our $binary = "/home/bioinfo/eric_bin";
 
 ###########################
    #handle FASTQ sequences       
@@ -276,7 +273,7 @@ elsif(defined($fasta)){
      }else{         
             #Mapping Host-unfiltered reads against bacters reference    
             print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
-            my $exec5_1="bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index /home/ubuntu/data/references/all_bacters.fasta $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log ";
+            my $exec5_1="bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index /media/data/reference/bacterial_genomes/all_bacters.fasta $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log ";
             print LOG "\nSTEP5_1\n\t $exec5_1\n";
            `$exec5_1`;
            
@@ -344,7 +341,7 @@ elsif(defined($fasta)){
           
             #Mapping Host-filtered reads against bacters reference
             print "[MAPPING HOST-FILTERED READS AGAINST BACTERIAL GENOMES]... \n";
-            my $exec5_1="bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index /home/ubuntu/data/references/all_bacters.fasta $step4/unmappedVectorReads.fasta > /dev/null 2>>$prefix.warn ";
+            my $exec5_1="bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index /media/data/reference/bacterial_genomes/all_bacters.fasta $step4/unmappedVectorReads.fasta > /dev/null 2>>$prefix.warn ";
             print LOG "\nSTEP5_1\n\t $exec5_1\n";
            `$exec5_1`;
            
@@ -365,18 +362,18 @@ elsif(defined($fasta)){
 #########################################
         #como default temos passado 18 - 30 nt na linha de comando na hora de executar (mas eu vou passar 15-35)
         print "[FILTER UNMAPPED SEQUENCES BY SIZE (variable size $si to $se)]\n";
-        my $exec5= "python $binary/filter_fasta_by_size.py $step4/unmappedVectorBacters.fasta $si $se $step4/unmapped_trimmed_filtered.fasta -t F ";
+        my $exec5= "python /home/bioinfo/eric_bin/filter_fasta_by_size.py $step4/unmappedVectorBacters.fasta $si $se $step4/unmapped_trimmed_filtered.fasta -t F ";
         print LOG "\nSTEP5\n\t $exec5\n";
         `$exec5`;
         
         print "[FILTER UNMAPPED SEQUENCES BY SIZE (20-23NT)]\n";
-        my $exec5_1= "python $binary/filter_fasta_by_size.py $step4/unmappedVectorBacters.fasta 20 23 $step4/unmapped_trimmed_filtered.20-23.fasta";
+        my $exec5_1= "python /home/bioinfo/eric_bin/filter_fasta_by_size.py $step4/unmappedVectorBacters.fasta 20 23 $step4/unmapped_trimmed_filtered.20-23.fasta";
         print LOG "\nSTEP5_1\n\t $exec5_1\n";
         `$exec5_1`;
                
         
         print "[FILTER UNMAPPED SEQUENCES BY SIZE (24-30NT)]\n";
-        my $exec5_2= "python $binary/filter_fasta_by_size.py $step4/unmappedVectorBacters.fasta 24 30 $step4/unmapped_trimmed_filtered.24-30.fasta";
+        my $exec5_2= "python /home/bioinfo/eric_bin/filter_fasta_by_size.py $step4/unmappedVectorBacters.fasta 24 30 $step4/unmapped_trimmed_filtered.24-30.fasta";
         print LOG "\nSTEP5_2\n\t $exec5_2\n";
         `$exec5_2`;
         
@@ -387,13 +384,13 @@ elsif(defined($fasta)){
 #########################################################
 	    print "\n#[RUNNING VELVET OPTIMIZER]\n";
         print "\t#Running step 6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
-        my $exec6_1="$binary/VelvetOptimiser-2.2.5/VelvetOptimiser.pl --d $step5_opt/run1 --t $process --s 13 --e 19 --f '-short -fasta $step4/unmapped_trimmed_filtered.fasta' --a $process 2>>$prefix.warn";
+        my $exec6_1="/home/bioinfo/source_programs_eric/VelvetOptimiser-2.2.5/VelvetOptimiser.pl --d $step5_opt/run1 --t $process --s 13 --e 19 --f '-short -fasta $step4/unmapped_trimmed_filtered.fasta' --a $process 2>>$prefix.warn";
         print LOG "\nSTEP6_1\n\t $exec6_1\n";
         `$exec6_1`;
 
       
         print "\t#Running step 6_4 [ SPADES ] \n";
-		my $exec6_4="$binary/SPAdes-3.15.4/spades.py -s $step4/unmapped_trimmed_filtered.fasta --careful --only-assembler -t $process  -k 13,15,17,19 -o $step5_opt/run2";
+		my $exec6_4="/media/group1_data/joaopaulo/programs_jp/SPAdes-3.15.4-Linux/bin/./spades.py -s $step4/unmapped_trimmed_filtered.fasta --careful --only-assembler -t $process  -k 13,15,17,19 -o $step5_opt/run2";
         print LOG "\nSTEP6_4\n\t $exec6_4\n";
         `$exec6_4`;
 
@@ -408,16 +405,16 @@ elsif(defined($fasta)){
 ################################
         print "\n[RUNNING DEFAULT VELVET]\n";
         print "\t#Running step 6 [ Assemble unmapped 21 nt - velvet hash $hash ]\n";
-        my $exec6 = "$binary/velvet_1.2.10/velveth $step5_fix/run1 $hash -fasta -short $step4/unmapped_trimmed_filtered.fasta 2>>$prefix.warn";
+        my $exec6 = "velveth $step5_fix/run1 $hash -fasta -short $step4/unmapped_trimmed_filtered.fasta 2>>$prefix.warn";
         print LOG "\nSTEP6\n\t $exec6\n";
         `$exec6`;
 
-        `$binary/velvet_1.2.10/velvetg $step5_fix/run1 -exp_cov auto -cov_cutoff auto 2>$prefix.warn`;
+        `velvetg $step5_fix/run1 -exp_cov auto -cov_cutoff auto 2>$prefix.warn`;
 		
 		`mkdir $step5_fix/run2`;
 		
         print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-		my $exec6_2="$binary/SPAdes-3.15.4/spades.py -s $step4/unmapped_trimmed_filtered.fasta --careful --only-assembler -t $process  -k $hash -o $step5_fix/run2 ";
+		my $exec6_2="/media/group1_data/joaopaulo/programs_jp/SPAdes-3.15.4-Linux/bin/./spades.py -s $step4/unmapped_trimmed_filtered.fasta --careful --only-assembler -t $process  -k $hash -o $step5_fix/run2 ";
         print LOG "\nSTEP6_2\n\t $exec6_2\n";
         `$exec6_2`;
 
@@ -433,14 +430,14 @@ elsif(defined($fasta)){
        
         print "\n[VELVET OPTIMISER HASH ONLY 15]\n";
         print "\t#Running step 6_6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
-        my $exec6_6="$binary/VelvetOptimiser-2.2.5/VelvetOptimiser.pl --d $step5_opt_fix/run1 --t $process --s $hash --e $hash --f '-short -fasta $step4/unmapped_trimmed_filtered.fasta' --a 2>>$prefix.warn";
+        my $exec6_6="/home/bioinfo/source_programs_eric/VelvetOptimiser-2.2.5/VelvetOptimiser.pl --d $step5_opt_fix/run1 --t $process --s $hash --e $hash --f '-short -fasta $step4/unmapped_trimmed_filtered.fasta' --a 2>>$prefix.warn";
         print LOG "\nSTEP6_1\n\t $exec6_6\n";
         `$exec6_6`;
         
         
 		`mkdir $step5_opt_fix/run2`;
 		print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-		my $exec6_6_2="$binary/SPAdes-3.15.4/spades.py -s $step4/unmapped_trimmed_filtered.fasta --careful --only-assembler -t $process  -k 15 -o $step5_opt_fix/run2 ";
+		my $exec6_6_2="/media/group1_data/joaopaulo/programs_jp/SPAdes-3.15.4-Linux/bin/./spades.py -s $step4/unmapped_trimmed_filtered.fasta --careful --only-assembler -t $process  -k 15 -o $step5_opt_fix/run2 ";
         print LOG "\nSTEP6_2\n\t $exec6_2\n";
         `$exec6_6_2`;
 
@@ -455,13 +452,13 @@ elsif(defined($fasta)){
        
         print "\n[VELVET OPTIMISER HASH ONLY 15 - 20-23nt]\n";
         print "\t#Running step 6_10 [ Assemble unmapped 20-23nt nt - velvetOptimser.pl ]\n";
-        my $exec6_10="$binary/VelvetOptimiser-2.2.5/VelvetOptimiser.pl --d $step5_opt_20to23/run1 --t $process --s $hash --e $hash --f '-short -fasta $step4/unmapped_trimmed_filtered.20-23.fasta' --a 2>>$prefix.warn";
+        my $exec6_10="/home/bioinfo/source_programs_eric/VelvetOptimiser-2.2.5/VelvetOptimiser.pl --d $step5_opt_20to23/run1 --t $process --s $hash --e $hash --f '-short -fasta $step4/unmapped_trimmed_filtered.20-23.fasta' --a 2>>$prefix.warn";
         print LOG "\nSTEP6_1\n\t $exec6_10\n";
         `$exec6_10`;
 
         `mkdir $step5_opt_20to23/run2`;
 		print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-		my $exec6_10_2="$binary/SPAdes-3.15.4/bin/spades.py -s $step4/unmapped_trimmed_filtered.20-23.fasta  --careful --only-assembler -t $process  -k $hash -o $step5_opt_20to23/run2 ";
+		my $exec6_10_2="/media/group1_data/joaopaulo/programs_jp/SPAdes-3.15.4-Linux/bin/./spades.py -s $step4/unmapped_trimmed_filtered.20-23.fasta  --careful --only-assembler -t $process  -k $hash -o $step5_opt_20to23/run2 ";
         print LOG "\nSTEP6_10_2\n\t $exec6_2\n";
         `$exec6_10_2`;
 
@@ -477,14 +474,14 @@ elsif(defined($fasta)){
 ############################################
 	    print "\n[VELVET OPTIMISER - 24-30nt]\n";
         print "\t#Running step 6_10 [ Assemble unmapped 24-30nt nt - velvetOptimser.pl ]\n";
-        my $exec62_10="$binary/VelvetOptimiser-2.2.5/VelvetOptimiser.pl --d $step5_opt_24to30/run1 --t $process --s 15 --e 17 --f '-short -fasta $step4/unmapped_trimmed_filtered.24-30.fasta' --a 2>>$prefix.warn";
+        my $exec62_10="/home/bioinfo/source_programs_eric/VelvetOptimiser-2.2.5/VelvetOptimiser.pl --d $step5_opt_24to30/run1 --t $process --s 15 --e 17 --f '-short -fasta $step4/unmapped_trimmed_filtered.24-30.fasta' --a 2>>$prefix.warn";
         print LOG "\nSTEP62_10\n\t $exec62_10\n";
         `$exec62_10`;
         
 		`mkdir $step5_opt_24to30/run2 `;
 		
        print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-		my $exec6_10_3="$binary/SPAdes-3.15.4/bin/spades.py -s $step4/unmapped_trimmed_filtered.24-30.fasta --careful --only-assembler -t $process  -k 15,17 -o $step5_opt_24to30/run2 ";
+		my $exec6_10_3="/media/group1_data/joaopaulo/programs_jp/SPAdes-3.15.4-Linux/bin/./spades.py -s $step4/unmapped_trimmed_filtered.24-30.fasta --careful --only-assembler -t $process  -k 15,17 -o $step5_opt_24to30/run2 ";
         print LOG "\nSTEP6_10_3\n\t $exec6_2\n";
         `$exec6_10_3`;
 
@@ -532,7 +529,7 @@ elsif(defined($fasta)){
             
       
         print "[FILTER CONTIGS gt 200 nt]\n";
-        my $exec_FC2= "python $binary/filter_fasta_by_size.py $step5_cap3/contigs_merged.final.gt50.fasta 200 1000000 $step5_cap3/contigs_merged.final.gt200.fasta";
+        my $exec_FC2= "python /home/bioinfo/eric_bin/filter_fasta_by_size.py $step5_cap3/contigs_merged.final.gt50.fasta 200 1000000 $step5_cap3/contigs_merged.final.gt200.fasta";
         print LOG "\nSTEP5_2\n\t $exec_FC2\n";
         `$exec_FC2`;
       
@@ -546,7 +543,7 @@ elsif(defined($fasta)){
 ###########
 	  print "\n[BlastN contigs gt 200]\n";
         print "\t#Running step 10_111 [ Blast against NT - blast+ blastn ]\n";
-        my $exec10_111 = "$binary/ncbi-blast-2.11.0+/bin/blastn -query $step5_cap3/contigs_merged.final.gt200.fasta -db /home/ubuntu/data/nt/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $step6/contigs_merged.final.gt200.1e5.blastn  -num_threads $process";
+        my $exec10_111 = "/media/group3_data/ncbi-blast-2.13.0+/bin/blastn -query $step5_cap3/contigs_merged.final.gt200.fasta -db /media/group3_data/blastdb_2022/nt/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $step6/contigs_merged.final.gt200.1e5.blastn  -num_threads $process";
         print LOG "\nSTEP10_111\n\t $exec10_111\n";
         `$exec10_111`;
 		
@@ -561,7 +558,7 @@ elsif(defined($fasta)){
        
         print "\n[Extracting contigs nonviral blastn 1e-5]\n";
         `grep -v -i "virus" $step7/contigs.bN.analyze..contigs.fasta | grep '>' | cut -f1 -d " " >  $step7/aux_nonviral`;
-        `$binary/fastx_toolkit_0.0.13/fasta_formatter -i $step7/contigs.bN.analyze..contigs.fasta > $step7/aux.fasta`;
+        `fasta_formatter -i $step7/contigs.bN.analyze..contigs.fasta > $step7/aux.fasta`;
         `while read p; do grep -A1 \${p} $step7/aux.fasta >> $step7/contigs.bN.analyze.nonviral.contigs.fasta;done < $step7/aux_nonviral`;
         `rm -f $step7/aux.fasta`;
         `rm -f $step7/aux_nonviral`;        
@@ -594,7 +591,7 @@ elsif(defined($fasta)){
         
         print "\n[Diamond (BlastX) contigs gt 200]\n";
         print "\t#Running step 9 [ Diamond-Blast against NR ]\n";
-        my $exec9 = "$binary/diamond blastx -q $step6/seqNoHit.blastN.1e5.fasta -d /home/ubuntu/data/nr.dmnd -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $step7/diamond_blastx.out --un $step7/diamond_blastx_NoHits.fasta --unfmt fasta --al $step7/diamond_blastx_Hits.fasta --alfmt fasta 2>  $step7/diamond.log ";
+        my $exec9 = "/media/group3_data/diamond blastx -q $step6/seqNoHit.blastN.1e5.fasta -d /media/group3_data/nr.dmnd -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $step7/diamond_blastx.out --un $step7/diamond_blastx_NoHits.fasta --unfmt fasta --al $step7/diamond_blastx_Hits.fasta --alfmt fasta 2>  $step7/diamond.log ";
         print LOG "\nSTEP9\n\t $exec9\n";
         `$exec9`;
         
@@ -619,7 +616,7 @@ elsif(defined($fasta)){
 
           `$binary/Z-score.bothstrands.pl -sam $step9/reads_vs_contigsHitNoHit.v1.sam -p $step9/reads_vs_contigsHitNoHit `;
           
-          `R --no-save $step9/reads_vs_contigsHitNoHit.zscore.tab $step9/reads_vs_contigsHitNoHit.zscore  < $binary/heatmap_correlation_VISA.R 2>/dev/null`;
+          `R --no-save $step9/reads_vs_contigsHitNoHit.zscore.tab $step9/reads_vs_contigsHitNoHit.zscore  < /home/bioinfo/eric_bin/R/heatmap_correlation_VISA.R 2>/dev/null`;
           
         ####stats
         $hitsBlastn = `grep '>' $step9/seq_ViralHits_and_NoHits.withSiRNA.fasta | grep blastN | wc -l `;
@@ -689,7 +686,7 @@ print "\n\n Calculating pattern viral contigs and candidates - HEATMAP \n\n";
 ###bowtie 
 `bowtie -f -S -k 1 -p $process -v 1  $step9/seq_ViralHits_and_NoHits.fasta $step2/trimmed_filtered_gt15.fasta | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $step10/reads.VS.contigs_virus_and_nohit.sam`;
 `$binary/Z-score.bothstrands.pl -sam $step10/reads.VS.contigs_virus_and_nohit.sam -p $step10/reads.VS.contigs_virus_and_nohit`;
-`R --no-save $step10/reads.VS.contigs_virus_and_nohit.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.all < $binary/heatmap_correlation_VISA.R 2>/dev/null`;
+`R --no-save $step10/reads.VS.contigs_virus_and_nohit.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.all < /home/bioinfo/eric_bin/R/heatmap_correlation_VISA.R 2>/dev/null`;
 
 
 ### identifying contigs with siRNA and piRNA aignature
@@ -736,9 +733,9 @@ print "\n\n Creating plots \n\n";
 
 `$binary/Z-score.bothstrands.pl -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam -p $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs`;
 
-`R --no-save $step10/reads.VS.contigs_virus_and_nohit.siRNAs.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs < $binary/heatmap_correlation_VISA.R 2>/dev/null`;
+`R --no-save $step10/reads.VS.contigs_virus_and_nohit.siRNAs.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs < /home/bioinfo/eric_bin/R/heatmap_correlation_VISA.R 2>/dev/null`;
 
-`R --no-save $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs < $binary/heatmap_correlation_VISA.R 2>/dev/null`;
+`R --no-save $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs < /home/bioinfo/eric_bin/R/heatmap_correlation_VISA.R 2>/dev/null`;
 
 ##############################################################################################################
 
