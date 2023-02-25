@@ -61,72 +61,69 @@ my $clean;
 my $nohostfilter;
 my $large_index;
 
-GetOptions ("qual=s" => \$qual,
-        "hostgenome=s" => \$hostgenome,
-        "fasta=s" => \$fasta,
-        "fastqgz=s" => \$fastqgz,
-        "fastq=s" => \$fastq,
-        "prefix=s" => \$prefix,
-        "size=s" => \$size,
-        "hash=s" => \$hash,
-        "log=s" => \$log,
-        "si=s" => \$si,
-        "se=s" => \$se,
-        "process=s" => \$process,
-        "clean!" => \$clean,
-        "nohostfilter!" => \$nohostfilter, #opstions must be lowcase and without "_"
-        "degradation!" => \$deg,
-    	"largeindex!" => \$large_index,
-        "h!" => \$help);
+GetOptions("qual=s" => \$qual,
+    "hostgenome=s" => \$hostgenome,
+    "fasta=s" => \$fasta,
+    "fastqgz=s" => \$fastqgz,
+    "fastq=s" => \$fastq,
+    "prefix=s" => \$prefix,
+    "size=s" => \$size,
+    "hash=s" => \$hash,
+    "log=s" => \$log,
+    "si=s" => \$si,
+    "se=s" => \$se,
+    "process=s" => \$process,
+    "clean!" => \$clean,
+    "nohostfilter!" => \$nohostfilter, #opstions must be lowcase and without "_"
+    "degradation!" => \$deg,
+    "largeindex!" => \$large_index,
+    "h!" => \$help);
 
 if ($help) {
     print "\t $exec1\n";
     die $usage;
 }
 if (not defined($nohostfilter) and not defined($fasta) and not defined($fastqgz)) {
-	print "aqui0";
-   if (not (defined $fastq)) {
-      if ((not(defined($fastqgz))) and (not defined($fastq)) and ( not defined($fasta)) ) {
-                die "\nGive an input file valid!\n ",$usage;
+    print "aqui0";
+    if (not(defined $fastq)) {
+        if ((not(defined($fastqgz))) and (not defined($fastq)) and (not defined($fasta))) {
+            die "\nGive an input file valid!\n ", $usage;
         }
 
-        if (not(defined($qual)) and (not defined($fastq)) and ( not defined($fasta))) {
-                die "\nGive an input quality file name valid! \n",$usage;
+        if (not(defined($qual)) and (not defined($fastq)) and (not defined($fasta))) {
+            die "\nGive an input quality file name valid! \n", $usage;
         }
     }
-   
-   
 }
 
 if (defined($large_index)) {
-	$large_index= " --large-index ";
+    $large_index = " --large-index ";
 } else {
-		$large_index= " ";
+    $large_index = " ";
 }
 
 if (not(defined($hostgenome))) {
-        die "\nGive an input reference file valid! \n",$usage;
+    die "\nGive an input reference file valid! \n", $usage;
 }
 
 if (not(defined($process))) {
-        die "\nGive an number of process to use! \n",$usage;
+    die "\nGive an number of process to use! \n", $usage;
 }
 
-
 if (not(defined($si)) or not defined($se)) {
-        die "\nGive a range size of reads to use! ex: -si 21 -se 23 \n",$usage;
+    die "\nGive a range size of reads to use! ex: -si 21 -se 23 \n", $usage;
 }
 
 if (not(defined($size))) {
-        die "\nGive the expected size of the genome! \n",$usage;
+    die "\nGive the expected size of the genome! \n", $usage;
 }
 
 if (not(defined($prefix))) {
-        die "\nGivea prefix name! \n",$usage;
+    die "\nGivea prefix name! \n", $usage;
 }
 
 if (not(defined($hash))) {
-	$hash = 15;
+    $hash = 15;
 }
 
 
