@@ -167,57 +167,56 @@ my $step_virus	="$prefix/$prefix"."_virus";
 
 print "Creating folders...\n\n";
 if (not -e $prefix) {
-	`mkdir $prefix`;
+    `mkdir $prefix`;
 }
 
 if (not -e $step0) {
-	`mkdir $step0`;
+    `mkdir $step0`;
 }
 if (not -e $step1) {
-	`mkdir $step1`;
+    `mkdir $step1`;
 }
 if (not -e $step2) {
-	`mkdir $step2`;
+    `mkdir $step2`;
 }
 if (not -e $step3) {
-	`mkdir $step3`;
-	
+    `mkdir $step3`;
 }
 if (not -e $step4) {
-	`mkdir $step4`;
+    `mkdir $step4`;
 }
 if (not -e $step5) {
-	`mkdir $step5`;
+    `mkdir $step5`;
 }
 if (not -e $step5) {
-	`mkdir $step5_fix`;
-	`mkdir $step5_opt`;
-	`mkdir $step5_opt_fix`;
-	`mkdir $step5_contigs`;
-	`mkdir $step5_cap3`;
-	`mkdir $step5_opt_20to23`;
-	`mkdir $step5_opt_24to30`;
+    `mkdir $step5_fix`;
+    `mkdir $step5_opt`;
+    `mkdir $step5_opt_fix`;
+    `mkdir $step5_contigs`;
+    `mkdir $step5_cap3`;
+    `mkdir $step5_opt_20to23`;
+    `mkdir $step5_opt_24to30`;
 }
 if (not -e $step6) {
-	`mkdir $step6`;
+    `mkdir $step6`;
 }
 if (not -e $step7) {
-        `mkdir $step7`;
+    `mkdir $step7`;
 }
 if (not -e $step8) {
-	`mkdir $step8`;
+    `mkdir $step8`;
 }
 if (not -e $step9) {
-	`mkdir $step9`;
+    `mkdir $step9`;
 }
 
 if (not -e $step10) {
-	`mkdir $step10`;
+    `mkdir $step10`;
 }
 
-open(metrics,">$step8/full_metrics.txt");
-open(interest,">$step8/metrics_of_interest.txt");
-open(LOG,">$log");
+open(metrics, ">$step8/full_metrics.txt");
+open(interest, ">$step8/metrics_of_interest.txt");
+open(LOG, ">$log");
 
 our $binary = "/home/bioinfo/eric_bin";
 

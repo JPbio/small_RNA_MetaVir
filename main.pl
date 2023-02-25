@@ -8,6 +8,7 @@ $| = 1;     # forces immediate prints into files rather than the buffer.
 
 #######################################################################
 ### PARSE INPUTS ------------------------------------------------------
+#######################################################################
 
 my $usage = "
 ------------------------------------------------------
@@ -132,11 +133,15 @@ if (not(defined($hash))) {
 
 
 #######################################################################
+### Print details -----------------------------------------------------
+#######################################################################
 
 print "\n\n\n#########################################################\n";
 print "# Reads: $fasta\n";
 print "# Reference: $hostgenome\n";
-print "# si: $si\tse:$se\thash:$hash\n";
+print "# si: $si\n";
+print "# se: $se\n";
+print "# si: hash:$hash\n";
 print "# prefix: $prefix\n";
 
 if (defined($deg)) {
@@ -145,7 +150,104 @@ if (defined($deg)) {
     print "# Searching for degradation: FALSE\n";
 }
 
+print"#########################################################\n\n\n";
 
+#######################################################################
+### Create step folders -----------------------------------------------
+#######################################################################
+
+my $step0		="$prefix/$prefix"."_00_saet";
+my $step1		="$prefix/$prefix"."_01_trimming";
+my $step2		="$prefix/$prefix"."_02_filter_size_gaps_convertion";
+my $step3		="$prefix/$prefix"."_03_mapping_vector";
+my $step4		="$prefix/$prefix"."_04_getUnmapped";
+my $step5_fix	="$prefix/$prefix"."_05_assembleUnmapped_fix";
+my $step5_opt	="$prefix/$prefix"."_05_assembleUnmapped_opt";
+my $step5_opt_fix="$prefix/$prefix"."_05_assembleUnmapped_opt_fix";
+my $step5_opt_20to23="$prefix/$prefix"."_05_assembleUnmapped_opt_20to23";
+my $step5_opt_24to30="$prefix/$prefix"."_05_assembleUnmapped_opt_24to30";
+my $step5_contigs= "$prefix/$prefix"."_05_assembleUnmapped_final";
+my $step5_cap3  = "$prefix/$prefix"."_05_cap3";
+my $step6		="$prefix/$prefix"."_06_blast";
+my $step7		="$prefix/$prefix"."_07_reportBlast";
+my $step8		="$prefix/$prefix"."_08_completeReport";
+my $step9		="$prefix/$prefix"."_09_contigs_no_hit";
+my $step10		="$prefix/$prefix"."_10_pattern";
+my $step_virus	="$prefix/$prefix"."_virus";
+
+
+print "Creating folders...\n\n";
+if (not -e $prefix) {
+    `mkdir $prefix`;
+}
+
+if (not -e $step0) {
+    `mkdir $step0`;
+}
+if (not -e $step1) {
+    `mkdir $step1`;
+}
+if (not -e $step2) {
+    `mkdir $step2`;
+}
+if (not -e $step3) {
+    `mkdir $step3`;
+}
+if (not -e $step4) {
+    `mkdir $step4`;
+}
+if (not -e $step5_fix) {
+    `mkdir $step5_fix`
+}
+if (not -e $step5_opt) {
+    `mkdir $step5_opt`;
+}
+if (not -e $step5_opt_fix) {
+    `mkdir $step5_opt_fix`;
+}
+if (not -e $step5_contigs) {
+    `mkdir $step5_contigs`;
+}
+if (not -e $step5_cap3) {
+    `mkdir $step5_cap3`;
+}
+if (not -e $step5_opt_20to23) {
+    `mkdir $step5_opt_20to23`;
+}
+if (not -e $step5_opt_24to30) {
+    `mkdir $step5_opt_24to30`;
+}
+if (not -e $step6) {
+    `mkdir $step6`;
+}
+if (not -e $step7) {
+    `mkdir $step7`;
+}
+if (not -e $step8) {
+    `mkdir $step8`;
+}
+if (not -e $step9) {
+    `mkdir $step9`;
+}
+if (not -e $step10) {
+    `mkdir $step10`;
+}
+
+#######################################################################
+
+# 
+# TODO: 2023-02-25 - Check out what to do with these (log?) files...
+# 
+
+# open(metrics, ">$step8/full_metrics.txt");
+# open(interest, ">$step8/metrics_of_interest.txt");
+# open(LOG, ">$log");
+
+
+# 
+# TODO: 2023-02-25 - Should we stop using this 'binary' thing?
+# 
+our $binary = "/home/bioinfo/eric_bin";
 
 #######################################################################
 print "\n\n-- THE END --\n\n"
