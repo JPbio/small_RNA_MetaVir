@@ -6,4 +6,5 @@ services:
     container_name: srna_metavir
     tty: true
     volumes:
-      - ./:/src
+      - ./:/srna_metavir/src # TODO: Find a better way to handle this
+      - ./asset/:/srna_metavir/asset
