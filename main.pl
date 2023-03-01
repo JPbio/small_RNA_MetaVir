@@ -1,10 +1,19 @@
 use strict;
 use warnings;
-# use YAML qw(LoadFile);
-# use Data::Dumper qw(Dumper);
-use Getopt::Long;
+# use autodie;
 
-$| = 1;     # forces immediate prints into files rather than the buffer.
+use Time::HiRes;
+# use Time::HiRes qw(time usleep nanosleep);
+use POSIX qw(strftime);
+use Getopt::Long;
+# use YAML qw(LoadFile);
+
+
+use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+
+# $| = 1;     # forces immediate prints into files rather than the buffer.
+my $timeStart = $^T;
+my $timeStartStr = strftime("%Y-%m-%d %H:%M:%S", localtime($timeStart));
 
 #######################################################################
 ### PARSE INPUTS ------------------------------------------------------
@@ -58,7 +67,7 @@ my $si;
 
 # Optional args
 my $fastqgz;
-my $log;
+# my $log; # TODO: 2023-02-27 - Restablish the custom log file(s) option
 my $fastq;
 my $hash;
 my $clean;
@@ -75,7 +84,7 @@ GetOptions("qual=s" => \$qual,
     "prefix=s" => \$prefix,
     "size=s" => \$size,
     "hash=s" => \$hash,
-    "log=s" => \$log,
+    # "log=s" => \$log,
     "si=s" => \$si,
     "se=s" => \$se,
     "process=s" => \$process,
@@ -136,21 +145,30 @@ if (not(defined($hash))) {
 ### Print details -----------------------------------------------------
 #######################################################################
 
-print "\n\n\n#########################################################\n";
-print "# Reads: $fasta\n";
-print "# Reference: $hostgenome\n";
-print "# si: $si\n";
-print "# se: $se\n";
-print "# si: hash:$hash\n";
-print "# prefix: $prefix\n";
+my $runDetails = "
+
+-------------------------------------------
+> Details:
+
+Start Time: $timeStartStr
+
+> Reads: '$fasta';
+> Reference: '$hostgenome';
+> si: '$si';
+> se: '$se';
+> si: hash:'$hash';
+> prefix: '$prefix';
+";
 
 if (defined($deg)) {
-    print "# Searching for degradation: TRUE\n";
+    $runDetails .= "> Searching for degradation: TRUE\n";
 } else {
-    print "# Searching for degradation: FALSE\n";
+    $runDetails .= "> Searching for degradation: FALSE\n";
 }
 
-print"#########################################################\n\n\n";
+$runDetails .= "\n-------------------------------------------\n";
+
+print $runDetails . "\n";
 
 #######################################################################
 ### Create step folders -----------------------------------------------
@@ -234,23 +252,110 @@ if (not -e $step10) {
 }
 
 #######################################################################
+### Configure logging -------------------------------------------------
+#######################################################################
+
 
 # 
-# TODO: 2023-02-25 - Check out what to do with these (log?) files...
+# TODO: 2023-02-27 - Find a better way to do this...
+# TODO: 2023-02-27 - Restablish the custom log file(s) option
 # 
 
 # open(metrics, ">$step8/full_metrics.txt");
 # open(interest, ">$step8/metrics_of_interest.txt");
 # open(LOG, ">$log");
 
+# 
+# NOTE: From here on all printed stuff will be sent to the log file
+# 
+
+# open filehandle log.txt
+my $LOG_FH;
+open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
+select $LOG_FH;
+
+print "\n\n";
+print "#######################################################################\n";
+print ">> New execution";
+print $runDetails;
+
+
+# # 
+# # TODO: 2023-02-25 - Should we stop using this 'binary' thing?
+# # 
+# # our $binary = "/home/bioinfo/eric_bin";
+
+
+# #######################################################################
+# ### Handle FASTQ sequences --------------------------------------------
+# #######################################################################
+
+# # 
+# # TODO: 2023-02-27 - Handle FastQ sequences
+# # 
+
+# #######################################################################
+# ### Handle FASTA sequences --------------------------------------------
+# #######################################################################
+
+# my $nReadsUnmapHostBac;
+# my $mappedbac;
+# my $nReadsUnmapHost;
+
+# if (defined($fasta)) {
+#     print "#Loading FASTA file ... \n";
+
+#     if (not defined($nohostfilter)) {
+
+#         # 
+#         # REVIEW: 2023-02-27 - Find a better way to manage file paths
+#         # 
+
+#         print "[COPING $fasta TO $step2/trimmed_filtered_gt15.fasta]\n";
+#         `cp $fasta $step2/trimmed_filtered_gt15.fasta `;
+#         print "\nSTEP3\n\t cp $fasta $step2/trimmed_filtered_gt15.fasta \n";
+
+#     } else {
+
+#         # Mapping Host - unfiltered reads against bacters reference
+#         print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
+        
+#         my $exec5_1 = "bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index /media/data/reference/bacterial_genomes/all_bacters.fasta $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log ";
+        
+#         print LOG "\nSTEP5_1\n\t $exec5_1\n";
+#         `$exec5_1`;
+
+#         $nReadsUnmapHostBac = `grep -c '>' $step4/unmappedVectorBacters.fasta`;
+#         chomp($nReadsUnmapHostBac);
+#         $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac;
+
+#         print metrics "#reads mapped bacter\t".$mappedbac."\n";
+        
+#         # Mapped reads Bacterial genomes
+#         print metrics "#preprocessed reads\t".$nReadsUnmapHostBac."\n";
+        
+#         # pre - processed reads
+#         print "\n  PRE-PROCESSING FINISHED \n";
+#     }
+# }
+
+
+# #######################################################################
 
 # 
-# TODO: 2023-02-25 - Should we stop using this 'binary' thing?
+# TODO: 2023-03-01 - Encapsulate these date / time formatting stuff
 # 
-our $binary = "/home/bioinfo/eric_bin";
 
-#######################################################################
-print "\n\n-- THE END --\n\n"
+# Calculate elapsed time
+my $timeElapsed = Time::HiRes::tv_interval([$timeStart]);
+my $time_elapsed_ms = 1000 * ($timeElapsed - int($timeElapsed));
+my $time_elapsed_str = strftime("%H:%M:%S", localtime($timeElapsed)) . sprintf ":%03d", ($time_elapsed_ms);
+
+print "\n-- THE END --\n";
+print "Time elapsed: $time_elapsed_str", "\n";
+
+close(LOG_FH);
+
 
     
 # my $filename = shift or die "Usage: $0 YAML-FILE\n";
