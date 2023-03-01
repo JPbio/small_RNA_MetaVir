@@ -231,25 +231,23 @@ if ( defined($fastq)) {
 	txt(`countFastq $fastq`);
 	print "\n\nRunning step 0 [ quality filter - fastq_quality_filter ]\n";
 	my $exec_fq_0="fastq_quality_filter -Q 33 -q 15 -p 60 -i $fastq -o $step0/trimming.quality.fastq ";
-	print LOG "\nSTEP0\n\t $exec_fq_0\n";
+	print "\nSTEP0\n\t $exec_fq_0\n";
 	`$exec_fq_0`;
 
 
 	#trimming adapters
 	print "\n\nRunning step 1 [ trimming adapter - fastq_clipper ]\n";
 	my $exec_fq_1="fastx_clipper -Q 33 -l 17 -c -i $step0/trimming.quality.fastq -a $adapter -o $step2/trimmed.quality.gt15.fastq";
-	print LOG "\nSTEP1\n\t $exec_fq_1\n";
+	print "\nSTEP1\n\t $exec_fq_1\n";
 	`$exec_fq_1`;
 
 	print "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
 	#converting fastq to fasta
 	my $exec_fq_2="fastq_to_fasta -Q 33 -i $step2/trimmed.quality.gt15.fastq -o $step2/trimmed_filtered_gt15.fasta";
-	print LOG "\nSTEP2\n\t $exec_fq_2\n";
+	print "\nSTEP2\n\t $exec_fq_2\n";
 	`$exec_fq_2`;
 	title("Number of trimmed reads\n");
 	title(`grep -c ">" $step2/trimmed_filtered_gt15.fasta`);
-	
-	
 }
 
 ###########################
@@ -261,12 +259,12 @@ elsif (defined($fasta)) {
      if (not defined ($nohostfilter)) {
          print "[COPING $fasta TO $step2/trimmed_filtered_gt15.fasta]\n";
         `cp $fasta $step2/trimmed_filtered_gt15.fasta `;
-          print LOG "\nSTEP3\n\t cp $fasta $step2/trimmed_filtered_gt15.fasta \n";
+          print "\nSTEP3\n\t cp $fasta $step2/trimmed_filtered_gt15.fasta \n";
      } else {         
             #Mapping Host-unfiltered reads against bacters reference    
             print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
             my $exec5_1="bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index /media/data/reference/bacterial_genomes/all_bacters.fasta $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log ";
-            print LOG "\nSTEP5_1\n\t $exec5_1\n";
+            print "\nSTEP5_1\n\t $exec5_1\n";
            `$exec5_1`;
            
             $nReadsUnmapHostBac = `grep -c '>' $step4/unmappedVectorBacters.fasta`;

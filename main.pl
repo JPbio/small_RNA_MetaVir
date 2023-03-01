@@ -8,12 +8,16 @@ use POSIX qw(strftime);
 use Getopt::Long;
 # use YAML qw(LoadFile);
 
-
 use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+use constant PATH_REF_BACTERIA => "/srna_metavir/asset/all_bacters.fasta";
+
+# 
+# TODO: 2023-03-01 - Standardize naming as snake_case
+# 
 
 # $| = 1;     # forces immediate prints into files rather than the buffer.
-my $timeStart = $^T;
-my $timeStartStr = strftime("%Y-%m-%d %H:%M:%S", localtime($timeStart));
+my $time_start = $^T;
+my $time_start_str = strftime("%Y-%m-%d %H:%M:%S", localtime($time_start));
 
 #######################################################################
 ### PARSE INPUTS ------------------------------------------------------
@@ -57,9 +61,17 @@ my $hostgenome;
 my $process; # TODO: 2023-02-25 - Does 'proccess' stand for 'processors'?
 my $size;
 my $prefix; # TODO: 2023-02-25 - Should we call it simply 'output dir' (or something like it)?
-my $fasta;
 my $se;
 my $si;
+
+# Conditionally required args
+
+#
+# REVIEW: 2023-03-01 - Shall we standardize 'path' variables (prefix 'path'?)
+#
+
+my $fasta;
+my $fastq;
 
 # 
 # TODO: 2023-02-25 - Check optional args
@@ -68,7 +80,6 @@ my $si;
 # Optional args
 my $fastqgz;
 # my $log; # TODO: 2023-02-27 - Restablish the custom log file(s) option
-my $fastq;
 my $hash;
 my $clean;
 my $nohostfilter;
@@ -150,7 +161,7 @@ my $runDetails = "
 -------------------------------------------
 > Details:
 
-Start Time: $timeStartStr
+Start Time: $time_start_str
 
 > Reads: '$fasta';
 > Reference: '$hostgenome';
@@ -173,6 +184,10 @@ print $runDetails . "\n";
 #######################################################################
 ### Create step folders -----------------------------------------------
 #######################################################################
+
+# 
+# REVIEW: 2023-03-01 - Shall we standardize these directories as all other 'path' variables too? ('path' prefix?)
+# 
 
 my $step0		="$prefix/$prefix"."_00_saet";
 my $step1		="$prefix/$prefix"."_01_trimming";
@@ -280,65 +295,81 @@ print ">> New execution";
 print $runDetails;
 
 
-# # 
-# # TODO: 2023-02-25 - Should we stop using this 'binary' thing?
-# # 
-# # our $binary = "/home/bioinfo/eric_bin";
+# 
+# REVIEW: 2023-02-25 - Should we stop using this 'binary' thing?
+# 
+# our $binary = "/home/bioinfo/eric_bin";
 
 
 # #######################################################################
 # ### Handle FASTQ sequences --------------------------------------------
 # #######################################################################
 
-# # 
-# # TODO: 2023-02-27 - Handle FastQ sequences
-# # 
+# 
+# TODO: 2023-02-27 - Handle FastQ sequences
+# 
 
 # #######################################################################
 # ### Handle FASTA sequences --------------------------------------------
 # #######################################################################
 
-# my $nReadsUnmapHostBac;
-# my $mappedbac;
+# 
+# REVIEW: 2023-03-01 - Shall we think of better names?
+# 
+
+my $mappedbac;
+my $nReadsUnmapHostBac;
 # my $nReadsUnmapHost;
 
-# if (defined($fasta)) {
-#     print "#Loading FASTA file ... \n";
+if (defined($fasta)) {
+    print "#Loading FASTA file ... \n";
 
-#     if (not defined($nohostfilter)) {
+    if (not defined($nohostfilter)) {
 
-#         # 
-#         # REVIEW: 2023-02-27 - Find a better way to manage file paths
-#         # 
+        # 
+        # REVIEW: 2023-02-27 - Find a better way to manage file paths
+        #
 
-#         print "[COPING $fasta TO $step2/trimmed_filtered_gt15.fasta]\n";
-#         `cp $fasta $step2/trimmed_filtered_gt15.fasta `;
-#         print "\nSTEP3\n\t cp $fasta $step2/trimmed_filtered_gt15.fasta \n";
+        my $path_trimmed_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
+        my $cmd = "cp $fasta $path_trimmed_filtered_gt15";
 
-#     } else {
-
-#         # Mapping Host - unfiltered reads against bacters reference
-#         print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
+        print "[COPING $fasta TO $path_trimmed_filtered_gt15]\n";
+        `$cmd`;
         
-#         my $exec5_1 = "bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index /media/data/reference/bacterial_genomes/all_bacters.fasta $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log ";
-        
-#         print LOG "\nSTEP5_1\n\t $exec5_1\n";
-#         `$exec5_1`;
+        print "\nSTEP3\n\t $cmd\n";
 
-#         $nReadsUnmapHostBac = `grep -c '>' $step4/unmappedVectorBacters.fasta`;
-#         chomp($nReadsUnmapHostBac);
-#         $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac;
+    } else {
 
-#         print metrics "#reads mapped bacter\t".$mappedbac."\n";
-        
-#         # Mapped reads Bacterial genomes
-#         print metrics "#preprocessed reads\t".$nReadsUnmapHostBac."\n";
-        
-#         # pre - processed reads
-#         print "\n  PRE-PROCESSING FINISHED \n";
-#     }
-# }
+        # 
+        # REVIEW: 2023-03-01 - Check this step numbering
+        # TODO: 2023-03-01 - Test it
+        # 
 
+        # Mapping Host - unfiltered reads against bacters reference
+        print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
+        
+
+        my $path_unmapped_vector_bacters = "$step4/unmappedVectorBacters.fasta";
+
+        my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index /media/data/reference/bacterial_genomes/all_bacters.fasta $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log ";
+        
+        print "\nSTEP5_1\n\t $exec5_1\n";
+        `$exec5_1`;
+
+        $nReadsUnmapHostBac = `grep -c '>' $path_unmapped_vector_bacters`;
+        chomp($nReadsUnmapHostBac);
+
+        # Mapped reads Bacterial genomes
+        # print metrics "#preprocessed reads\t".$nReadsUnmapHostBac."\n"; # TODO: 2023-03-01 - Check this 'metrics' log
+        print "#preprocessed reads\t $nReadsUnmapHostBac \n"; # REVIEW: 2023-03-01 - Does this message really make sense?
+        
+        # $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac; # REVIEW: 2023-03-01 - It doesn't look like it works
+        # print metrics "#reads mapped bacter\t".$mappedbac."\n"; # TODO: 2023-03-01 - Check this 'metrics' log
+        # print "#reads mapped bacter\t".$mappedbac."\n";
+        
+        print "\n  PRE-PROCESSING FINISHED \n"; # REVIEW: 2023-03-01 - Does this message really make sense?
+    }
+}
 
 # #######################################################################
 
@@ -347,14 +378,21 @@ print $runDetails;
 # 
 
 # Calculate elapsed time
-my $timeElapsed = Time::HiRes::tv_interval([$timeStart]);
-my $time_elapsed_ms = 1000 * ($timeElapsed - int($timeElapsed));
-my $time_elapsed_str = strftime("%H:%M:%S", localtime($timeElapsed)) . sprintf ":%03d", ($time_elapsed_ms);
+my $time_elapsed = Time::HiRes::tv_interval([$time_start]);
+my $time_elapsed_ms = 1000 * ($time_elapsed - int($time_elapsed));
+my $time_elapsed_str = strftime("%H:%M:%S", localtime($time_elapsed)) . sprintf ":%03d", ($time_elapsed_ms);
 
-print "\n-- THE END --\n";
-print "Time elapsed: $time_elapsed_str", "\n";
+my $msg_finish = "
+-- THE END --
+Time elapsed: $time_elapsed_str
+";
 
+print $msg_finish;
 close(LOG_FH);
+
+select STDOUT;
+print "$msg_finish \n";
+
 
 
     
