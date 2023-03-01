@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  perl:
+    build: .
+    image: srna_metavir
+    container_name: srna_metavir
+    tty: true
+    volumes:
+      - ./:/src

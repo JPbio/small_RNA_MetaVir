@@ -1,0 +1,48 @@
+
+###################################################################################
+    Docker
+###################################################################################
+
+docker run \
+    -d -t \
+    --name perl \
+    -v .:/src \
+    perl:5.16.3
+
+docker rename admiring_sanderson perl
+
+docker start perl
+docker restart perl
+
+docker exec -it perl /bin/bash
+
+docker compose up -d
+
+
+###################################################################################
+    sRNA METAVIR
+###################################################################################
+
+--- Ground truth
+smallRNA_MetaVir_v0.pl \
+    -prefix RKPM44 \
+    -fasta /data/zikalliance/libraries/libs_caratinga/RKPM44_trim.fasta \
+    -hostgenome /data/zikalliance/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 15 \
+    -size 20000 \
+    -si 15 \
+    -se 35 \
+    -log RKPM_virome \
+     >> RKPM44_virome_full_log 2>> RKPM44_virome_full_log_2
+
+--- ...
+docker exec -it srna_metavir \
+    perl main.pl \
+    -fasta /data/zikalliance/libraries/libs_caratinga/RKPM44_trim.fasta \
+    -hostgenome /data/zikalliance/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 15 \
+    -si 15 \
+    -se 35 \
+    -size 20000 \
+    -prefix RKPM44 \
+    -log RKPM_virome \
