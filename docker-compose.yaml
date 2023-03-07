@@ -6,5 +6,8 @@ services:
     container_name: srna_metavir
     tty: true
     volumes:
-      - ./:/srna_metavir/src # TODO: Find a better way to handle this
-      - ./asset/:/srna_metavir/asset
+      - /media/temp_data/hebert/srna-meta-vir/:/srna_metavir/src # TODO: Find a better way to handle this
+      - /data/zikalliance/libraries/libs_caratinga/:/srna_metavir/asset/libs_caratinga
+      - /data/zikalliance/ref_hosts/:/srna_metavir/asset/ref_hosts
+      - /media/data/reference/bacterial_genomes/:/srna_metavir/asset/bacterial_genomes
+      

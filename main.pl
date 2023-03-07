@@ -8,8 +8,12 @@ use POSIX qw(strftime);
 use Getopt::Long;
 # use YAML qw(LoadFile);
 
+
+#
+# TODO: 2023-03-07 - Use a decent logger
+# 
 use constant PATH_LOG_MAIN => "srna_metavir.main.log";
-use constant PATH_REF_BACTERIA => "/srna_metavir/asset/all_bacters.fasta";
+use constant PATH_REF_BACTERIA => "/srna_metavir/asset/bacterial_genomes/all_bacters.fasta";
 
 # 
 # TODO: 2023-03-01 - Standardize naming as snake_case
@@ -60,7 +64,14 @@ my $qual; # Quality file name
 my $hostgenome;
 my $process; # TODO: 2023-02-25 - Does 'proccess' stand for 'processors'?
 my $size;
-my $prefix; # TODO: 2023-02-25 - Should we call it simply 'output dir' (or something like it)?
+
+# 
+# TODO: 2023-02-25 - Should we call it simply 'output dir' (or something like it)?
+# TODO: 2023-03-06 - Reenable custom naming for this folder
+# 
+# my $prefix = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
+my $prefix = "exec_20230307_120529";
+
 my $se;
 my $si;
 
@@ -92,7 +103,7 @@ GetOptions("qual=s" => \$qual,
     "fasta=s" => \$fasta,
     "fastqgz=s" => \$fastqgz,
     "fastq=s" => \$fastq,
-    "prefix=s" => \$prefix,
+    # "prefix=s" => \$prefix, # TODO: 2023-03-06 - Reenable custom naming for this folder
     "size=s" => \$size,
     "hash=s" => \$hash,
     # "log=s" => \$log,
@@ -298,8 +309,8 @@ print $runDetails;
 # 
 # REVIEW: 2023-02-25 - Should we stop using this 'binary' thing?
 # 
+my $path_utils = "/srna_metavir/src/utils";
 # our $binary = "/home/bioinfo/eric_bin";
-
 
 # #######################################################################
 # ### Handle FASTQ sequences --------------------------------------------
@@ -371,6 +382,100 @@ if (defined($fasta)) {
     }
 }
 
+my $path_plot_dist_per_base_by_reads = "$path_utils/plot-geral-dist-base-reads/plotGeralDistributionPerBaseByReads.pl";
+
+if (not defined($nohostfilter)) {
+    if (defined($fastqgz)) {
+
+        # 
+        # TODO: 2023-03-06 - Test it
+        # 
+
+        # # # dealing with FASTQ TRIMMED files compacted with GZIP
+
+        print "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
+
+        #converting fastq to fasta
+        my $exec_fq_2 = "gunzip -dc $fastqgz | fastq_to_fasta -Q 33 -o $step2/trimmed_filtered_gt15.fasta";
+        print "\nSTEP2\n\t $exec_fq_2\n";
+        `$exec_fq_2`;
+    }
+
+    print "[MAPPING SEQUENCE AGAINST VECTOR]\n";
+    # my $exec3 = "bowtie $large_index -f -S -k 1 -p $process -v 1 --un $step4/unmappedVectorReads.fasta $hostgenome $step2/trimmed_filtered_gt15.fasta | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $step3/mapped_host.v1.sam  2>mapping_host.stats  ";
+    # print "\nSTEP3\n\t $exec3\n";
+    # `$exec3;
+
+    # #count total reads
+    my $nReads = `grep -c '>' $step2/trimmed_filtered_gt15.fasta`;
+    chomp($nReads);
+
+    # print metrics "#total reads\t".$nReads. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "#total reads\t".$nReads.
+    "\n";
+    # print interest "#total reads\t".$nReads. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "#total reads\t".$nReads.
+    "\n";
+
+
+    print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST ]\n";
+    my $exec3_1 = "$path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s $si -e $se -p $step3/$prefix.mapped_host.v1.$si.$se -norm $nReads --plot";
+    print "\nSTEP3\n\t $exec3_1\n";
+    `$exec3_1`;
+
+    print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST - 15-35nt ]\n";
+    my $exec3_11 = "$path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s 15 -e 35 -p $step3/$prefix.mapped_host.v1 -norm $nReads --plot";
+    print "\nSTEP3\n\t $exec3_11\n";
+    `$exec3_11`;
+
+    my $nReadsUnmapHost = `grep -c '>' $step4/unmappedVectorReads.fasta`;
+    chomp($nReadsUnmapHost);
+    my $mapped = $nReads - $nReadsUnmapHost;
+
+    # print metrics "#reads mapped host\t".$mapped. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "#reads mapped host\t".$mapped.
+    "\n";
+    # mapped reads HOST
+    # print metrics "#reads unmapped host\t".$nReadsUnmapHost. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "#reads unmapped host\t".$nReadsUnmapHost.
+    "\n";
+    # unmapped reads HOST
+
+    # print interest "#reads mapped host\t".$mapped. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "#reads mapped host\t".$mapped.
+    "\n";
+    # mapped reads HOST
+    # print interest "#reads unmapped host\t".$nReadsUnmapHost. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "#reads unmapped host\t".$nReadsUnmapHost.
+    "\n";
+    # unmapped reads HOST
+
+    `rm -rf $step3/mapped_host.v1.sam`;
+    # deleting sam file mapped reads on host genome
+
+    #Mapping Host - filtered reads against bacters reference
+    print "[MAPPING HOST-FILTERED READS AGAINST BACTERIAL GENOMES]... \n";
+    my $exec5_1 = "bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index /media/data/reference/bacterial_genomes/all_bacters.fasta $step4/unmappedVectorReads.fasta > /dev/null 2>>$prefix.warn ";
+    print "\nSTEP5_1\n\t $exec5_1\n";
+    `$exec5_1`;
+
+    $nReadsUnmapHostBac = `grep -c '>' $step4/unmappedVectorBacters.fasta`;
+    chomp($nReadsUnmapHostBac);
+    $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac;
+
+    # print metrics "#reads mapped bacter\t".$mappedbac. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "#reads mapped bacter\t".$mappedbac.
+    "\n";
+    
+    # mapped reads Bacterial genomes
+    # print metrics "#preprocessed reads\t".$nReadsUnmapHostBac. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "#preprocessed reads\t".$nReadsUnmapHostBac.
+    "\n";
+    # pre - processed reads
+
+    print "\n  PRE-PROCESSING FINISHED \n";
+}
+
 # #######################################################################
 
 # 
@@ -388,7 +493,7 @@ Time elapsed: $time_elapsed_str
 ";
 
 print $msg_finish;
-close(LOG_FH);
+close($LOG_FH);
 
 select STDOUT;
 print "$msg_finish \n";

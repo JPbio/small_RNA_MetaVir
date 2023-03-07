@@ -278,74 +278,84 @@ elsif (defined($fasta)) {
     }
     
 }
-    if (not defined($nohostfilter)) {
-		if (defined($fastqgz)) { ### dealing with FASTQ TRIMMED files compacted with GZIP
-			           
-			print "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";   
-	        
-			#converting fastq to fasta
-			my $exec_fq_2="gunzip -dc $fastqgz | fastq_to_fasta -Q 33 -o $step2/trimmed_filtered_gt15.fasta";
-			print LOG "\nSTEP2\n\t $exec_fq_2\n";
-			`$exec_fq_2`;
-         } 
 
-	
-            print "[MAPPING SEQUENCE AGAINST VECTOR]\n";
-            my $exec3="bowtie $large_index -f -S -k 1 -p $process -v 1 --un $step4/unmappedVectorReads.fasta  $hostgenome $step2/trimmed_filtered_gt15.fasta | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $step3/mapped_host.v1.sam  2>mapping_host.stats  ";
-            print  "\nSTEP3\n\t $exec3\n";
-            `$exec3  `;
-                      
-           ##count total reads
-            $nReads = `grep -c '>' $step2/trimmed_filtered_gt15.fasta`;
-            chomp($nReads);
-            print metrics "#total reads\t".$nReads ."\n";
-            print interest "#total reads\t".$nReads ."\n";
+if (not defined($nohostfilter)) {
+    if (defined($fastqgz)) {
+        # # # dealing with FASTQ TRIMMED files compacted with GZIP
 
-           
-            print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST ]\n";
-            my $exec3_1="$binary/plotGeralDistributionPerBaseByReads.pl -sam $step3/mapped_host.v1.sam  -s $si -e $se -p $step3/$prefix.mapped_host.v1.$si.$se -norm $nReads --plot";
-			print  "\nSTEP3\n\t $exec3_1\n";
-            print LOG "\nSTEP3\n\t $exec3_1\n";
-            `$exec3_1`; 
+        print "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
 
-			    print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST - 15-35nt ]\n";
-            my $exec3_11="$binary/plotGeralDistributionPerBaseByReads.pl -sam $step3/mapped_host.v1.sam  -s 15 -e 35 -p $step3/$prefix.mapped_host.v1 -norm $nReads --plot";
-			print  "\nSTEP3\n\t $exec3_11\n";
-            print LOG "\nSTEP3\n\t $exec3_11\n";
-            `$exec3_11`; 
-
-
-         
-			 $nReadsUnmapHost = `grep -c '>' $step4/unmappedVectorReads.fasta`;
-            chomp($nReadsUnmapHost);
-            $mapped = $nReads - $nReadsUnmapHost;
-            
-            print metrics "#reads mapped host\t".$mapped  ."\n"; # mapped reads HOST
-			print metrics "#reads unmapped host\t".$nReadsUnmapHost  ."\n"; # unmapped reads HOST
-			
-			print interest "#reads mapped host\t".$mapped  ."\n"; # mapped reads HOST
-			print interest "#reads unmapped host\t".$nReadsUnmapHost  ."\n"; # unmapped reads HOST
-			
-			`rm -rf $step3/mapped_host.v1.sam`; # deleting sam file mapped reads on host genome
-
-          
-            #Mapping Host-filtered reads against bacters reference
-            print "[MAPPING HOST-FILTERED READS AGAINST BACTERIAL GENOMES]... \n";
-            my $exec5_1="bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index /media/data/reference/bacterial_genomes/all_bacters.fasta $step4/unmappedVectorReads.fasta > /dev/null 2>>$prefix.warn ";
-            print LOG "\nSTEP5_1\n\t $exec5_1\n";
-           `$exec5_1`;
-           
-            $nReadsUnmapHostBac = `grep -c '>' $step4/unmappedVectorBacters.fasta`;
-            chomp($nReadsUnmapHostBac);
-            $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac;
-			
-			print metrics "#reads mapped bacter\t".$mappedbac  ."\n"; # mapped reads Bacterial genomes
-			print metrics "#preprocessed reads\t".$nReadsUnmapHostBac  ."\n"; # pre-processed reads
-			
-
-
-			print "\n  PRE-PROCESSING FINISHED \n";
+        #converting fastq to fasta
+        my $exec_fq_2 = "gunzip -dc $fastqgz | fastq_to_fasta -Q 33 -o $step2/trimmed_filtered_gt15.fasta";
+        print LOG "\nSTEP2\n\t $exec_fq_2\n";
+        `$exec_fq_2`;
     }
+
+    print "[MAPPING SEQUENCE AGAINST VECTOR]\n";
+    my $exec3 = "bowtie $large_index -f -S -k 1 -p $process -v 1 --un $step4/unmappedVectorReads.fasta  $hostgenome $step2/trimmed_filtered_gt15.fasta | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $step3/mapped_host.v1.sam  2>mapping_host.stats  ";
+    print "\nSTEP3\n\t $exec3\n";
+    `$exec3  `;
+
+    # #count total reads
+    $nReads = `grep -c '>' $step2/trimmed_filtered_gt15.fasta`;
+    chomp($nReads);
+    print metrics "#total reads\t".$nReads.
+    "\n";
+    print interest "#total reads\t".$nReads.
+    "\n";
+
+    print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST ]\n";
+    my $exec3_1 = "$binary/plotGeralDistributionPerBaseByReads.pl -sam $step3/mapped_host.v1.sam  -s $si -e $se -p $step3/$prefix.mapped_host.v1.$si.$se -norm $nReads --plot";
+    print "\nSTEP3\n\t $exec3_1\n";
+    print LOG "\nSTEP3\n\t $exec3_1\n";
+    `$exec3_1`;
+
+    print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST - 15-35nt ]\n";
+    my $exec3_11 = "$binary/plotGeralDistributionPerBaseByReads.pl -sam $step3/mapped_host.v1.sam  -s 15 -e 35 -p $step3/$prefix.mapped_host.v1 -norm $nReads --plot";
+    print "\nSTEP3\n\t $exec3_11\n";
+    print LOG "\nSTEP3\n\t $exec3_11\n";
+    `$exec3_11`;
+
+    $nReadsUnmapHost = `grep -c '>' $step4/unmappedVectorReads.fasta`;
+    chomp($nReadsUnmapHost);
+    $mapped = $nReads - $nReadsUnmapHost;
+
+    print metrics "#reads mapped host\t".$mapped.
+    "\n";
+    # mapped reads HOST
+    print metrics "#reads unmapped host\t".$nReadsUnmapHost.
+    "\n";
+    # unmapped reads HOST
+
+    print interest "#reads mapped host\t".$mapped.
+    "\n";
+    # mapped reads HOST
+    print interest "#reads unmapped host\t".$nReadsUnmapHost.
+    "\n";
+    # unmapped reads HOST
+
+        `rm -rf $step3/mapped_host.v1.sam`;
+    # deleting sam file mapped reads on host genome
+
+    #Mapping Host - filtered reads against bacters reference
+    print "[MAPPING HOST-FILTERED READS AGAINST BACTERIAL GENOMES]... \n";
+    my $exec5_1 = "bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index /media/data/reference/bacterial_genomes/all_bacters.fasta $step4/unmappedVectorReads.fasta > /dev/null 2>>$prefix.warn ";
+    print LOG "\nSTEP5_1\n\t $exec5_1\n";
+    `$exec5_1`;
+
+    $nReadsUnmapHostBac = `grep -c '>' $step4/unmappedVectorBacters.fasta`;
+    chomp($nReadsUnmapHostBac);
+    $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac;
+
+    print metrics "#reads mapped bacter\t".$mappedbac.
+    "\n";
+    # mapped reads Bacterial genomes
+    print metrics "#preprocessed reads\t".$nReadsUnmapHostBac.
+    "\n";
+    # pre - processed reads
+
+    print "\n  PRE-PROCESSING FINISHED \n";
+}
 	
 #########################################
    #selecting filtered sequences by size    

@@ -9,6 +9,10 @@ docker run \
     -v .:/src \
     perl:5.16.3
 
+docker run \
+    -d -t \
+    perl:5.16.3
+
 docker rename admiring_sanderson perl
 
 docker start perl
@@ -46,3 +50,13 @@ docker exec -it srna_metavir \
     -size 20000 \
     -prefix RKPM44 \
     -log RKPM_virome \
+
+docker exec -it srna_metavir \
+    perl main.pl \
+    -fasta /srna_metavir/asset/libs_caratinga/RKPM44_trim.fasta \
+    -hostgenome /srna_metavir/asset/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 15 \
+    -si 15 \
+    -se 35 \
+    -size 20000 \
+    -prefix RKPM44 \
