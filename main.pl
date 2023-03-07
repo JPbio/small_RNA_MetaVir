@@ -193,8 +193,42 @@ $runDetails .= "\n-------------------------------------------\n";
 print $runDetails . "\n";
 
 #######################################################################
+### Configure logging -------------------------------------------------
+#######################################################################
+
+
+# 
+# TODO: 2023-02-27 - Find a better way to do this...
+# TODO: 2023-02-27 - Restablish the custom log file(s) option
+# 
+
+# open(metrics, ">$step8/full_metrics.txt");
+# open(interest, ">$step8/metrics_of_interest.txt");
+# open(LOG, ">$log");
+
+# 
+# NOTE: From here on all printed stuff will be sent to the log file
+# 
+
+# open filehandle log.txt
+my $LOG_FH;
+open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
+select $LOG_FH;
+
+print "\n\n";
+print "#######################################################################\n";
+print ">> New execution";
+print $runDetails;
+
+#######################################################################
 ### Create step folders -----------------------------------------------
 #######################################################################
+
+# 
+# REVIEW: 2023-02-25 - Should we stop using this 'binary' thing?
+# 
+my $path_utils = "/srna_metavir/src/utils";
+# our $binary = "/home/bioinfo/eric_bin";
 
 # 
 # REVIEW: 2023-03-01 - Shall we standardize these directories as all other 'path' variables too? ('path' prefix?)
@@ -277,40 +311,6 @@ if (not -e $step10) {
     `mkdir $step10`;
 }
 
-#######################################################################
-### Configure logging -------------------------------------------------
-#######################################################################
-
-
-# 
-# TODO: 2023-02-27 - Find a better way to do this...
-# TODO: 2023-02-27 - Restablish the custom log file(s) option
-# 
-
-# open(metrics, ">$step8/full_metrics.txt");
-# open(interest, ">$step8/metrics_of_interest.txt");
-# open(LOG, ">$log");
-
-# 
-# NOTE: From here on all printed stuff will be sent to the log file
-# 
-
-# open filehandle log.txt
-my $LOG_FH;
-open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
-select $LOG_FH;
-
-print "\n\n";
-print "#######################################################################\n";
-print ">> New execution";
-print $runDetails;
-
-
-# 
-# REVIEW: 2023-02-25 - Should we stop using this 'binary' thing?
-# 
-my $path_utils = "/srna_metavir/src/utils";
-# our $binary = "/home/bioinfo/eric_bin";
 
 # #######################################################################
 # ### Handle FASTQ sequences --------------------------------------------
