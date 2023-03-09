@@ -22,6 +22,8 @@ docker exec -it perl /bin/bash
 
 docker compose up -d
 
+docker compose -f docker-compose.dev.yml up -d --remove-orphans
+
 
 ###################################################################################
     sRNA METAVIR
