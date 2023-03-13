@@ -1,5 +1,5 @@
 library(ggplot2)
-library(reshape)
+library(reshape2)
 
 args <- commandArgs()
 data <- read.csv(args[3],sep="\t",header=T)
@@ -19,4 +19,3 @@ scale_fill_manual(values = c("#108041", "#3B54A2","#F9A31B","#EA2627")) +
 scale_x_continuous(breaks=c(seq(15,35,by=1)),labels = c("","16","","18","","20","","22","","24","","26","","28","","30","","32","","34",""))
 
 dev.off()
-

@@ -1,5 +1,5 @@
 library(ggplot2)
-library(reshape)
+library(reshape2)
 
 args <- commandArgs()
 data <- read.csv(args[3],sep="\t",header=T)
@@ -18,4 +18,3 @@ ggplot()+ theme_classic(base_size=20)+ geom_bar(data=b,aes(size,value,fill=varia
   scale_x_continuous(breaks=c(seq(15,35,by=1)),labels = c("","16","","18","","20","","22","","24","","26","","28","","30","","32","","34",""))
 
 dev.off()
-

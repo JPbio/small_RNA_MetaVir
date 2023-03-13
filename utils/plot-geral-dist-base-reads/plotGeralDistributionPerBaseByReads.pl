@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/local/bin/perl
 
 use strict;
 use warnings;
@@ -52,8 +52,14 @@ my $end;
 my $plot;
 my $antisense;
 my $revcomp;
-my $norm;
-my $minimo;
+
+# 
+# REVIEW: 2023-03-13 - Should these variables be 'my'
+# 
+
+our $norm;
+our $minimo;
+
 my $base;
 my $help;
 
@@ -130,6 +136,10 @@ select $LOG_FH;
 
 open(IN, "<$sam");
 
+# 
+# REVIEW: 2023-03-10 - Should theses variables be 'my'
+# 
+
 our %tamanhos;
 our %tamanhos_p;
 our %tamanhos_n;
@@ -140,7 +150,6 @@ our %ch2;
 our %base;
 our %base_total;
 our %base_per_size;
-
 my $min = 1000;
 my $max = 0;
 
@@ -150,40 +159,6 @@ our %base_pi;
 our %total_reads;
 our %total_si;
 our %total_pi;
-
-
-# my %tamanhos;
-# my %tamanhos_p;
-# my %tamanhos_n;
-# my $cp = 0;
-# my $cn = 0;
-# my %ch;
-# my %ch2;
-
-# my %base;
-# my %base_total;
-# my %base_per_size;
-
-# my $min = 1000;
-# my $max = 0;
-
-# # 
-# # REVIEW: 2023-03-07 - Aren't these variables actually supposed to hashes?
-# # 
-
-# # my %base_si;
-# # my %base_pi;
-
-# # my %total_reads;
-# # my %total_si;
-# # my %total_pi;
-
-# my $base_si;
-# my $base_pi;
-
-# my $total_reads;
-# my $total_si;
-# my $total_pi;
 
 sub norm {
     my $t = shift;
@@ -216,7 +191,7 @@ warn("Loading SAM file...\n");
 
 my %read;
 my $nmappings = 0;
-my $nreads    = 0;
+my $nreads = 0;
 
 while (<IN>) {
     if (/^\w+/) {
@@ -276,8 +251,12 @@ while (<IN>) {
                 $base{$c}{"neg"}{$size}{"T"} = 0;
             }
 
-            if ($size < $min) { $min = $size; }
-            if ($size > $max) { $max = $size; }
+            if ($size < $min) {
+                $min = $size;
+            }
+            if ($size > $max) {
+                $max = $size;
+            }
 
             my $first = uc(substr($campos[9], 0, 1));
 
@@ -295,7 +274,9 @@ while (<IN>) {
             }
             $base_total{$first} = $base_total{$first} + 1;
 
-            if (not exists($base{$c}{$first})) { $base{$c}{$first} = 0; }
+            if (not exists($base{$c}{$first})) {
+                $base{$c}{$first} = 0;
+            }
             $base{$c}{$first} = $base{$c}{$first} + 1;
 
             if ($size >= 20 && $size <= 23) {
@@ -323,8 +304,7 @@ while (<IN>) {
                 $tamanhos_p{$size}       = $tamanhos_p{$size} + 1;
                 $ch2{$c}{"pos"}{"$size"} = $ch2{$c}{"pos"}{"$size"} + 1;
 
-                $base{$c}{"pos"}{$size}{$first} =
-                  $base{$c}{"pos"}{$size}{$first} + 1;
+                $base{$c}{"pos"}{$size}{$first} = $base{$c}{"pos"}{$size}{$first} + 1;
 
 				#print "POSITIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"pos"}{$size} ."\n";
                 $base_per_size{$size}{"+"}{$first} = $base_per_size{$size}{"+"}{$first} + 1;
@@ -339,7 +319,9 @@ while (<IN>) {
 				#print "NEGATIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"neg"}{$size} ."\n";
                 $base_per_size{$size}{"-"}{$first} = $base_per_size{$size}{"-"}{$first} + 1;
             }
-            if (not exists $total_reads{$c}) { $total_reads{$c} = 0; }
+            if (not exists $total_reads{$c}) {
+                $total_reads{$c} = 0;
+            }
             $total_reads{$c} = $total_reads{$c} + 1;
         }
     }
@@ -383,7 +365,7 @@ for (my $i = $start ; $i <= $end ; $i++) {
     }
     $t = $p + $n;
     if (defined($norm)) {
-        my $a     = ($t / $norm) * 1000000;
+        my $a = ($t / $norm) * 1000000;
         my $pnorm = ($p / $norm) * 1000000;
         my $nnorm = ($p / $norm) * 1000000;
 
@@ -410,8 +392,7 @@ for (my $i = $start ; $i <= $end ; $i++) {
     }
     if ($i == $start) {
         print O5 "$prefix#$p";
-    }
-    else {
+    } else {
         print O5 "#$p";
     }
 
@@ -449,7 +430,7 @@ close(O3);
 ############## GERAL preference print
 open(O4, ">$prefix.Geral_base_distribution");
 print O4 "size\tA\tC\tG\tT\n";
-for (my $i = $start ; $i <= $end ; $i++) {
+for (my $i = $start; $i <= $end ; $i++) {
     my $ta = $base_per_size{$i}{"+"}{"A"};
     my $tc = $base_per_size{$i}{"+"}{"C"};
     my $tg = $base_per_size{$i}{"+"}{"G"};
@@ -488,15 +469,15 @@ if (defined($norm)) {
 
 if (defined($plot)) {
     if (defined($norm)) {
-`R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_by_reads RPM < $path_inner/calcDistributionPerBase_publication.R`;
-`R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_by_reads_ZOOM_piRNAS RPM < $path_inner/calcDistributionPerBase_publication_zoom_piRNAs.R`;
-`R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_sumstrands_by_reads RPM < $path_inner/calcDistributionPerBaseSumStrand_publication.R`;
+        `R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_by_reads RPM < $path_inner/calcDistributionPerBase_publication.R`;
+        `R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_by_reads_ZOOM_piRNAS RPM < $path_inner/calcDistributionPerBase_publication_zoom_piRNAs.R`;
+        `R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_sumstrands_by_reads RPM < $path_inner/calcDistributionPerBaseSumStrand_publication.R`;
 
     }
 
-`R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_by_reads < $path_inner/calcDistributionPerBase_publication.R`;
-`R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_by_reads_ZOOM_piRNAs < $path_inner/calcDistributionPerBase_publication_zoom_piRNAs.R`;
-`R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_sumstrands_by_reads < $path_inner/calcDistributionPerBaseSumStrand_publication.R`;
+    `R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_by_reads < $path_inner/calcDistributionPerBase_publication.R`;
+    `R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_by_reads_ZOOM_piRNAs < $path_inner/calcDistributionPerBase_publication_zoom_piRNAs.R`;
+    `R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_sumstrands_by_reads < $path_inner/calcDistributionPerBaseSumStrand_publication.R`;
 
 }
 
