@@ -137,7 +137,7 @@ select $LOG_FH;
 open(IN, "<$sam");
 
 # 
-# REVIEW: 2023-03-10 - Should theses variables be 'my'
+# REVIEW: 2023-03-10 - Should all these variables be 'my'?
 # 
 
 our %tamanhos;
@@ -419,11 +419,13 @@ close(O5);
 open(O3, ">$prefix.miRNA_total_base_distribution");
 print O3 "\tA\tC\tG\tT\n";
 foreach my $c (keys %ch2) {
-    my $ta = $base_total{$c}{"A"};
-    my $tc = $base_total{$c}{"C"};
-    my $tg = $base_total{$c}{"G"};
-    my $tt = $base_total{$c}{"T"};
-    print O3 $c . "\t$ta\t$tc\t$tg\t$tt\n";
+    if (defined($base_total{$c})) {
+        my $ta = $base_total{$c}{"A"};
+        my $tc = $base_total{$c}{"C"};
+        my $tg = $base_total{$c}{"G"};
+        my $tt = $base_total{$c}{"T"};
+        print O3 $c . "\t$ta\t$tc\t$tg\t$tt\n";
+     }
 }
 close(O3);
 

@@ -324,6 +324,8 @@ if (not -e $step10) {
 # ### Handle FASTA sequences --------------------------------------------
 # #######################################################################
 
+my $path_bacterial_genome_all = "/srna_metavir/asset/bacterial_genomes/all_bacters.fasta";
+
 # 
 # REVIEW: 2023-03-01 - Shall we think of better names?
 # 
@@ -362,7 +364,7 @@ if (defined($fasta)) {
 
         my $path_unmapped_vector_bacters = "$step4/unmappedVectorBacters.fasta";
 
-        my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index /media/data/reference/bacterial_genomes/all_bacters.fasta $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log ";
+        my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index $path_bacterial_genome_all $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log ";
         
         print "\nSTEP5_1\n\t $exec5_1\n";
         `$exec5_1`;
@@ -402,9 +404,9 @@ if (not defined($nohostfilter)) {
     }
 
     print "[MAPPING SEQUENCE AGAINST VECTOR]\n";
-    # my $exec3 = "bowtie $large_index -f -S -k 1 -p $process -v 1 --un $step4/unmappedVectorReads.fasta $hostgenome $step2/trimmed_filtered_gt15.fasta | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $step3/mapped_host.v1.sam  2>mapping_host.stats  ";
-    # print "\nSTEP3\n\t $exec3\n";
-    # `$exec3;
+    my $exec3 = "bowtie $large_index -f -S -k 1 -p $process -v 1 --un $step4/unmappedVectorReads.fasta $hostgenome $step2/trimmed_filtered_gt15.fasta | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $step3/mapped_host.v1.sam  2>mapping_host.stats  ";
+    print "\nSTEP3\n\t $exec3\n";
+    `$exec3`;
 
     # #count total reads
     my $nReads = `grep -c '>' $step2/trimmed_filtered_gt15.fasta`;
@@ -455,7 +457,7 @@ if (not defined($nohostfilter)) {
 
     #Mapping Host - filtered reads against bacters reference
     print "[MAPPING HOST-FILTERED READS AGAINST BACTERIAL GENOMES]... \n";
-    my $exec5_1 = "bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index /media/data/reference/bacterial_genomes/all_bacters.fasta $step4/unmappedVectorReads.fasta > /dev/null 2>>$prefix.warn ";
+    my $exec5_1 = "bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index $path_bacterial_genome_all $step4/unmappedVectorReads.fasta > /dev/null 2>>$prefix.warn ";
     print "\nSTEP5_1\n\t $exec5_1\n";
     `$exec5_1`;
 

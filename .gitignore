@@ -1,2 +1,7 @@
 .vscode
 *.log
+*.warn
+*.stats
+
+asset
+exec_*

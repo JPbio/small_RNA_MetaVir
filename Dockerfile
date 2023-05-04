@@ -4,7 +4,7 @@
 # -- Stage: Perl --
 # ====================================
 
-FROM perl:5.36.0 AS stage_perl
+FROM docker.io/library/perl:5.36.0 AS stage_perl
 RUN cpan Bio::SeqIO
 
 
@@ -12,7 +12,7 @@ RUN cpan Bio::SeqIO
 # -- Stage: R --
 # ====================================
 
-FROM r-base:4.2.2 as stage_r
+FROM docker.io/library/r-base:4.2.2 as stage_r
 RUN R -e "install.packages('remotes')" \
     && installGithub.r tidyverse/ggplot2@v3.4.1 \
     && installGithub.r hadley/reshape@v1.4.1
@@ -21,10 +21,10 @@ RUN R -e "install.packages('remotes')" \
 # -- Stage: Dependencies --
 # ====================================
 
-FROM ubuntu:22.04 AS stage_dependencies
+FROM docker.io/library/ubuntu:22.04 AS stage_dependencies
 RUN apt-get update -y && apt-get install -y \
-    # TODO: 2023-03-09 - Lock bowtie version
-    bowtie
+    python3=3.10.6-1~22.04 \
+    bowtie=1.3.1-1
 
 
 # ====================================
@@ -35,7 +35,7 @@ RUN apt-get update -y && apt-get install -y \
 # REVIEW: 2023-03-09 - Find a smaller working base image
 # 
 
-FROM ubuntu:22.04 AS srna_metavir
+FROM docker.io/library/ubuntu:22.04 AS srna_metavir
 
 # 
 # REVIEW: 2023-03-09 - Can we include less stuff?
@@ -59,7 +59,6 @@ COPY --from=stage_r /etc/R /etc/R
 COPY --from=stage_r /usr/bin/R /usr/bin/R
 COPY --from=stage_r /usr/lib/R /usr/lib/R
 COPY --from=stage_r /usr/local/lib/R /usr/local/lib/R
-COPY --from=stage_r /usr/share/man/man1/R.1.gz /usr/share/man/man1/R.1.gz
 COPY --from=stage_r /usr/share/R /usr/share/R
 
 COPY --from=stage_r /usr/lib/R/library /usr/lib/R/library
@@ -68,12 +67,10 @@ COPY --from=stage_r /usr/lib/R/site-library /usr/lib/R/site-library
 COPY --from=stage_r /usr/local/lib/R/site-library /usr/local/lib/R/site-library
 COPY --from=stage_r /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
 
-# 
-# TODO: 2023-03-13 - Include bowtie
-# 
-# COPY --from=stage_dependencies /usr/bin/bowtie* /usr/bin/
+# Include bowtie
+COPY --from=stage_dependencies /usr/bin/bowtie* /usr/bin/
 
-# Habdle source files
+# Handle source files
 RUN mkdir /srna_metavir \
     && mkdir /srna_metavir/src \
     && mkdir /srna_metavir/asset
