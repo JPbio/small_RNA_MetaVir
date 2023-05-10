@@ -5,8 +5,15 @@
 # ====================================
 
 FROM docker.io/library/perl:5.36.0 AS stage_perl
-RUN cpan Bio::SeqIO
+RUN cpanm --notest --quiet Bio::SeqIO
 
+# ====================================
+# -- Stage: Python --
+# ====================================
+
+FROM docker.io/library/python:3.10-slim-bullseye AS stage_python
+# COPY requirements.txt .
+# RUN pip install --no-cache-dir -r requirements.txt
 
 # ====================================
 # -- Stage: R --
@@ -21,20 +28,28 @@ RUN R -e "install.packages('remotes')" \
 # -- Stage: Dependencies --
 # ====================================
 
-FROM docker.io/library/ubuntu:22.04 AS stage_dependencies
-RUN apt-get update -y && apt-get install -y \
-    python3=3.10.6-1~22.04 \
-    bowtie=1.3.1-1
+# FROM debian:bullseye-slim
+# FROM docker.io/library/debian:11-slim AS stage_dependencies
+# RUN apt-get update && \
+#     apt-get install --no-install-recommends --yes \
+#         bowtie=1.3.0+dfsg1-1
 
+# FROM docker.io/library/ubuntu:20.04 AS stage_dependencies
+# RUN apt-get update && \
+#     apt-get install --no-install-recommends -y \
+#         bowtie=1.2.3+dfsg-4build1
+
+FROM docker.io/library/ubuntu:22.04 AS stage_dependencies
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+        bowtie=1.3.1-1
 
 # ====================================
 # -- Stage: Final --
 # ====================================
 
-# 
-# REVIEW: 2023-03-09 - Find a smaller working base image
-# 
-
+# FROM docker.io/library/debian:11-slim AS srna_metavir
+# FROM docker.io/library/ubuntu:20.04 AS srna_metavir
 FROM docker.io/library/ubuntu:22.04 AS srna_metavir
 
 # 
@@ -58,14 +73,36 @@ COPY --from=stage_perl /usr/local/lib/perl5 /usr/local/lib/perl5
 COPY --from=stage_r /etc/R /etc/R
 COPY --from=stage_r /usr/bin/R /usr/bin/R
 COPY --from=stage_r /usr/lib/R /usr/lib/R
-COPY --from=stage_r /usr/local/lib/R /usr/local/lib/R
-COPY --from=stage_r /usr/share/R /usr/share/R
-
-COPY --from=stage_r /usr/lib/R/library /usr/lib/R/library
-COPY --from=stage_r /usr/lib/R/site-library /usr/lib/R/site-library
-# REVIEW: 2023-03-13 - Can we get rid of these following two?
-COPY --from=stage_r /usr/local/lib/R/site-library /usr/local/lib/R/site-library
 COPY --from=stage_r /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
+# COPY --from=stage_r /usr/local/lib/R /usr/local/lib/R
+# COPY --from=stage_r /usr/share/R /usr/share/R
+
+# COPY --from=stage_r /usr/lib/R/library /usr/lib/R/library
+# COPY --from=stage_r /usr/lib/R/site-library /usr/lib/R/site-library
+# REVIEW: 2023-03-13 - Can we get rid of these following two?
+# COPY --from=stage_r /usr/local/lib/R/site-library /usr/local/lib/R/site-library
+# COPY --from=stage_r /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+
+# COPY --from=stage_r /usr/bin/R /usr/bin/R
+# COPY --from=stage_r /etc/R /etc/R
+# COPY --from=stage_r /usr/share/R /usr/share/R
+
+# COPY --from=stage_r /usr/lib/R /usr/lib/R
+# COPY --from=stage_r /usr/lib/libR.so /usr/lib/libR.so
+# COPY --from=stage_r /usr/local/lib/R /usr/local/lib/R
+# COPY --from=stage_r /usr/lib64/ /usr/lib64/
+# # COPY --from=stage_r /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
+# COPY --from=stage_r /usr/lib/x86_64-linux-gnu/libblas.so.3 /usr/lib/x86_64-linux-gnu/libblas.so.3
+# COPY --from=stage_r /usr/lib/x86_64-linux-gnu/libreadline.so.8 /usr/lib/x86_64-linux-gnu/libreadline.so.8
+# COPY --from=stage_r /usr/lib/x86_64-linux-gnu/libicuuc.so /usr/lib/x86_64-linux-gnu/libicuuc.so
+# COPY --from=stage_r /usr/lib/x86_64-linux-gnu/libtirpc.so /usr/lib/x86_64-linux-gnu/libtirpc.so
+
+# # COPY --from=stage_r /usr/lib64/R/bin/exec/R /usr/lib64/R/bin/exec/R
+# # /usr/lib/R
+# # /usr/lib/R/bin/exec/R
+# # /usr/lib/R/etc/ldpaths
+# # /usr/lib64/R/bin/exec/R
+# # /usr/share/R
 
 # Include bowtie
 COPY --from=stage_dependencies /usr/bin/bowtie* /usr/bin/
@@ -79,12 +116,9 @@ RUN mkdir /srna_metavir \
 
 WORKDIR /srna_metavir
 
-
 # ====================================
 # -- Stage: Final [dev] --
 # ====================================
 
 FROM srna_metavir AS srna_metavir_dev
-
-# RUN apk add --no-cache bash vim
 RUN apt-get update -y && apt-get install -y nano
