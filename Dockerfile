@@ -74,35 +74,6 @@ COPY --from=stage_r /etc/R /etc/R
 COPY --from=stage_r /usr/bin/R /usr/bin/R
 COPY --from=stage_r /usr/lib/R /usr/lib/R
 COPY --from=stage_r /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
-# COPY --from=stage_r /usr/local/lib/R /usr/local/lib/R
-# COPY --from=stage_r /usr/share/R /usr/share/R
-
-# COPY --from=stage_r /usr/lib/R/library /usr/lib/R/library
-# COPY --from=stage_r /usr/lib/R/site-library /usr/lib/R/site-library
-# REVIEW: 2023-03-13 - Can we get rid of these following two?
-# COPY --from=stage_r /usr/local/lib/R/site-library /usr/local/lib/R/site-library
-# COPY --from=stage_r /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
-
-# COPY --from=stage_r /usr/bin/R /usr/bin/R
-# COPY --from=stage_r /etc/R /etc/R
-# COPY --from=stage_r /usr/share/R /usr/share/R
-
-# COPY --from=stage_r /usr/lib/R /usr/lib/R
-# COPY --from=stage_r /usr/lib/libR.so /usr/lib/libR.so
-# COPY --from=stage_r /usr/local/lib/R /usr/local/lib/R
-# COPY --from=stage_r /usr/lib64/ /usr/lib64/
-# # COPY --from=stage_r /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu
-# COPY --from=stage_r /usr/lib/x86_64-linux-gnu/libblas.so.3 /usr/lib/x86_64-linux-gnu/libblas.so.3
-# COPY --from=stage_r /usr/lib/x86_64-linux-gnu/libreadline.so.8 /usr/lib/x86_64-linux-gnu/libreadline.so.8
-# COPY --from=stage_r /usr/lib/x86_64-linux-gnu/libicuuc.so /usr/lib/x86_64-linux-gnu/libicuuc.so
-# COPY --from=stage_r /usr/lib/x86_64-linux-gnu/libtirpc.so /usr/lib/x86_64-linux-gnu/libtirpc.so
-
-# # COPY --from=stage_r /usr/lib64/R/bin/exec/R /usr/lib64/R/bin/exec/R
-# # /usr/lib/R
-# # /usr/lib/R/bin/exec/R
-# # /usr/lib/R/etc/ldpaths
-# # /usr/lib64/R/bin/exec/R
-# # /usr/share/R
 
 # Include bowtie
 COPY --from=stage_dependencies /usr/bin/bowtie* /usr/bin/
