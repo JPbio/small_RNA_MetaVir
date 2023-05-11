@@ -74,6 +74,7 @@ COPY --from=stage_r /etc/R /etc/R
 COPY --from=stage_r /usr/bin/R /usr/bin/R
 COPY --from=stage_r /usr/lib/R /usr/lib/R
 COPY --from=stage_r /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
+COPY --from=stage_r /usr/local/lib/R /usr/local/lib/R
 
 # Include bowtie
 COPY --from=stage_dependencies /usr/bin/bowtie* /usr/bin/
