@@ -52,22 +52,18 @@ RUN apt-get update && \
 # FROM docker.io/library/ubuntu:20.04 AS srna_metavir
 FROM docker.io/library/ubuntu:22.04 AS srna_metavir
 
-# 
-# REVIEW: 2023-03-09 - Can we include less stuff?
-# REVIEW: 2023-03-10 - /usr/local/bin/perl seems to be the right one
-# REVIEW: 2023-03-13 - /usr/lib/x86_64-linux-gnu seems to be critical
-# 
-
 # Include perl
-COPY --from=stage_perl /etc/perl /etc/perl
-COPY --from=stage_perl /usr/bin/perl /usr/bin/perl
-COPY --from=stage_perl /usr/bin/perl5.32-x86_64-linux-gnu /usr/bin/perl5.32-x86_64-linux-gnu
-COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl /usr/lib/x86_64-linux-gnu/perl
-COPY --from=stage_perl /usr/local/bin/perl /usr/local/bin/perl
-COPY --from=stage_perl /usr/share/perl /usr/share/perl
+COPY ./remove_perl.sh /
+RUN chmod +x /remove_perl.sh && \
+    /remove_perl.sh && \
+    rm /remove_perl.sh
 
+COPY --from=stage_perl /usr/local/bin/perl /usr/local/bin/perl
 COPY --from=stage_perl /usr/local/lib/perl5 /usr/local/lib/perl5
-# /usr/share/man/man1/perl.1.gz
+
+# Include python
+COPY --from=stage_python /usr/local/bin/python3 /usr/local/bin/python3
+COPY --from=stage_python /usr/local/lib /usr/local/lib
 
 # Include R
 COPY --from=stage_r /etc/R /etc/R
@@ -93,4 +89,11 @@ WORKDIR /srna_metavir
 # ====================================
 
 FROM srna_metavir AS srna_metavir_dev
-RUN apt-get update -y && apt-get install -y nano
+
+# RUN apt-get update && \
+#     apt-get install --yes \
+#         nano
+
+RUN apt-get update -y \
+    && apt-get install -y \
+        nano
