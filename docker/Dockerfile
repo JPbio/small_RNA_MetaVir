@@ -4,7 +4,8 @@
 # -- Stage: Perl --
 # ====================================
 
-FROM docker.io/library/perl:5.36.0 AS stage_perl
+FROM docker.io/library/perl:5.36.0-threaded AS stage_perl
+# docker pull perl:5.36.0-threaded-bullseye
 RUN cpanm --notest --quiet Bio::SeqIO
 
 # ====================================
@@ -42,6 +43,7 @@ RUN R -e "install.packages('remotes')" \
 FROM docker.io/library/ubuntu:22.04 AS stage_dependencies
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
+        # wget \
         bowtie=1.3.1-1
 
 # ====================================
@@ -58,8 +60,42 @@ RUN chmod +x /remove_perl.sh && \
     /remove_perl.sh && \
     rm /remove_perl.sh
 
+COPY --from=stage_perl /etc/perl /etc/perl
+COPY --from=stage_perl /usr/bin/perl* /usr/bin/perl/
+# COPY --from=stage_perl /usr/lib/perl* /usr/lib/perl/
+COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/libperl* /usr/lib/x86_64-linux-gnu/libperl/
+COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl-base
+COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl* /usr/lib/x86_64-linux-gnu/perl/
+# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl/5.34 /usr/lib/x86_64-linux-gnu/perl/5.34
+# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl5/5.34 /usr/lib/x86_64-linux-gnu/perl5/5.34
 COPY --from=stage_perl /usr/local/bin/perl /usr/local/bin/perl
+COPY --from=stage_perl /usr/local/lib/perl* /usr/local/lib/perl/
 COPY --from=stage_perl /usr/local/lib/perl5 /usr/local/lib/perl5
+# COPY --from=stage_perl /usr/local/lib/site_perl /usr/local/lib/site_perl
+# COPY --from=stage_perl /usr/local/lib/x86_64-linux-gnu/perl/5.34.0 /usr/local/lib/x86_64-linux-gnu/perl/5.34.0
+# COPY --from=stage_perl /usr/local/share/perl* /usr/local/share/perl/
+# COPY --from=stage_perl /usr/local/share/perl/5.34.0 /usr/local/share/perl/5.34.0
+COPY --from=stage_perl /usr/share/perl* /usr/share/perl/
+
+# COPY --from=stage_perl /usr/bin/perl*
+# COPY --from=stage_perl /usr/lib/perl*
+# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/libperl*
+# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl-base
+# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl*
+# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl/5.32
+# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl/5.34
+# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl5/5.32
+# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl5/5.34
+# COPY --from=stage_perl /usr/local/lib/perl*
+# COPY --from=stage_perl /usr/local/lib/site_perl
+# COPY --from=stage_perl /usr/local/lib/x86_64-linux-gnu/perl/5.32.1
+# COPY --from=stage_perl /usr/local/lib/x86_64-linux-gnu/perl/5.34.0
+# COPY --from=stage_perl /usr/local/share/perl*
+# COPY --from=stage_perl /usr/local/share/perl/5.32.1
+# COPY --from=stage_perl /usr/local/share/perl/5.34.0
+# COPY --from=stage_perl /usr/share/perl*
+
+
 
 # Include python
 COPY --from=stage_python /usr/local/bin/python3 /usr/local/bin/python3
@@ -83,6 +119,23 @@ RUN mkdir /srna_metavir \
     # && chmod +x -R src/utils
 
 WORKDIR /srna_metavir
+
+
+
+
+
+RUN apt-get update && \
+    apt-get install --no-install-recommends -y \
+        wget
+# RUN wget -O velvetoptimiser_2.2.6.tar.gz https://github.com/tseemann/VelvetOptimiser/releases/tag/2.2.6 && \
+RUN wget -O velvetoptimiser_2.2.6.tar.gz https://codeload.github.com/tseemann/VelvetOptimiser/tar.gz/refs/tags/2.2.6 --no-check-certificate && \
+    mkdir /src && \
+    tar zxvf velvetoptimiser_2.2.6.tar.gz && \
+    mv VelvetOptimiser-2.2.6/ /src/velvetOptimiser-2.2.6/
+    # && \
+    # echo "export PATH=$PATH:/src/velvetOptimiser-2.2.6/"
+ENV PATH="$PATH:/src/velvetOptimiser-2.2.6/"
+
 
 # ====================================
 # -- Stage: Final [dev] --
