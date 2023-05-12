@@ -70,7 +70,7 @@ my $size;
 # TODO: 2023-03-06 - Reenable custom naming for this folder
 # 
 # my $prefix = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
-my $prefix = "exec_20230307_120529";
+my $prefix = "exec_20230511_120529";
 
 my $se;
 my $si;
@@ -221,19 +221,20 @@ print ">> New execution";
 print $runDetails;
 
 #######################################################################
-### Create step folders -----------------------------------------------
+### Define paths ------------------------------------------------------
 #######################################################################
 
 # 
 # REVIEW: 2023-02-25 - Should we stop using this 'binary' thing?
 # 
-my $path_utils = "/srna_metavir/src/utils";
 # our $binary = "/home/bioinfo/eric_bin";
 
 # 
+# REVIEW: 2023-02-27 - Find a better way to manage file paths
 # REVIEW: 2023-03-01 - Shall we standardize these directories as all other 'path' variables too? ('path' prefix?)
 # 
 
+# Step folders
 my $step0		="$prefix/$prefix"."_00_saet";
 my $step1		="$prefix/$prefix"."_01_trimming";
 my $step2		="$prefix/$prefix"."_02_filter_size_gaps_convertion";
@@ -253,6 +254,26 @@ my $step9		="$prefix/$prefix"."_09_contigs_no_hit";
 my $step10		="$prefix/$prefix"."_10_pattern";
 my $step_virus	="$prefix/$prefix"."_virus";
 
+# Utils scripts
+my $path_utils = "/srna_metavir/src/utils";
+my $path_assets = "/srna_metavir/asset";
+
+my $path_bacterial_genome_all = "$path_assets/bacterial_genomes/all_bacters.fasta";
+
+my $path_filter_fasta_by_size = "$path_utils/filter_fasta_by_size.py";
+
+my $path_plot_dist_per_base_by_reads = "$path_utils/plot-geral-dist-base-reads/plotGeralDistributionPerBaseByReads.pl";
+
+my $path_trimmed_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
+
+my $path_unmapped_vector_bacters = "$step4/unmappedVectorBacters.fasta";
+my $path_unmapped_trimmed_filtered = "$step4/unmapped_trimmed_filtered.fasta";
+my $path_unmapped_trimmed_filtered_20_23 = "$step4/unmapped_trimmed_filtered.20-23.fasta";
+my $path_unmapped_trimmed_filtered_24_30 = "$step4/unmapped_trimmed_filtered.24-30.fasta";
+
+#######################################################################
+### Create step folders -----------------------------------------------
+#######################################################################
 
 print "Creating folders...\n\n";
 if (not -e $prefix) {
@@ -311,7 +332,6 @@ if (not -e $step10) {
     `mkdir $step10`;
 }
 
-
 # #######################################################################
 # ### Handle FASTQ sequences --------------------------------------------
 # #######################################################################
@@ -323,8 +343,6 @@ if (not -e $step10) {
 # #######################################################################
 # ### Handle FASTA sequences --------------------------------------------
 # #######################################################################
-
-my $path_bacterial_genome_all = "/srna_metavir/asset/bacterial_genomes/all_bacters.fasta";
 
 # 
 # REVIEW: 2023-03-01 - Shall we think of better names?
@@ -339,11 +357,6 @@ if (defined($fasta)) {
 
     if (not defined($nohostfilter)) {
 
-        # 
-        # REVIEW: 2023-02-27 - Find a better way to manage file paths
-        #
-
-        my $path_trimmed_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
         my $cmd = "cp $fasta $path_trimmed_filtered_gt15";
 
         print "[COPING $fasta TO $path_trimmed_filtered_gt15]\n";
@@ -361,8 +374,6 @@ if (defined($fasta)) {
         # Mapping Host - unfiltered reads against bacters reference
         print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
         
-
-        my $path_unmapped_vector_bacters = "$step4/unmappedVectorBacters.fasta";
 
         my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index $path_bacterial_genome_all $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log ";
         
@@ -383,8 +394,6 @@ if (defined($fasta)) {
         print "\n  PRE-PROCESSING FINISHED \n"; # REVIEW: 2023-03-01 - Does this message really make sense?
     }
 }
-
-my $path_plot_dist_per_base_by_reads = "$path_utils/plot-geral-dist-base-reads/plotGeralDistributionPerBaseByReads.pl";
 
 if (not defined($nohostfilter)) {
     if (defined($fastqgz)) {
@@ -457,11 +466,11 @@ if (not defined($nohostfilter)) {
 
     #Mapping Host - filtered reads against bacters reference
     print "[MAPPING HOST-FILTERED READS AGAINST BACTERIAL GENOMES]... \n";
-    my $exec5_1 = "bowtie -f -S -v 1 --un $step4/unmappedVectorBacters.fasta -k 1 -p $process --large-index $path_bacterial_genome_all $step4/unmappedVectorReads.fasta > /dev/null 2>>$prefix.warn ";
+    my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index $path_bacterial_genome_all $step4/unmappedVectorReads.fasta > /dev/null 2>>$prefix.warn ";
     print "\nSTEP5_1\n\t $exec5_1\n";
     `$exec5_1`;
 
-    $nReadsUnmapHostBac = `grep -c '>' $step4/unmappedVectorBacters.fasta`;
+    $nReadsUnmapHostBac = `grep -c '>' $path_unmapped_vector_bacters`;
     chomp($nReadsUnmapHostBac);
     $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac;
 
@@ -477,6 +486,33 @@ if (not defined($nohostfilter)) {
 
     print "\n  PRE-PROCESSING FINISHED \n";
 }
+
+#######################################################################
+### Select filtered sequences by size ---------------------------------
+#######################################################################
+
+# By default we've being using 18 ~ 30 nt as arguments
+
+# 
+# TODO: 2023-05-11 - Use 15 ~ 35nt as default
+# 
+print "[FILTER UNMAPPED SEQUENCES BY SIZE (variable size $si to $se)]\n";
+
+
+my $exec5 = "python3 $path_filter_fasta_by_size $path_unmapped_vector_bacters $si $se $path_unmapped_trimmed_filtered -t F ";
+
+print "\nSTEP5\n\t $exec5\n";
+`$exec5`;
+
+print "[FILTER UNMAPPED SEQUENCES BY SIZE (20-23NT)]\n";
+my $exec5_1 = "python3 $path_filter_fasta_by_size $path_unmapped_vector_bacters 20 23 $path_unmapped_trimmed_filtered_20_23";
+print "\nSTEP5_1\n\t $exec5_1\n";
+`$exec5_1`;
+
+print "[FILTER UNMAPPED SEQUENCES BY SIZE (24-30NT)]\n";
+my $exec5_2 = "python3 $path_filter_fasta_by_size $path_unmapped_vector_bacters 24 30 $path_unmapped_trimmed_filtered_24_30";
+print "\nSTEP5_2\n\t $exec5_2\n";
+`$exec5_2`;
 
 # #######################################################################
 
