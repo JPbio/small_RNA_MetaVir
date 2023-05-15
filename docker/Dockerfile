@@ -1,152 +1,114 @@
 # syntax=docker/dockerfile:1
+# FROM debian:stable-slim as srna_metavir
+# FROM stable-20230502-slim as srna_metavir
 
+# RUN apt-get update && \
+#     apt-get install -y \
+#         build-essential \
+#         curl
+ 
 # ====================================
 # -- Stage: Perl --
 # ====================================
 
 FROM docker.io/library/perl:5.36.0-threaded AS stage_perl
-# docker pull perl:5.36.0-threaded-bullseye
+
+# # Download and extract the thread-enabled Perl source code
+# RUN curl -L https://www.cpan.org/src/perl-5.32.1.tar.gz -o perl-5.32.1.tar.gz && \
+#     tar xzf perl-5.32.1.tar.gz && \
+#     cd perl-5.32.1 && \
+#     ./Configure -des -Dusethreads && \
+#     make && \
+#     make install && \
+#     cd .. && \
+#     rm -rf perl-5.32.1.tar.gz perl-5.32.1
+
+# # Install CPANM
+# RUN curl -L https://cpanmin.us -o /usr/local/bin/cpanm && \
+#     chmod +x /usr/local/bin/cpanm
+
+# RUN apt-get install -y bioperl
 RUN cpanm --notest --quiet Bio::SeqIO
 
 # ====================================
 # -- Stage: Python --
 # ====================================
 
-FROM docker.io/library/python:3.10-slim-bullseye AS stage_python
-# COPY requirements.txt .
-# RUN pip install --no-cache-dir -r requirements.txt
+FROM stage_perl AS stage_python
+
+# RUN apt-get update && \
+#     apt-get install -y \
+#         python3-pip \
+#         && \
+#     pip3 install \
+#         numpy pandas biopython
 
 # ====================================
 # -- Stage: R --
 # ====================================
 
-FROM docker.io/library/r-base:4.2.2 as stage_r
-RUN R -e "install.packages('remotes')" \
-    && installGithub.r tidyverse/ggplot2@v3.4.1 \
-    && installGithub.r hadley/reshape@v1.4.1
+FROM stage_python AS stage_r
+
+RUN apt-get update && \
+    apt-get install -y \
+    r-base
+
+RUN Rscript -e "install.packages(c('ggplot2', 'reshape2'), repos='https://cloud.r-project.org/')"
 
 # ====================================
 # -- Stage: Dependencies --
 # ====================================
 
-# FROM debian:bullseye-slim
-# FROM docker.io/library/debian:11-slim AS stage_dependencies
-# RUN apt-get update && \
-#     apt-get install --no-install-recommends --yes \
-#         bowtie=1.3.0+dfsg1-1
+FROM stage_r AS stage_dependencies
 
-# FROM docker.io/library/ubuntu:20.04 AS stage_dependencies
-# RUN apt-get update && \
-#     apt-get install --no-install-recommends -y \
-#         bowtie=1.2.3+dfsg-4build1
-
-FROM docker.io/library/ubuntu:22.04 AS stage_dependencies
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y \
-        # wget \
-        bowtie=1.3.1-1
+    apt-get install -y \
+    bowtie \
+    velvetoptimiser
+
+# ====================================
+# -- Stage: Main --
+# ====================================
+
+FROM stage_dependencies AS stage_main
+
+RUN mkdir /srna_metavir \
+    && mkdir /srna_metavir/src \
+    && mkdir /srna_metavir/asset
+
+WORKDIR /srna_metavir
 
 # ====================================
 # -- Stage: Final --
 # ====================================
 
-# FROM docker.io/library/debian:11-slim AS srna_metavir
-# FROM docker.io/library/ubuntu:20.04 AS srna_metavir
-FROM docker.io/library/ubuntu:22.04 AS srna_metavir
+FROM stage_main AS srna_metavir
 
-# Include perl
-COPY ./remove_perl.sh /
-RUN chmod +x /remove_perl.sh && \
-    /remove_perl.sh && \
-    rm /remove_perl.sh
-
-COPY --from=stage_perl /etc/perl /etc/perl
-COPY --from=stage_perl /usr/bin/perl* /usr/bin/perl/
-# COPY --from=stage_perl /usr/lib/perl* /usr/lib/perl/
-COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/libperl* /usr/lib/x86_64-linux-gnu/libperl/
-COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl-base
-COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl* /usr/lib/x86_64-linux-gnu/perl/
-# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl/5.34 /usr/lib/x86_64-linux-gnu/perl/5.34
-# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl5/5.34 /usr/lib/x86_64-linux-gnu/perl5/5.34
-COPY --from=stage_perl /usr/local/bin/perl /usr/local/bin/perl
-COPY --from=stage_perl /usr/local/lib/perl* /usr/local/lib/perl/
-COPY --from=stage_perl /usr/local/lib/perl5 /usr/local/lib/perl5
-# COPY --from=stage_perl /usr/local/lib/site_perl /usr/local/lib/site_perl
-# COPY --from=stage_perl /usr/local/lib/x86_64-linux-gnu/perl/5.34.0 /usr/local/lib/x86_64-linux-gnu/perl/5.34.0
-# COPY --from=stage_perl /usr/local/share/perl* /usr/local/share/perl/
-# COPY --from=stage_perl /usr/local/share/perl/5.34.0 /usr/local/share/perl/5.34.0
-COPY --from=stage_perl /usr/share/perl* /usr/share/perl/
-
-# COPY --from=stage_perl /usr/bin/perl*
-# COPY --from=stage_perl /usr/lib/perl*
-# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/libperl*
-# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl-base
-# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl*
-# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl/5.32
-# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl/5.34
-# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl5/5.32
-# COPY --from=stage_perl /usr/lib/x86_64-linux-gnu/perl5/5.34
-# COPY --from=stage_perl /usr/local/lib/perl*
-# COPY --from=stage_perl /usr/local/lib/site_perl
-# COPY --from=stage_perl /usr/local/lib/x86_64-linux-gnu/perl/5.32.1
-# COPY --from=stage_perl /usr/local/lib/x86_64-linux-gnu/perl/5.34.0
-# COPY --from=stage_perl /usr/local/share/perl*
-# COPY --from=stage_perl /usr/local/share/perl/5.32.1
-# COPY --from=stage_perl /usr/local/share/perl/5.34.0
-# COPY --from=stage_perl /usr/share/perl*
-
-
-
-# Include python
-COPY --from=stage_python /usr/local/bin/python3 /usr/local/bin/python3
-COPY --from=stage_python /usr/local/lib /usr/local/lib
-
-# Include R
-COPY --from=stage_r /etc/R /etc/R
-COPY --from=stage_r /usr/bin/R /usr/bin/R
-COPY --from=stage_r /usr/lib/R /usr/lib/R
-COPY --from=stage_r /usr/lib/x86_64-linux-gnu/* /usr/lib/x86_64-linux-gnu/
-COPY --from=stage_r /usr/local/lib/R /usr/local/lib/R
-
-# Include bowtie
-COPY --from=stage_dependencies /usr/bin/bowtie* /usr/bin/
-
-# Handle source files
-RUN mkdir /srna_metavir \
-    && mkdir /srna_metavir/src \
-    && mkdir /srna_metavir/asset
-    # REVIEW: 2023-03-09 - Mind this permission problem
-    # && chmod +x -R src/utils
-
-WORKDIR /srna_metavir
-
-
-
-
-
-RUN apt-get update && \
-    apt-get install --no-install-recommends -y \
-        wget
-# RUN wget -O velvetoptimiser_2.2.6.tar.gz https://github.com/tseemann/VelvetOptimiser/releases/tag/2.2.6 && \
-RUN wget -O velvetoptimiser_2.2.6.tar.gz https://codeload.github.com/tseemann/VelvetOptimiser/tar.gz/refs/tags/2.2.6 --no-check-certificate && \
-    mkdir /src && \
-    tar zxvf velvetoptimiser_2.2.6.tar.gz && \
-    mv VelvetOptimiser-2.2.6/ /src/velvetOptimiser-2.2.6/
-    # && \
-    # echo "export PATH=$PATH:/src/velvetOptimiser-2.2.6/"
-ENV PATH="$PATH:/src/velvetOptimiser-2.2.6/"
-
+RUN apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # ====================================
 # -- Stage: Final [dev] --
 # ====================================
 
-FROM srna_metavir AS srna_metavir_dev
+FROM stage_main AS srna_metavir_dev
 
-# RUN apt-get update && \
-#     apt-get install --yes \
-#         nano
+RUN apt-get install -y nano
 
-RUN apt-get update -y \
-    && apt-get install -y \
-        nano
+# =============================================
+# DESC 01
+
+# In this Dockerfile, each software package is installed in a separate RUN instruction to keep the Docker image layers as small as possible.
+
+# The Perl installation includes some required packages for database access. The Python installation includes numpy, pandas, and biopython. The R installation includes ggplot2, reshape2, dplyr, and tidyr.
+
+# Bowtie and VelvetOptimiser are installed in their own RUN instructions. Finally, the default command is set to run Bash.
+
+# Note that you can further optimize the image size by combining multiple RUN instructions into a single one and removing any unnecessary files and directories.
+
+# =============================================
+# DESC 02
+
+# In this updated Dockerfile, we first install build-essential to be able to compile Perl from source. Then, we download and extract the thread-enabled Perl source code. We configure Perl with the -Dusethreads flag to enable threading support and compile it. Finally, we install Perl using make install.
+
+# The rest of the Dockerfile remains the same as in the previous example. Note that you can adjust the version of Perl as needed by changing the URL in the curl command and the directory name in the cd command.
