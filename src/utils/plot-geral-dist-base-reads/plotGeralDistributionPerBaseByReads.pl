@@ -111,7 +111,6 @@ if (not defined($minimo) or ($minimo < 0)) {
 ### Configure logging -------------------------------------------------
 #######################################################################
 
-
 # 
 # TODO: 2023-02-27 - Find a better way to do this...
 # TODO: 2023-02-27 - Restablish the custom log file(s) option

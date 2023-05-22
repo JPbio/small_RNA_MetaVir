@@ -261,8 +261,8 @@ my $path_assets = "/srna_metavir/asset";
 my $path_bacterial_genome_all = "$path_assets/bacterial_genomes/all_bacters.fasta";
 
 my $path_filter_fasta_by_size = "$path_utils/filter_fasta_by_size.py";
-
 my $path_plot_dist_per_base_by_reads = "$path_utils/plot-geral-dist-base-reads/plotGeralDistributionPerBaseByReads.pl";
+my $path_merge_contigs = "$path_utils/merge-contigs/mergeContigsNew.pl";
 
 my $path_trimmed_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
 
@@ -513,6 +513,26 @@ print "[FILTER UNMAPPED SEQUENCES BY SIZE (24-30NT)]\n";
 my $exec5_2 = "python3 $path_filter_fasta_by_size $path_unmapped_vector_bacters 24 30 $path_unmapped_trimmed_filtered_24_30";
 print "\nSTEP5_2\n\t $exec5_2\n";
 `$exec5_2`;
+
+#######################################################################
+### Run Velvet optmiser (automatically defined hash) ------------------
+#######################################################################
+
+print "\n#[RUNNING VELVET OPTIMIZER]\n";
+print "\t#Running step 6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
+my $exec6_1 = "velvetoptimiser --d $step5_opt/run1 --t $process --s 13 --e 19 --f '-short -fasta $path_unmapped_trimmed_filtered' --a $process 2>>$prefix.warn";
+print "\nSTEP6_1\n\t $exec6_1\n";
+`$exec6_1`;
+
+print "\t#Running step 6_4 [ SPADES ] \n";
+my $exec6_4 = "spades -s $path_unmapped_trimmed_filtered --careful --only-assembler -t $process -k 13,15,17,19 -o $step5_opt/run2";
+print "\nSTEP6_4\n\t $exec6_4\n";
+`$exec6_4`;
+
+print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
+my $exec6_5 = "$path_merge_contigs -contig1 $step5_opt/run1/contigs.fa -contig2 $step5_opt/run2/scaffolds.fasta -output $step5_opt/contigs.final.fasta ";
+print "\nSTEP6_5\n\t $exec6_5\n";
+`$exec6_5`;
 
 # #######################################################################
 

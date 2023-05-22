@@ -41,8 +41,9 @@ FROM stage_r AS stage_dependencies
 
 RUN apt-get update && \
     apt-get install -y \
-    bowtie \
-    velvetoptimiser
+    bowtie=1.3.0+dfsg1-1 \
+    velvetoptimiser=2.2.6-3 \
+    spades=3.13.1+dfsg-2+b2
 
 # ====================================
 # -- Stage: Main --
@@ -52,7 +53,8 @@ FROM stage_dependencies AS stage_main
 
 RUN mkdir /srna_metavir \
     && mkdir /srna_metavir/src \
-    && mkdir /srna_metavir/asset
+    && mkdir /srna_metavir/asset \
+    && chmod -R +x /srna_metavir/src
 
 WORKDIR /srna_metavir
 
