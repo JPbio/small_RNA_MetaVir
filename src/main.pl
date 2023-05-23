@@ -534,6 +534,99 @@ my $exec6_5 = "$path_merge_contigs -contig1 $step5_opt/run1/contigs.fa -contig2 
 print "\nSTEP6_5\n\t $exec6_5\n";
 `$exec6_5`;
 
+#######################################################################
+### Running velvet (fixed hash) ---------------------------------------
+#######################################################################
+
+print "\n[RUNNING DEFAULT VELVET]\n";
+print "\t#Running step 6 [ Assemble unmapped 21 nt - velvet hash $hash ]\n";
+my $exec6 = "velveth $step5_fix/run1 $hash -fasta -short $path_unmapped_trimmed_filtered 2>>$prefix.warn";
+print "\nSTEP6\n\t $exec6\n";
+`$exec6`;
+
+`velvetg $step5_fix/run1 -exp_cov auto -cov_cutoff auto 2>$prefix.warn`;
+
+`mkdir $step5_fix/run2`;
+
+print "\t#Running SPADES fixed hash  [ SPADES ] \n";
+my $exec6_2 = "spades -s $path_unmapped_trimmed_filtered --careful --only-assembler -t $process  -k $hash -o $step5_fix/run2 ";
+print "\nSTEP6_2\n\t $exec6_2\n";
+`$exec6_2`;
+
+print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
+$exec6_5 = "$path_merge_contigs -contig1 $step5_fix/run1/contigs.fa -contig2 $step5_fix/run2/scaffolds.fasta -output $step5_fix/contigs.final.fasta ";
+print "\nSTEP6_5\n\t $exec6_5\n";
+`$exec6_5`;
+
+# #######################################################################
+# ### Running velvet optmiser (FIXED hash) ------------------------------
+# #######################################################################
+
+print "\n[VELVET OPTIMISER HASH ONLY 15]\n";
+print "\t#Running step 6_6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
+my $exec6_6 = "velvetoptimiser --d $step5_opt_fix/run1 --t $process --s $hash --e $hash --f '-short -fasta $path_unmapped_trimmed_filtered' --a 2>>$prefix.warn";
+print "\nSTEP6_1\n\t $exec6_6\n";
+`$exec6_6`;
+
+`mkdir $step5_opt_fix/run2`;
+print "\t#Running SPADES fixed hash  [ SPADES ] \n";
+my $exec6_6_2 = "spades -s $path_unmapped_trimmed_filtered --careful --only-assembler -t $process  -k 15 -o $step5_opt_fix/run2 ";
+print "\nSTEP6_2\n\t $exec6_2\n";
+`$exec6_6_2`;
+
+print "\t#Running step 6_9 [ merge assemblies - mergeContigs.pl ] \n";
+my $exec6_9 = "$path_merge_contigs -contig1 $step5_opt_fix/run1/contigs.fa -contig2 $step5_opt_fix/run2/scaffolds.fasta -output $step5_opt_fix/contigs.final.fasta ";
+print "\nSTEP6_5\n\t $exec6_5\n";
+`$exec6_9`;
+
+#######################################################################
+### Running velvet optmiser (FIXED hash) 20-23 ------------------------
+#######################################################################
+
+print "\n[VELVET OPTIMISER HASH ONLY 15 - 20-23nt]\n";
+print "\t#Running step 6_10 [ Assemble unmapped 20-23nt nt - velvetOptimser.pl ]\n";
+my $exec6_10 = "velvetoptimiser --d $step5_opt_20to23/run1 --t $process --s $hash --e $hash --f '-short -fasta $path_unmapped_trimmed_filtered_20_23' --a 2>>$prefix.warn";
+print "\nSTEP6_1\n\t $exec6_10\n";
+`$exec6_10`;
+
+`mkdir $step5_opt_20to23/run2`;
+print "\t#Running SPADES fixed hash  [ SPADES ] \n";
+my $exec6_10_2 = "spades -s $path_unmapped_trimmed_filtered_20_23  --careful --only-assembler -t $process  -k $hash -o $step5_opt_20to23/run2 ";
+print "\nSTEP6_10_2\n\t $exec6_2\n";
+`$exec6_10_2`;
+
+print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
+my $exec6_13 = "$path_merge_contigs -contig1 $step5_opt_20to23/run1/contigs.fa -contig2 $step5_opt_20to23/run2/scaffolds.fasta -output $step5_opt_20to23/contigs.final.fasta ";
+print "\nSTEP6_13\n\t $exec6_13\n";
+`$exec6_13`;
+
+   
+#######################################################################
+### Running velvet optmiser (hash 17) 24-30 ---------------------------
+#######################################################################
+
+if (defined($deg)) {
+    
+    print "\n[VELVET OPTIMISER - 24-30nt]\n";
+    print "\t#Running step 6_10 [ Assemble unmapped 24-30nt nt - velvetOptimser.pl ]\n";
+    
+    my $exec62_10 = "velvetoptimiser --d $step5_opt_24to30/run1 --t $process --s 15 --e 17 --f '-short -fasta $path_unmapped_trimmed_filtered_24_30' --a 2>>$prefix.warn";
+    print "\nSTEP62_10\n\t $exec62_10\n";
+    `$exec62_10`;
+
+    `mkdir $step5_opt_24to30/run2 `;
+
+    print "\t#Running SPADES fixed hash  [ SPADES ] \n";
+    my $exec6_10_3 = "spades -s $path_unmapped_trimmed_filtered_24_30 --careful --only-assembler -t $process  -k 15,17 -o $step5_opt_24to30/run2 ";
+    print "\nSTEP6_10_3\n\t $exec6_2\n";
+    `$exec6_10_3`;
+
+    print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
+    my $exec62_13 = "$path_merge_contigs -contig1 $step5_opt_24to30/run1/contigs.fa -contig2 $step5_opt_24to30/run2/scaffolds.fasta -output $step5_opt_24to30/contigs.final.fasta ";
+    print "\nSTEP62_13\n\t $exec62_13\n";
+    `$exec62_13`;
+}
+
 # #######################################################################
 
 # 
