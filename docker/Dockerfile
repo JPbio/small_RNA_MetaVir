@@ -45,6 +45,15 @@ RUN apt-get update && \
     velvetoptimiser=2.2.6-3 \
     spades=3.13.1+dfsg-2+b2
 
+# Add cap3
+COPY ./cap3.linux.opteron64.tar /usr/bin/
+
+RUN cd /usr/bin/ && \
+    tar -xvf cap3.linux.opteron64.tar && \
+    rm cap3.linux.opteron64.tar
+
+ENV PATH="${PATH}:/usr/bin/CAP3"
+
 # ====================================
 # -- Stage: Main --
 # ====================================

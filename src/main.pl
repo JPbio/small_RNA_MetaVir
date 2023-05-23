@@ -263,6 +263,8 @@ my $path_bacterial_genome_all = "$path_assets/bacterial_genomes/all_bacters.fast
 my $path_filter_fasta_by_size = "$path_utils/filter_fasta_by_size.py";
 my $path_plot_dist_per_base_by_reads = "$path_utils/plot-geral-dist-base-reads/plotGeralDistributionPerBaseByReads.pl";
 my $path_merge_contigs = "$path_utils/merge-contigs/mergeContigsNew.pl";
+my $path_fix_cap3_contigs = "$path_utils/fixIdCap3Contigs.pl";
+my $path_filter_blast = "$path_utils/filterblast.pl";
 
 my $path_trimmed_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
 
@@ -332,17 +334,17 @@ if (not -e $step10) {
     `mkdir $step10`;
 }
 
-# #######################################################################
-# ### Handle FASTQ sequences --------------------------------------------
-# #######################################################################
+#######################################################################
+### Handle FASTQ sequences --------------------------------------------
+#######################################################################
 
 # 
 # TODO: 2023-02-27 - Handle FastQ sequences
 # 
 
-# #######################################################################
-# ### Handle FASTA sequences --------------------------------------------
-# #######################################################################
+#######################################################################
+### Handle FASTA sequences --------------------------------------------
+#######################################################################
 
 # 
 # REVIEW: 2023-03-01 - Shall we think of better names?
@@ -626,6 +628,54 @@ if (defined($deg)) {
     print "\nSTEP62_13\n\t $exec62_13\n";
     `$exec62_13`;
 }
+
+#######################################################################
+### Merging assemblies ------------------------------------------------
+#######################################################################
+
+if (not defined($deg)) {
+    `touch $step5_opt_24to30/contigs.final.fasta`;
+}
+
+print "\n[MERGING CONTIGS AND RUNNING CAP3]\n";
+print "\t#Running STEP [CAT] Concatenating contigs...\n";
+my $exec_cat = "cat $step5_opt_20to23/contigs.final.fasta $step5_opt_fix/contigs.final.fasta  $step5_fix/contigs.final.fasta $step5_opt/contigs.final.fasta $step5_opt_24to30/contigs.final.fasta > $step5_cap3/all_contigs.fasta";
+print "\nSTEP6_CAT\n\t $exec_cat\n";
+`$exec_cat`;
+
+print "\t#Running step CAP3 [ assembly contigs from different assemblies ] \n";
+my $exec_cap3 = "cap3 $step5_cap3/all_contigs.fasta  > $step5_cap3/log.cap3";
+print "\nSTEP CAP3\n\t $exec_cap3\n";
+`$exec_cap3`;
+
+print "\t#Running [ Concatenning contigs and singlets from CAP3]\n";
+my $exec_cap3_1 = "cat $step5_cap3/all_contigs.fasta.cap.contigs $step5_cap3/all_contigs.fasta.cap.singlets > $step5_cap3/contigs_merged.final.fasta";
+print "\nSTEP6_CAT\n\t $exec_cap3_1\n";
+`$exec_cap3_1`;
+
+print "\t#Running step 6_7 [ selecting contigs larger than n50 - calcN50.pl ] \n";
+my $step6_7 = "$path_fix_cap3_contigs -i $step5_cap3/contigs_merged.final.fasta -s 50  -p $step5_cap3/contigs_merged.final";
+print "\nSTEP6_7\n\t $step6_7\n";
+`$step6_7`;
+
+my $countAssembledContigs = `grep -c '>' $step5_cap3/contigs_merged.final.gt50.fasta`;
+chomp($countAssembledContigs);
+# print metrics "#total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
+print "#total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
+# print interest "#total assembled contigs\t" . $countAssembledContigs . "\n"; # Assembled Contigs
+print "#total assembled contigs\t" . $countAssembledContigs . "\n"; # Assembled Contigs
+
+print "[FILTER CONTIGS gt 200 nt]\n";
+my $exec_FC2 = "python3 $path_filter_fasta_by_size $step5_cap3/contigs_merged.final.gt50.fasta 200 1000000 $step5_cap3/contigs_merged.final.gt200.fasta";
+print "\nSTEP5_2\n\t $exec_FC2\n";
+`$exec_FC2`;
+
+$countAssembledContigs = `grep -c '>' $step5_cap3/contigs_merged.final.gt200.fasta`;
+chomp($countAssembledContigs);
+# print metrics "#contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
+print "#contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
+# print interest "#contigs gt200\t".$countAssembledContigs . "\n"; # Assembled Contigs
+print "#contigs gt200\t".$countAssembledContigs . "\n"; # Assembled Contigs
 
 # #######################################################################
 
