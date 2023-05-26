@@ -258,13 +258,16 @@ my $step_virus	="$prefix/$prefix"."_virus";
 my $path_utils = "/srna_metavir/src/utils";
 my $path_assets = "/srna_metavir/asset";
 
-my $path_bacterial_genome_all = "$path_assets/bacterial_genomes/all_bacters.fasta";
+my $path_bacterial_genome_all = "$path_assets/refs/bacterial_genomes/all_bacters.fasta";
+my $path_blast_db_nt = "$path_assets/blastdb/nt";
 
 my $path_filter_fasta_by_size = "$path_utils/filter_fasta_by_size.py";
 my $path_plot_dist_per_base_by_reads = "$path_utils/plot-geral-dist-base-reads/plotGeralDistributionPerBaseByReads.pl";
 my $path_merge_contigs = "$path_utils/merge-contigs/mergeContigsNew.pl";
 my $path_fix_cap3_contigs = "$path_utils/fixIdCap3Contigs.pl";
 my $path_filter_blast = "$path_utils/filterblast.pl";
+my $path_analyse_contigs_blastn = "$path_utils/analyse-contigs-blastn/analyzeContigsFilterBlastn.pl";
+my $path_extract_seqs_no_hit_blast = "$path_utils/extract-seqs/extractSequencesNoHitBlast.pl";
 
 my $path_trimmed_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
 
@@ -676,6 +679,77 @@ chomp($countAssembledContigs);
 print "#contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
 # print interest "#contigs gt200\t".$countAssembledContigs . "\n"; # Assembled Contigs
 print "#contigs gt200\t".$countAssembledContigs . "\n"; # Assembled Contigs
+
+#######################################################################
+### Blastn ------------------------------------------------------------
+#######################################################################
+
+print "\n[BlastN contigs gt 200]\n";
+print "\t#Running step 10_111 [ Blast against NT - blast+ blastn ]\n";
+my $exec10_111 = "blastn -query $step5_cap3/contigs_merged.final.gt200.fasta -db $path_blast_db_nt/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $step6/contigs_merged.final.gt200.1e5.blastn  -num_threads $process";
+
+print "\nSTEP10_111\n\t $exec10_111\n";
+`$exec10_111`;
+
+print "\t#Running filterblast...\n";
+my $exec10_112 = "$path_filter_blast -b $step6/contigs_merged.final.gt200.1e5.blastn -evalue 1e-5 --best --desc > $step7/contigs.blastn.1e5.report";
+
+print "\nSTEP10_112\n\t $exec10_112\n";
+`$exec10_112`;
+
+print "\n[Extracting contigs all Hits blastn 1e-5]\n";
+`$path_analyse_contigs_blastn -i $step7/contigs.blastn.1e5.report  -f $step5_cap3/contigs_merged.final.gt200.fasta -q "" -p  $step7/contigs.bN.analyze --fasta > $step7/contigs.blastN.analyze`;
+
+print "\n[Extracting contigs viral blastn 1e-5]\n";
+`$path_analyse_contigs_blastn -i $step7/contigs.blastn.1e5.report  -f $step5_cap3/contigs_merged.final.gt200.fasta -q "virus" -p  $step7/contigs.bN.blastn.analyze --fasta > $step7/contigs.blastN.virus.analyze`;
+
+print "\n[Extracting contigs nonviral blastn 1e-5]\n";
+`grep -v -i "virus" $step7/contigs.bN.analyze..contigs.fasta | grep '>' | cut -f1 -d " " >  $step7/aux_nonviral`;
+
+`fasta_formatter -i $step7/contigs.bN.analyze..contigs.fasta > $step7/aux.fasta`;
+`while read p; do grep -A1 \${p} $step7/aux.fasta >> $step7/contigs.bN.analyze.nonviral.contigs.fasta;done < $step7/aux_nonviral`;
+`rm -f $step7/aux.fasta`;
+`rm -f $step7/aux_nonviral`;
+
+my $hitsBlastn = `grep -c '>' $step7/contigs.bN.analyze..contigs.fasta`;
+chomp($hitsBlastn);
+
+# 
+# TODO: 2023-05-23 - Check what to do with these 'parallel' logging files
+# 
+# print metrics "#contigs hit blastN\t".$hitsBlastn."\n";
+print "#contigs hit blastN\t".$hitsBlastn."\n";
+# Assembled Contigs
+# print interest "#contigs hit blastN\t".$hitsBlastn."\n";
+print "#contigs hit blastN\t".$hitsBlastn."\n";
+# Assembled Contigs
+
+my $hitsVirusBlastn = `grep -c '>' $step7/contigs.bN.blastn.analyze.virus.contigs.fasta`;
+chomp($hitsVirusBlastn);
+# print metrics "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
+print "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
+# Assembled Contigs
+# print interest "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
+print "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
+# Assembled Contigs
+
+print "\n[Extracting contigs no hit blastn 1e-5]\n";
+my $exec10_113 = "$path_extract_seqs_no_hit_blast -seq $step5_cap3/contigs_merged.final.gt200.fasta -blast $step7/contigs.blastn.1e5.report -out $step6/seqNoHit.blastN.1e5.fasta";
+print "\nSTEP10_113\n\t $exec10_113\n";
+`$exec10_113`;
+
+my $seqsNoHitBlastn = `grep -c '>' $step6/seqNoHit.blastN.1e5.fasta`;
+chomp($seqsNoHitBlastn);
+
+# 
+# TODO: 2023-05-23 - Check what to do with these 'parallel' logging files
+# 
+
+# print metrics "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
+print "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
+# Assembled Contigs
+
+`cat $step7/contigs.bN.blastn.analyze.virus.contigs.fasta | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $step7/contigs.virus.blastN.formatted.fasta`;
 
 # #######################################################################
 

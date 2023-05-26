@@ -11,9 +11,8 @@ services:
     volumes:
       # - /media/temp_data/hebert/srna-meta-vir/:/srna_metavir/src
       - /home/hebert/srna-meta-vir/src:/srna_metavir/src
-      # - /data/zikalliance/libraries/libs_caratinga/:/srna_metavir/asset/libs_caratinga
-      - /home/hebert/srna-meta-vir/asset/libs_caratinga/:/srna_metavir/asset/libs_caratinga
-      # - /data/zikalliance/ref_hosts/:/srna_metavir/asset/ref_hosts
-      - /home/hebert/srna-meta-vir/asset/ref_hosts/:/srna_metavir/asset/ref_hosts
-      # - /media/data/reference/bacterial_genomes/:/srna_metavir/asset/bacterial_genomes
-      - /home/hebert/srna-meta-vir/asset/bacterial_genomes/:/srna_metavir/asset/bacterial_genomes
+      # - /data/zikalliance/libraries/:/srna_metavir/asset/libs
+      - /home/hebert/srna-meta-vir/asset/libs/:/srna_metavir/asset/libs
+      # - /data/zikalliance/ref_hosts/:/srna_metavir/asset/refs/ref_hosts
+      - /home/hebert/srna-meta-vir/asset/refs/:/srna_metavir/asset/refs
+      - /raid5/r2d2_share/nt:/srna_metavir/asset/blastdb/nt

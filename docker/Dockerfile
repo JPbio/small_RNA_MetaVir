@@ -29,9 +29,8 @@ FROM stage_python AS stage_r
 
 RUN apt-get update && \
     apt-get install -y \
-    r-base
-
-RUN Rscript -e "install.packages(c('ggplot2', 'reshape2'), repos='https://cloud.r-project.org/')"
+        r-base && \
+    Rscript -e "install.packages(c('ggplot2', 'reshape2'), repos='https://cloud.r-project.org/')"
 
 # ====================================
 # -- Stage: Dependencies --
@@ -39,11 +38,22 @@ RUN Rscript -e "install.packages(c('ggplot2', 'reshape2'), repos='https://cloud.
 
 FROM stage_r AS stage_dependencies
 
-RUN apt-get update && \
-    apt-get install -y \
-    bowtie=1.3.0+dfsg1-1 \
-    velvetoptimiser=2.2.6-3 \
-    spades=3.13.1+dfsg-2+b2
+# Add Blast
+RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.13.0/ncbi-blast-2.13.0+-x64-linux.tar.gz && \
+    tar xvpf ncbi-blast-2.13.0+-x64-linux.tar.gz && \
+    mv ncbi-blast-2.13.0+/bin/* /usr/bin/ && \
+    rm -rf ncbi-blast-2.13.0+*
+
+# Add the ones available trhough apt-get
+# RUN apt-get update && \
+#     apt-get install -y \
+#         bowtie=1.3.0+dfsg1-1 \
+#         velvetoptimiser=2.2.6-3 \
+#         spades=3.13.1+dfsg-2+b2
+RUN apt-get update
+RUN apt-get install -y bowtie=1.3.0+dfsg1-1
+RUN apt-get install -y velvetoptimiser=2.2.6-3 ncbi-blast+-
+RUN apt-get install -y spades=3.13.1+dfsg-2+b2
 
 # Add cap3
 COPY ./cap3.linux.opteron64.tar /usr/bin/
@@ -53,6 +63,50 @@ RUN cd /usr/bin/ && \
     rm cap3.linux.opteron64.tar
 
 ENV PATH="${PATH}:/usr/bin/CAP3"
+
+# Add FASTX-Toolkit
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}/usr/local/lib"
+
+# RUN git clone https://github.com/agordon/libgtextutils.git && \
+#         cd libgtextutils/ && \
+#         ./reconf && \
+#         ./configure && \
+#         make && \
+#         make install && \
+#         cd .. && \
+#         rm -rf libgtextutils && \
+#     git clone https://github.com/agordon/fastx_toolkit.git && \
+#         cd fastx_toolkit && \
+#         wget -t 0 https://github.com/agordon/fastx_toolkit/files/1182724/fastx-toolkit-gcc7-patch.txt && \
+#         patch -p1 < fastx-toolkit-gcc7-patch.txt && \
+#         ./reconf && \
+#         ./configure && \
+#         make && \
+#         make install && \
+#         cd .. && \
+#         rm -rf fastx_toolkit && \
+#     ldconfig
+
+RUN mkdir /temp && \
+    cd /temp && \
+        git clone https://github.com/agordon/libgtextutils.git && \
+            cd /temp/libgtextutils/ && \
+            ./reconf && \
+            ./configure && \
+            make && \
+            make install && \
+    cd /temp && \
+        git clone https://github.com/agordon/fastx_toolkit.git && \
+            cd /temp/fastx_toolkit && \
+            wget -t 0 https://github.com/agordon/fastx_toolkit/files/1182724/fastx-toolkit-gcc7-patch.txt && \
+            patch -p1 < fastx-toolkit-gcc7-patch.txt && \
+            ./reconf && \
+            ./configure && \
+            make && \
+            make install && \
+    cd / && \
+    rm -rf /temp && \
+    ldconfig
 
 # ====================================
 # -- Stage: Main --
