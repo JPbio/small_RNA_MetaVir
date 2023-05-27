@@ -9,10 +9,8 @@ services:
     container_name: srna_metavir_dev
     tty: true
     volumes:
-      # - /media/temp_data/hebert/srna-meta-vir/:/srna_metavir/src
       - /home/hebert/srna-meta-vir/src:/srna_metavir/src
-      # - /data/zikalliance/libraries/:/srna_metavir/asset/libs
       - /home/hebert/srna-meta-vir/asset/libs/:/srna_metavir/asset/libs
-      # - /data/zikalliance/ref_hosts/:/srna_metavir/asset/refs/ref_hosts
       - /home/hebert/srna-meta-vir/asset/refs/:/srna_metavir/asset/refs
       - /raid5/r2d2_share/nt:/srna_metavir/asset/blastdb/nt
+      - /home/hebert/srna-meta-vir/asset/diamond:/srna_metavir/asset/diamond

@@ -108,6 +108,12 @@ RUN mkdir /temp && \
     rm -rf /temp && \
     ldconfig
 
+# Add diamond
+RUN wget http://github.com/bbuchfink/diamond/releases/download/v2.1.6/diamond-linux64.tar.gz && \
+    tar xzf diamond-linux64.tar.gz && \
+    mv ./diamond /usr/bin && \
+    rm diamond-linux64.tar.gz
+
 # ====================================
 # -- Stage: Main --
 # ====================================

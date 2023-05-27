@@ -260,7 +260,9 @@ my $path_assets = "/srna_metavir/asset";
 
 my $path_bacterial_genome_all = "$path_assets/refs/bacterial_genomes/all_bacters.fasta";
 my $path_blast_db_nt = "$path_assets/blastdb/nt";
+my $path_diamond_nr = "$path_assets/diamond/nr.dmnd";
 
+my $path_filter_diamond = "$path_utils/filter_diamond.sh";
 my $path_filter_fasta_by_size = "$path_utils/filter_fasta_by_size.py";
 my $path_plot_dist_per_base_by_reads = "$path_utils/plot-geral-dist-base-reads/plotGeralDistributionPerBaseByReads.pl";
 my $path_merge_contigs = "$path_utils/merge-contigs/mergeContigsNew.pl";
@@ -751,7 +753,25 @@ print "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
 
 `cat $step7/contigs.bN.blastn.analyze.virus.contigs.fasta | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $step7/contigs.virus.blastN.formatted.fasta`;
 
-# #######################################################################
+#######################################################################
+### DIAMOND (Blastx) --------------------------------------------------
+#######################################################################
+
+print "\n[Diamond (BlastX) contigs gt 200]\n";
+print "\t#Running step 9 [ Diamond-Blast against NR ]\n";
+
+my $exec9 = "diamond blastx -q $step6/seqNoHit.blastN.1e5.fasta -d $path_diamond_nr -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $step7/diamond_blastx.out --un $step7/diamond_blastx_NoHits.fasta --unfmt fasta --al $step7/diamond_blastx_Hits.fasta --alfmt fasta 2>  $step7/diamond.log ";
+
+print "\nSTEP9\n\t $exec9\n";
+`$exec9`;
+
+print "\t#Filtering Diamond results... ]\n";   
+my $exec9_11 = "$path_filter_diamond -f $step7/diamond_blastx_Hits.fasta -o $step7/diamond_blastx.out -d $step7";
+
+print "\nSTEP9_11\n\t $exec9_11\n";
+`$exec9_11`;
+
+#######################################################################
 
 # 
 # TODO: 2023-03-01 - Encapsulate these date / time formatting stuff
