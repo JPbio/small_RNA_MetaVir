@@ -4,4 +4,14 @@
 *.stats
 
 asset
+
+# Generated files
 exec_*
+*Logfile.txt
+
+idsOriginalSequences
+idsSeqNoHit
+idsWithHit
+step1.blastn
+step2.blastn.report
+difHitAndSeq.diff
