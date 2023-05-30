@@ -1,12 +1,5 @@
-#!/usr/local/bin/perl
-
 use strict;
 use warnings;
-
-# 
-# TODO: 2023-03-07 - Do it the right way
-# 
-use lib '/usr/local/lib/perl5/site_perl/5.36.0';
 
 use Bio::SeqIO;
 use Bio::Seq::Quality;

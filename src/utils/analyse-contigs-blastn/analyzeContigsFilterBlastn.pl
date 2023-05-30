@@ -1,4 +1,3 @@
-#!/usr/bin/perl
 ######################################################################
 #######################################################################
 # Copyright 2010 Fundação Oswaldo Cruz
@@ -22,7 +21,6 @@
 
 # use strict;
 use warnings;
-use Data::Dumper;
 
 use Getopt::Long;
 use Bio::SeqIO;
