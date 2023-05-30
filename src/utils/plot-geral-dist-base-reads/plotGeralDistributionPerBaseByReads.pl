@@ -126,6 +126,11 @@ select $LOG_FH;
 ### Main... -----------------------------------------------------------
 #######################################################################
 
+
+my $path_calc_dist_base_r = "$path_inner/calcDistributionPerBase_publication.R";
+my $path_calc_dist_base_zomm_pirna_r = "$path_inner/calcDistributionPerBase_publication_zoom_piRNAs.R";
+my $path_calc_dist_base_sum_strand_r = "$path_inner/calcDistributionPerBaseSumStrand_publication.R";
+
 open(IN, "<$sam");
 
 # 
@@ -463,15 +468,15 @@ if (defined($norm)) {
 
 if (defined($plot)) {
     if (defined($norm)) {
-        `R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_by_reads RPM < $path_inner/calcDistributionPerBase_publication.R`;
-        `R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_by_reads_ZOOM_piRNAS RPM < $path_inner/calcDistributionPerBase_publication_zoom_piRNAs.R`;
-        `R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_sumstrands_by_reads RPM < $path_inner/calcDistributionPerBaseSumStrand_publication.R`;
+        `R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_by_reads RPM < $path_calc_dist_base_r`;
+        `R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_by_reads_ZOOM_piRNAS RPM < $path_calc_dist_base_zomm_pirna_r`;
+        `R --no-save $prefix.Geral_base_distribution_norm $prefix.NORMALIZED_Geral_base_distribution_sumstrands_by_reads RPM < $path_calc_dist_base_sum_strand_r`;
 
     }
 
-    `R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_by_reads < $path_inner/calcDistributionPerBase_publication.R`;
-    `R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_by_reads_ZOOM_piRNAs < $path_inner/calcDistributionPerBase_publication_zoom_piRNAs.R`;
-    `R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_sumstrands_by_reads < $path_inner/calcDistributionPerBaseSumStrand_publication.R`;
+    `R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_by_reads < $path_calc_dist_base_r`;
+    `R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_by_reads_ZOOM_piRNAs < $path_calc_dist_base_zomm_pirna_r`;
+    `R --no-save $prefix.Geral_base_distribution $prefix.Geral_base_distribution_sumstrands_by_reads < $path_calc_dist_base_sum_strand_r`;
 
 }
 

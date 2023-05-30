@@ -233,6 +233,10 @@ print $runDetails;
 # REVIEW: 2023-03-01 - Shall we standardize these directories as all other 'path' variables too? ('path' prefix?)
 # 
 
+# 
+# TODO: 2023-05-30 - Remove prefix duplication from directory names
+# 
+
 # Step folders
 my $step0		="$prefix/$prefix"."_00_saet";
 my $step1		="$prefix/$prefix"."_01_trimming";
@@ -273,6 +277,8 @@ my $path_extract_seqs_no_hit_blast = "$path_utils/extract-seqs/extractSequencesN
 my $path_sam_stats = "$path_utils/samStatistics_v3.pl";
 my $path_z_score = "$path_utils/Z-score.bothstrands.pl";
 my $path_heatmap_corr = "$path_utils/heatmap_correlation_VISA.R";
+my $path_plot_map_data_base_preference = "$path_utils/plot-map-base-preference/plotMappingDataPerBasePreference.pl";
+my $path_calc_pattern_sam = "$path_utils/pattern-sam/calcPatternInSamFile.pl";
 
 my $path_trimmed_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
 
@@ -904,6 +910,96 @@ print "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
 print "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
 
 # close(metrics);
+
+#######################################################################
+### Pattern based analysis --------------------------------------------
+#######################################################################
+
+`mkdir $step_virus`;
+
+# Merge 02 files with contigs hit virus
+my $path_contig_viral_hits_all = "$step10/all_contigs_hit_virus.fasta";
+
+`cat $step7/contigs.virus.blastN.formatted.fasta $step7/diamond_blastx_Viral.fasta > $path_contig_viral_hits_all`;
+
+my $count_hit_lines = `cat $path_contig_viral_hits_all | wc -l`;
+chomp($count_hit_lines);
+
+if ($count_hit_lines > 0) {
+    `bowtie-build $path_contig_viral_hits_all $path_contig_viral_hits_all`;
+
+} else {
+    print "\nNo contig viral hits found...\n";
+}
+`bowtie-build $path_contig_viral_hits_all $path_contig_viral_hits_all`;
+
+`bowtie -f -S -k 1 -p $process -v 1  $path_contig_viral_hits_all $step2/trimmed_filtered_gt15.fasta | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $step10/reads.VS.contigs_hit_virus_blast.sam`;
+
+`perl $path_sam_stats -sam $step10/reads.VS.contigs_hit_virus_blast.sam -fa $path_contig_viral_hits_all -p $step10/reads.VS.contigs_hit_virus_blast --profile`;
+
+# Creating reference table with identified contigs hit virus by sequence similarity
+`grep ">" $path_contig_viral_hits_all | cut -f 2 -d '>'  > $step10/all_contigs_hit_virus_sequence_similarity.tab`;
+
+print "\n\n Calculating pattern viral contigs and candidates - HEATMAP \n\n";
+
+# Bowtie
+
+# 
+# TODO: 2023-05-30 - Check the deprecation warning for passing index via positional args
+# 
+
+`bowtie -f -S -k 1 -p $process -v 1  $step9/seq_ViralHits_and_NoHits.fasta $step2/trimmed_filtered_gt15.fasta | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $step10/reads.VS.contigs_virus_and_nohit.sam`;
+
+`perl $path_z_score -sam $step10/reads.VS.contigs_virus_and_nohit.sam -p $step10/reads.VS.contigs_virus_and_nohit`;
+
+`R --no-save $step10/reads.VS.contigs_virus_and_nohit.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.all < $path_heatmap_corr 2>/dev/null`;
+
+# Identifying contigs with siRNA and piRNA signature
+`perl $path_sam_stats -sam $step10/reads.VS.contigs_virus_and_nohit.sam -fa $step9/seq_ViralHits_and_NoHits.fasta -p $step10/reads.VS.contigs_virus_and_nohit --profile`;
+
+# Formatting candidate contigs for bowtie
+`bowtie-build $step10/reads.VS.contigs_virus_and_nohit.withSiRNA_and_PiRNA.fasta $step10/reads.VS.contigs_virus_and_nohit.withSiRNA_and_PiRNA.fasta > /dev/null `;
+
+`bowtie-build $step10/reads.VS.contigs_virus_and_nohit.withSiRNA.fasta $step10/reads.VS.contigs_virus_and_nohit.withSiRNA.fasta > /dev/null `;
+
+# Bowtie
+
+# 
+# TODO: 2023-05-30 - Check the deprecation warning for passing index via positional args
+# 
+
+`bowtie -f -S -k 1 -p $process -v 1 $step10/reads.VS.contigs_virus_and_nohit.withSiRNA.fasta $step2/trimmed_filtered_gt15.fasta | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam`;
+
+`bowtie -f -S -k 1 -p $process -v 1  $step10/reads.VS.contigs_virus_and_nohit.withSiRNA_and_PiRNA.fasta $step2/trimmed_filtered_gt15.fasta | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam`;
+
+print "\n\n Creating plots \n\n";
+
+# Creating folder to store plots
+`mkdir $step10/plots`;
+
+# Plotting distribution and density plots
+`perl $path_plot_map_data_base_preference -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam -s $si -e $se -fa $step10/reads.VS.contigs_virus_and_nohit.withSiRNA.fasta -pace 1 -p $step10/plots/reads.VS.contigs_virus_and_nohit.withSiRNA --profile --pattern`;
+
+`perl $path_plot_map_data_base_preference -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam -s $si -e $se -fa $step10/reads.VS.contigs_virus_and_nohit.withSiRNA_and_PiRNA.fasta -pace 1 -p $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs --profile --pattern`;
+
+# Calculating mean pattern
+`perl $path_calc_pattern_sam -s $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam -o $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs.pattern`;
+
+`perl $path_calc_pattern_sam -s $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam -o $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.pattern`;
+
+# Plot geral distribution of reads in contigs with siRNA and siRNA+piRNAs
+`perl $path_plot_dist_per_base_by_reads -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam -s $si -e $se -p $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs.geral_distribution --plot`;
+
+`perl $path_plot_dist_per_base_by_reads -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam -s $si -e $se -p $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.geral_distribution --plot`;
+
+# Generating clusterized heatmaps
+`perl $path_z_score -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam -p $step10/reads.VS.contigs_virus_and_nohit.siRNAs`;
+
+`perl $path_z_score -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam -p $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs`;
+
+`R --no-save $step10/reads.VS.contigs_virus_and_nohit.siRNAs.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs < $path_heatmap_corr 2>/dev/null`;
+
+`R --no-save $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs < $path_heatmap_corr 2>/dev/null`;
 
 #######################################################################
 
