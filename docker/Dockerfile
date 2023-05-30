@@ -7,6 +7,8 @@
 FROM docker.io/library/perl:5.36.0-threaded AS stage_perl
 
 RUN cpanm --notest --quiet Bio::SeqIO
+RUN cpanm --notest --quiet Statistics::Basic
+RUN cpanm --notest --quiet Statistics::RankCorrelation
 
 # ====================================
 # -- Stage: Python --

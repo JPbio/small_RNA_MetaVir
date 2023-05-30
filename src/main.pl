@@ -8,7 +8,6 @@ use POSIX qw(strftime);
 use Getopt::Long;
 # use YAML qw(LoadFile);
 
-
 #
 # TODO: 2023-03-07 - Use a decent logger
 # 
@@ -70,7 +69,7 @@ my $size;
 # TODO: 2023-03-06 - Reenable custom naming for this folder
 # 
 # my $prefix = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
-my $prefix = "exec_20230511_120529";
+my $prefix = "exec_20230525_000000";
 
 my $se;
 my $si;
@@ -271,6 +270,10 @@ my $path_filter_blast = "$path_utils/filterblast.pl";
 my $path_analyse_contigs_blastn = "$path_utils/analyse-contigs-blastn/analyzeContigsFilterBlastn.pl";
 my $path_extract_seqs_no_hit_blast = "$path_utils/extract-seqs/extractSequencesNoHitBlast.pl";
 
+my $path_sam_stats = "$path_utils/samStatistics_v3.pl";
+my $path_z_score = "$path_utils/Z-score.bothstrands.pl";
+my $path_heatmap_corr = "$path_utils/heatmap_correlation_VISA.R";
+
 my $path_trimmed_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
 
 my $path_unmapped_vector_bacters = "$step4/unmappedVectorBacters.fasta";
@@ -437,12 +440,12 @@ if (not defined($nohostfilter)) {
 
 
     print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST ]\n";
-    my $exec3_1 = "$path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s $si -e $se -p $step3/$prefix.mapped_host.v1.$si.$se -norm $nReads --plot";
+    my $exec3_1 = "perl $path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s $si -e $se -p $step3/$prefix.mapped_host.v1.$si.$se -norm $nReads --plot";
     print "\nSTEP3\n\t $exec3_1\n";
     `$exec3_1`;
 
     print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST - 15-35nt ]\n";
-    my $exec3_11 = "$path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s 15 -e 35 -p $step3/$prefix.mapped_host.v1 -norm $nReads --plot";
+    my $exec3_11 = "perl $path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s 15 -e 35 -p $step3/$prefix.mapped_host.v1 -norm $nReads --plot";
     print "\nSTEP3\n\t $exec3_11\n";
     `$exec3_11`;
 
@@ -537,7 +540,7 @@ print "\nSTEP6_4\n\t $exec6_4\n";
 `$exec6_4`;
 
 print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_5 = "$path_merge_contigs -contig1 $step5_opt/run1/contigs.fa -contig2 $step5_opt/run2/scaffolds.fasta -output $step5_opt/contigs.final.fasta ";
+my $exec6_5 = "perl $path_merge_contigs -contig1 $step5_opt/run1/contigs.fa -contig2 $step5_opt/run2/scaffolds.fasta -output $step5_opt/contigs.final.fasta ";
 print "\nSTEP6_5\n\t $exec6_5\n";
 `$exec6_5`;
 
@@ -561,7 +564,7 @@ print "\nSTEP6_2\n\t $exec6_2\n";
 `$exec6_2`;
 
 print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
-$exec6_5 = "$path_merge_contigs -contig1 $step5_fix/run1/contigs.fa -contig2 $step5_fix/run2/scaffolds.fasta -output $step5_fix/contigs.final.fasta ";
+$exec6_5 = "perl $path_merge_contigs -contig1 $step5_fix/run1/contigs.fa -contig2 $step5_fix/run2/scaffolds.fasta -output $step5_fix/contigs.final.fasta ";
 print "\nSTEP6_5\n\t $exec6_5\n";
 `$exec6_5`;
 
@@ -582,7 +585,7 @@ print "\nSTEP6_2\n\t $exec6_2\n";
 `$exec6_6_2`;
 
 print "\t#Running step 6_9 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_9 = "$path_merge_contigs -contig1 $step5_opt_fix/run1/contigs.fa -contig2 $step5_opt_fix/run2/scaffolds.fasta -output $step5_opt_fix/contigs.final.fasta ";
+my $exec6_9 = "perl $path_merge_contigs -contig1 $step5_opt_fix/run1/contigs.fa -contig2 $step5_opt_fix/run2/scaffolds.fasta -output $step5_opt_fix/contigs.final.fasta ";
 print "\nSTEP6_5\n\t $exec6_5\n";
 `$exec6_9`;
 
@@ -603,7 +606,7 @@ print "\nSTEP6_10_2\n\t $exec6_2\n";
 `$exec6_10_2`;
 
 print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_13 = "$path_merge_contigs -contig1 $step5_opt_20to23/run1/contigs.fa -contig2 $step5_opt_20to23/run2/scaffolds.fasta -output $step5_opt_20to23/contigs.final.fasta ";
+my $exec6_13 = "perl $path_merge_contigs -contig1 $step5_opt_20to23/run1/contigs.fa -contig2 $step5_opt_20to23/run2/scaffolds.fasta -output $step5_opt_20to23/contigs.final.fasta ";
 print "\nSTEP6_13\n\t $exec6_13\n";
 `$exec6_13`;
 
@@ -629,7 +632,7 @@ if (defined($deg)) {
     `$exec6_10_3`;
 
     print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
-    my $exec62_13 = "$path_merge_contigs -contig1 $step5_opt_24to30/run1/contigs.fa -contig2 $step5_opt_24to30/run2/scaffolds.fasta -output $step5_opt_24to30/contigs.final.fasta ";
+    my $exec62_13 = "perl $path_merge_contigs -contig1 $step5_opt_24to30/run1/contigs.fa -contig2 $step5_opt_24to30/run2/scaffolds.fasta -output $step5_opt_24to30/contigs.final.fasta ";
     print "\nSTEP62_13\n\t $exec62_13\n";
     `$exec62_13`;
 }
@@ -659,7 +662,7 @@ print "\nSTEP6_CAT\n\t $exec_cap3_1\n";
 `$exec_cap3_1`;
 
 print "\t#Running step 6_7 [ selecting contigs larger than n50 - calcN50.pl ] \n";
-my $step6_7 = "$path_fix_cap3_contigs -i $step5_cap3/contigs_merged.final.fasta -s 50  -p $step5_cap3/contigs_merged.final";
+my $step6_7 = "perl $path_fix_cap3_contigs -i $step5_cap3/contigs_merged.final.fasta -s 50  -p $step5_cap3/contigs_merged.final";
 print "\nSTEP6_7\n\t $step6_7\n";
 `$step6_7`;
 
@@ -694,16 +697,16 @@ print "\nSTEP10_111\n\t $exec10_111\n";
 `$exec10_111`;
 
 print "\t#Running filterblast...\n";
-my $exec10_112 = "$path_filter_blast -b $step6/contigs_merged.final.gt200.1e5.blastn -evalue 1e-5 --best --desc > $step7/contigs.blastn.1e5.report";
+my $exec10_112 = "perl $path_filter_blast -b $step6/contigs_merged.final.gt200.1e5.blastn -evalue 1e-5 --best --desc > $step7/contigs.blastn.1e5.report";
 
 print "\nSTEP10_112\n\t $exec10_112\n";
 `$exec10_112`;
 
 print "\n[Extracting contigs all Hits blastn 1e-5]\n";
-`$path_analyse_contigs_blastn -i $step7/contigs.blastn.1e5.report  -f $step5_cap3/contigs_merged.final.gt200.fasta -q "" -p  $step7/contigs.bN.analyze --fasta > $step7/contigs.blastN.analyze`;
+`perl $path_analyse_contigs_blastn -i $step7/contigs.blastn.1e5.report  -f $step5_cap3/contigs_merged.final.gt200.fasta -q "" -p  $step7/contigs.bN.analyze --fasta > $step7/contigs.blastN.analyze`;
 
 print "\n[Extracting contigs viral blastn 1e-5]\n";
-`$path_analyse_contigs_blastn -i $step7/contigs.blastn.1e5.report  -f $step5_cap3/contigs_merged.final.gt200.fasta -q "virus" -p  $step7/contigs.bN.blastn.analyze --fasta > $step7/contigs.blastN.virus.analyze`;
+`perl $path_analyse_contigs_blastn -i $step7/contigs.blastn.1e5.report  -f $step5_cap3/contigs_merged.final.gt200.fasta -q "virus" -p  $step7/contigs.bN.blastn.analyze --fasta > $step7/contigs.blastN.virus.analyze`;
 
 print "\n[Extracting contigs nonviral blastn 1e-5]\n";
 `grep -v -i "virus" $step7/contigs.bN.analyze..contigs.fasta | grep '>' | cut -f1 -d " " >  $step7/aux_nonviral`;
@@ -736,7 +739,7 @@ print "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
 # Assembled Contigs
 
 print "\n[Extracting contigs no hit blastn 1e-5]\n";
-my $exec10_113 = "$path_extract_seqs_no_hit_blast -seq $step5_cap3/contigs_merged.final.gt200.fasta -blast $step7/contigs.blastn.1e5.report -out $step6/seqNoHit.blastN.1e5.fasta";
+my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $step5_cap3/contigs_merged.final.gt200.fasta -blast $step7/contigs.blastn.1e5.report -out $step6/seqNoHit.blastN.1e5.fasta";
 print "\nSTEP10_113\n\t $exec10_113\n";
 `$exec10_113`;
 
@@ -772,6 +775,137 @@ print "\nSTEP9_11\n\t $exec9_11\n";
 `$exec9_11`;
 
 #######################################################################
+### Merge sequences viral hits (blastn & diamond) & nohits ------------
+#######################################################################
+
+`cat $step7/contigs.virus.blastN.formatted.fasta $step7/diamond_blastx_Viral.fasta $step7/diamond_blastx_NoHits.fasta > $step9/seq_ViralHits_and_NoHits.fasta`;
+
+`bowtie-build $step9/seq_ViralHits_and_NoHits.fasta $step9/seq_ViralHits_and_NoHits.fasta`;
+
+print "\t#Mapping reads against viral hits(blastn and diamond) and nohits\n";
+my $exec10_13 = "bowtie -f -S -p $process -v 1 $step9/seq_ViralHits_and_NoHits.fasta $step4/unmappedVectorBacters.fasta 2>>$prefix.warn | awk -F'\t' '{if( \$2 != 4) print \$0}' > $step9/reads_vs_contigsHitNoHit.v1.sam ";
+
+print"\nSTEP10_13\n\t $exec10_13\n";
+`$exec10_13`;
+
+`perl $path_sam_stats -sam $step9/reads_vs_contigsHitNoHit.v1.sam -fa $step9/seq_ViralHits_and_NoHits.fasta -p $step9/seq_ViralHits_and_NoHits --profile --counts`;
+
+`perl $path_z_score -sam $step9/reads_vs_contigsHitNoHit.v1.sam -p $step9/reads_vs_contigsHitNoHit`;
+
+`R --no-save $step9/reads_vs_contigsHitNoHit.zscore.tab $step9/reads_vs_contigsHitNoHit.zscore  < $path_heatmap_corr 2>/dev/null`;
+
+# Stats
+$hitsBlastn = `grep '>' $step9/seq_ViralHits_and_NoHits.withSiRNA.fasta | grep blastN | wc -l `;
+chomp($hitsBlastn);
+
+# 
+# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
+# 
+
+# print metrics "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
+print "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
+# print interest "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
+print "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
+
+$hitsBlastn = `grep '>' $step9/seq_ViralHits_and_NoHits.withSiRNA_and_PiRNA.fasta | grep blastN | wc -l `;
+chomp($hitsBlastn);
+
+# 
+# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
+# 
+
+# print metrics "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
+print "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
+# print interest "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
+print "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
+
+$hitsBlastn = `grep '>' $step9/seq_ViralHits_and_NoHits.withPiRNA.fasta | grep blastN | wc -l `;
+chomp($hitsBlastn);
+
+# 
+# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
+# 
+
+# print metrics "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn."\n";
+print "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn."\n";
+# print interest "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn. "\n";
+print  "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn. "\n";
+
+$hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA.fasta | grep blastX | wc -l `;
+chomp($hitsVirusBlastn);
+
+# 
+# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
+# 
+
+# print metrics "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
+print "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
+# print interest "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
+print "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
+
+$hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA_and_PiRNA.fasta| grep blastX | wc -l `;
+chomp($hitsVirusBlastn);
+
+# 
+# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
+# 
+
+# print metrics "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
+print "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
+# print interest "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
+print "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
+
+$hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withPiRNA.fasta | grep blastX | wc -l `;
+chomp($hitsVirusBlastn);
+
+# 
+# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
+# 
+
+# print metrics "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
+print "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
+# print interest "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
+print "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
+
+$hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA.fasta | grep -v blastX | grep -v blastN | wc -l `;
+chomp($hitsVirusBlastn);
+
+# 
+# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
+# 
+
+# print metrics "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
+print "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
+# print interest "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
+print "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
+
+$hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA_and_PiRNA.fasta | grep -v blastN | -v grep blastX | wc -l `;
+chomp($hitsVirusBlastn);
+
+# 
+# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
+# 
+
+# print metrics "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
+print "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
+# print interest "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
+print "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
+
+$hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withPiRNA.fasta | grep -v blastN | -v grep blastX | wc -l `;
+chomp($hitsVirusBlastn);
+
+# 
+# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
+# 
+
+# print metrics "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
+print "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
+# print interest "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
+print "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
+
+# close(metrics);
+
+#######################################################################
 
 # 
 # TODO: 2023-03-01 - Encapsulate these date / time formatting stuff
@@ -792,9 +926,6 @@ close($LOG_FH);
 
 select STDOUT;
 print "$msg_finish \n";
-
-
-
     
 # my $filename = shift or die "Usage: $0 YAML-FILE\n";
 # my $data = LoadFile($filename);
