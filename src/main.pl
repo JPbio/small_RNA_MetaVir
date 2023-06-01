@@ -69,7 +69,7 @@ my $size;
 # TODO: 2023-03-06 - Reenable custom naming for this folder
 # 
 # my $prefix = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
-my $prefix = "exec_20230525_000000";
+my $prefix = "exec_test_01";
 
 my $se;
 my $si;
@@ -110,7 +110,7 @@ GetOptions("qual=s" => \$qual,
     "se=s" => \$se,
     "process=s" => \$process,
     "clean!" => \$clean,
-    "nohostfilter!" => \$nohostfilter, #opstions must be lowcase and without "_"
+    "nohostfilter!" => \$nohostfilter, # Options must be lowcase and without "_"
     "degradation!" => \$deg,
     "largeindex!" => \$large_index,
     "h!" => \$help);
@@ -233,29 +233,25 @@ print $runDetails;
 # REVIEW: 2023-03-01 - Shall we standardize these directories as all other 'path' variables too? ('path' prefix?)
 # 
 
-# 
-# TODO: 2023-05-30 - Remove prefix duplication from directory names
-# 
-
 # Step folders
-my $step0		="$prefix/$prefix"."_00_saet";
-my $step1		="$prefix/$prefix"."_01_trimming";
-my $step2		="$prefix/$prefix"."_02_filter_size_gaps_convertion";
-my $step3		="$prefix/$prefix"."_03_mapping_vector";
-my $step4		="$prefix/$prefix"."_04_getUnmapped";
-my $step5_fix	="$prefix/$prefix"."_05_assembleUnmapped_fix";
-my $step5_opt	="$prefix/$prefix"."_05_assembleUnmapped_opt";
-my $step5_opt_fix="$prefix/$prefix"."_05_assembleUnmapped_opt_fix";
-my $step5_opt_20to23="$prefix/$prefix"."_05_assembleUnmapped_opt_20to23";
-my $step5_opt_24to30="$prefix/$prefix"."_05_assembleUnmapped_opt_24to30";
-my $step5_contigs= "$prefix/$prefix"."_05_assembleUnmapped_final";
-my $step5_cap3  = "$prefix/$prefix"."_05_cap3";
-my $step6		="$prefix/$prefix"."_06_blast";
-my $step7		="$prefix/$prefix"."_07_reportBlast";
-my $step8		="$prefix/$prefix"."_08_completeReport";
-my $step9		="$prefix/$prefix"."_09_contigs_no_hit";
-my $step10		="$prefix/$prefix"."_10_pattern";
-my $step_virus	="$prefix/$prefix"."_virus";
+my $step0		="$prefix/00_saet";
+my $step1		="$prefix/01_trimming";
+my $step2		="$prefix/02_filter_size_gaps_convertion";
+my $step3		="$prefix/03_mapping_vector";
+my $step4		="$prefix/04_getUnmapped";
+my $step5_fix	="$prefix/05_assembleUnmapped_fix";
+my $step5_opt	="$prefix/05_assembleUnmapped_opt";
+my $step5_opt_fix="$prefix/05_assembleUnmapped_opt_fix";
+my $step5_opt_20to23="$prefix/05_assembleUnmapped_opt_20to23";
+my $step5_opt_24to30="$prefix/05_assembleUnmapped_opt_24to30";
+my $step5_contigs= "$prefix/05_assembleUnmapped_final";
+my $step5_cap3  = "$prefix/05_cap3";
+my $step6		="$prefix/06_blast";
+my $step7		="$prefix/07_reportBlast";
+my $step8		="$prefix/08_completeReport";
+my $step9		="$prefix/09_contigs_no_hit";
+my $step10		="$prefix/10_pattern";
+my $step_virus	="$prefix/virus";
 
 # Utils scripts
 my $path_utils = "/srna_metavir/src/utils";
@@ -514,7 +510,6 @@ if (not defined($nohostfilter)) {
 # 
 print "[FILTER UNMAPPED SEQUENCES BY SIZE (variable size $si to $se)]\n";
 
-
 my $exec5 = "python3 $path_filter_fasta_by_size $path_unmapped_vector_bacters $si $se $path_unmapped_trimmed_filtered -t F ";
 
 print "\nSTEP5\n\t $exec5\n";
@@ -574,9 +569,9 @@ $exec6_5 = "perl $path_merge_contigs -contig1 $step5_fix/run1/contigs.fa -contig
 print "\nSTEP6_5\n\t $exec6_5\n";
 `$exec6_5`;
 
-# #######################################################################
-# ### Running velvet optmiser (FIXED hash) ------------------------------
-# #######################################################################
+#######################################################################
+### Running velvet optmiser (FIXED hash) ------------------------------
+#######################################################################
 
 print "\n[VELVET OPTIMISER HASH ONLY 15]\n";
 print "\t#Running step 6_6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
@@ -615,11 +610,14 @@ print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
 my $exec6_13 = "perl $path_merge_contigs -contig1 $step5_opt_20to23/run1/contigs.fa -contig2 $step5_opt_20to23/run2/scaffolds.fasta -output $step5_opt_20to23/contigs.final.fasta ";
 print "\nSTEP6_13\n\t $exec6_13\n";
 `$exec6_13`;
-
    
-#######################################################################
-### Running velvet optmiser (hash 17) 24-30 ---------------------------
-#######################################################################
+######################################################################
+## Running velvet optmiser (hash 17) 24-30 ---------------------------
+######################################################################
+
+#
+# TODO: 2023-05-31 - Test this condition
+# 
 
 if (defined($deg)) {
     
@@ -728,22 +726,21 @@ chomp($hitsBlastn);
 # 
 # TODO: 2023-05-23 - Check what to do with these 'parallel' logging files
 # 
-# print metrics "#contigs hit blastN\t".$hitsBlastn."\n";
-print "#contigs hit blastN\t".$hitsBlastn."\n";
-# Assembled Contigs
-# print interest "#contigs hit blastN\t".$hitsBlastn."\n";
-print "#contigs hit blastN\t".$hitsBlastn."\n";
-# Assembled Contigs
 
+# print metrics "#contigs hit blastN\t".$hitsBlastn."\n";
+# print interest "#contigs hit blastN\t".$hitsBlastn."\n";
+# Assembled Contigs
+print "#contigs hit blastN\t".$hitsBlastn."\n";
+
+# Assembled Contigs
 my $hitsVirusBlastn = `grep -c '>' $step7/contigs.bN.blastn.analyze.virus.contigs.fasta`;
 chomp($hitsVirusBlastn);
+
 # print metrics "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
-print "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
-# Assembled Contigs
 # print interest "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
 print "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
-# Assembled Contigs
 
+# Assembled Contigs
 print "\n[Extracting contigs no hit blastn 1e-5]\n";
 my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $step5_cap3/contigs_merged.final.gt200.fasta -blast $step7/contigs.blastn.1e5.report -out $step6/seqNoHit.blastN.1e5.fasta";
 print "\nSTEP10_113\n\t $exec10_113\n";
@@ -758,8 +755,8 @@ chomp($seqsNoHitBlastn);
 
 # print metrics "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
 print "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
-# Assembled Contigs
 
+# Assembled Contigs
 `cat $step7/contigs.bN.blastn.analyze.virus.contigs.fasta | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $step7/contigs.virus.blastN.formatted.fasta`;
 
 #######################################################################
@@ -1022,7 +1019,3 @@ close($LOG_FH);
 
 select STDOUT;
 print "$msg_finish \n";
-    
-# my $filename = shift or die "Usage: $0 YAML-FILE\n";
-# my $data = LoadFile($filename);
-# print Dumper $data;

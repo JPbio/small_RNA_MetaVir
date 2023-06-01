@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Input: fasta, minimal length, maximal length
 Output: fasta
