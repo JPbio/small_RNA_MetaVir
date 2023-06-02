@@ -9,6 +9,7 @@ services:
     container_name: srna_metavir_dev
     tty: true
     volumes:
+      - /home/hebert/srna-meta-vir/runs:/srna_metavir/runs
       - /home/hebert/srna-meta-vir/src:/srna_metavir/src
       - /home/hebert/srna-meta-vir/asset/libs/:/srna_metavir/asset/libs
       - /home/hebert/srna-meta-vir/asset/refs/:/srna_metavir/asset/refs

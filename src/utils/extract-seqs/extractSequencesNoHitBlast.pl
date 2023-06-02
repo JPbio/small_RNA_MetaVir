@@ -57,6 +57,6 @@ my $path_extract_seqs_fasta = "$path_utils/extract-seqs/inner/extract_seqs_from_
 `grep -oP '^\\-\\S+' difHitAndSeq.diff  | cut -d '-' -f 2 > idsSeqNoHit`;
 
 #extraindo contigs
-`$path_extract_seqs_fasta idsSeqNoHit $seq $out`;
+`perl $path_extract_seqs_fasta idsSeqNoHit $seq $out`;
 
 #` rm -rf idsWithHit idsOriginalSequences difHitAndSeq.diff idsSeqNoHit`;

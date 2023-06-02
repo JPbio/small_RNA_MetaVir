@@ -20,15 +20,10 @@
 # 
 
 # use strict;
-use warnings;
+# use warnings;
 
 use Getopt::Long;
 use Bio::SeqIO;
-
-# 
-# TODO: 2023-05-15 - Use a decent logger
-# 
-use constant PATH_LOG_MAIN => "srna_metavir.main.log";
 
 #######################################################################
 ### PARSE INPUTS ------------------------------------------------------
@@ -84,27 +79,6 @@ if (not(defined($prefix))) {
 	die "\nGive an prefix  name",$usage;
 }
 
-#######################################################################
-### Configure logging -------------------------------------------------
-#######################################################################
-
-# 
-# TODO: 2023-02-27 - Find a better way to do this...
-# TODO: 2023-02-27 - Restablish the custom log file(s) option
-# 
-
-# open(metrics, ">$step8/full_metrics.txt");
-# open(interest, ">$step8/metrics_of_interest.txt");
-# open(LOG, ">$log");
-
-# 
-# NOTE: From here on all printed stuff will be sent to the log file
-# 
-
-# open filehandle log.txt
-my $LOG_FH;
-open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
-select $LOG_FH;
 
 #######################################################################
 ### Main... -----------------------------------------------------------
@@ -153,13 +127,14 @@ while(<I>) {
 		chomp;
 		
         my @f = split(/\t/,$_);
+		
 		my $contig= $f[0];
+        my $h = $f[1];
 		my $org = $f[2];
 		
-        my $h = $f[1];
 		$h =~ /\|(\S+)\|/;
-		
         my $id_ncbi = $1;
+		
 		$org =~ /.+\[(.+)\]$/;
 		my $org_name = $1;
 		
@@ -180,26 +155,33 @@ while(<I>) {
 		$evalue=~ s/E-value=//g;
 		
 		if (not exists $f{$contig}{"org"}) {
-			 $f{$contig}{"org"} = $org_name;
-			 $f{$contig}{"desc"} = $org;
-			 $f{$contig}{"e"} = $evalue;
+			$f{$contig}{"org"} = $org_name;
+			$f{$contig}{"desc"} = $org;
+			$f{$contig}{"e"} = $evalue;
 		}
 		
+		# if (defined($org_name) && not exists $orgname{$org_name}) {
 		if (not exists $orgname{$org_name}) {
 		    $orgname{$org_name}=1;
+
+		# } elsif (defined($org_name)) {
 		} else {
 		    $orgname{$org_name} += 1;
 		}
 		
+		# if (defined($id_ncbi) && not exists $orgs{$id_ncbi}) {
 		if (not exists $orgs{$id_ncbi}) {
-		    $orgs{$id_ncbi}{"count"}=1;
+		    $orgs{$id_ncbi}{"count"} = 1;
 		    $orgs{$id_ncbi}{"desc"} = $org;
 		    $orgs{$id_ncbi}{"org"} = $org_name;
 		    $orgs{$id_ncbi}{"evalue"} = $evalue;
 		   
+		# } elsif (defined($id_ncbi)) {
 		} else {
-		    $orgs{$id_ncbi}{"count"} += 1;
-		    if ($evalue < $orgs{$id_ncbi}{"evalue"}) {
+		    
+			$orgs{$id_ncbi}{"count"} += 1;
+		    
+			if ($evalue < $orgs{$id_ncbi}{"evalue"}) {
 		        $orgs{$id_ncbi}{"evalue"} = $evalue;
 		    }
 		}
@@ -207,14 +189,14 @@ while(<I>) {
 }
 close(FA);
 
-print $LOG_FH "\n\n###########Hits by protein segment...\n";
+print "\n\n########### Hits by protein segment...\n";
 foreach my $c (keys %orgs) {
-    print $LOG_FH "Organism: $c\t"."Hits:".$orgs{$c}{"count"} ."\tDescription: ".$orgs{$c}{"desc"}."\tBest hit: ".$orgs{$c}{"evalue"}."\n";
+    print "Organism: $c\t"."Hits:".$orgs{$c}{"count"} ."\tDescription: ".$orgs{$c}{"desc"}."\tBest hit: ".$orgs{$c}{"evalue"}."\n";
 }
 
-print $LOG_FH "\n\n###########Hits by Organism...\n";
+print "\n\n########### Hits by Organism...\n";
 foreach my $n (keys %orgname) {
-    print $LOG_FH "Organism: $n\t"."Hits:".$orgname{$n}."\n";
+    print "Organism: $n\t"."Hits:".$orgname{$n}."\n";
 }
 
 my $count = 0;
@@ -227,7 +209,7 @@ foreach my $c (keys %hit) {
 
 	my $size = $f{$c}{"size"};
 	$sum += $size;
-	#print $LOG_FH "$c \t $size \n";
+	#print "$c \t $size \n";
 
 	if ($size > $big) {
         $big = $size;
@@ -257,19 +239,18 @@ if ($sum == 0 or $count==0) {
 	$avg = $sum / $count;
 }
 
-print $LOG_FH "\n\n############################################\nNumber of ($query) contigs:\t$count\n";
-print $LOG_FH "Size average:\t $avg \n";
-print $LOG_FH "Greater contig:\t$big\n";
-print $LOG_FH "Bases in contigs:\t$sum\n";
+print "\n\n############################################\nNumber of ($query) contigs:\t$count\n";
+print "Size average:\t $avg \n";
+print "Greater contig:\t$big\n";
+print "Bases in contigs:\t$sum\n";
 
-print $LOG_FH "Size Distribution:\n";
+print "Size Distribution:\n";
 
-print $LOG_FH "\n[CONTIGS]\n";
+print "\n[CONTIGS]\n";
 
-my $c;
-foreach $c (keys %f) {
-	if (defined($f{$c}{"e"}) && (f{$c}{"e"} ne "")) { 
-		print $LOG_FH "$c\t" .$f{$c}{"size"} ." \t" . $f{$c}{"org"} ." \t" . $f{$c}{"e"} ."\t" .$f{$c}{"desc"}." \n";
+foreach my $c (keys %f) {
+	if (defined($f{$c}{"e"}) && ($f{$c}{"e"} ne "")) {
+		print "$c\t" . ($f{$c}{"size"} // "") ." \t" . ($f{$c}{"org"} // "") ." \t" . ($f{$c}{"e"} // "") ."\t" . ($f{$c}{"desc"} // "")." \n";
 	}			
 }
 
@@ -281,14 +262,14 @@ foreach $c (keys %f) {
 #     my @db;
    
 #     if (defined($debug)) {
-#         print $LOG_FH "\n\n Downloading genomes...";
+#         print "\n\n Downloading genomes...";
 #     }
    
 #     foreach my $org (keys %orgs) {
         
 #         # Getting protein sequence
 #         if (defined($debug)) {
-#             print $LOG_FH "Downloading $org [".$orgs{$c}{"desc"}."] ";
+#             print "Downloading $org [".$orgs{$c}{"desc"}."] ";
 #         }
         
 #         # 
@@ -297,12 +278,12 @@ foreach $c (keys %f) {
 #         $c= "~/source_programs/edirect/esearch -db nucleotide -query \"$org\" | efetch -format fasta";
 
 #         if (defined($debug)) {
-#             print $LOG_FH "\tRuning ($c)\n";
+#             print "\tRuning ($c)\n";
 #         }
         
 #         while (length(`$c > $org.nucleotide`) > 10) {
 #             if (defined($debug)) {
-#                 print $LOG_FH "\n\t\t\t\t\t\t\t\t\tTrying download again...\n";
+#                 print "\n\t\t\t\t\t\t\t\t\tTrying download again...\n";
 #             }
 #         };
     
@@ -310,19 +291,19 @@ foreach $c (keys %f) {
 #         my $formatting = "formatdb -p F -i $org.nucleotide";
         
 #         if (defined($debug)) {
-#             print $LOG_FH "\tRuning ($formatting)... ";
+#             print "\tRuning ($formatting)... ";
 #         }
         
 #         if (length(`$formatting`) < 2) {
 #             if (defined($debug)) {
-#                 print $LOG_FH "\tDone! \n";
+#                 print "\tDone! \n";
 #             }
 #             push(@db,"$org.nucleotide");
 #         } elsif (defined($debug)) {
-#             print $LOG_FH "\tError!  IGNORING DATABASE $org.nucleotide\n";
+#             print "\tError!  IGNORING DATABASE $org.nucleotide\n";
 #         }
     
-#         # print $LOG_FH "Organism: $c\t"."Hits:".$orgs{$c}{"count"} ."\tDescription: ".$orgs{$c}{"desc"}."\n";
+#         # print "Organism: $c\t"."Hits:".$orgs{$c}{"count"} ."\tDescription: ".$orgs{$c}{"desc"}."\n";
 #     }
 
 #     # 
@@ -342,13 +323,13 @@ foreach $c (keys %f) {
     
 #         my $c1 = "blastall -p blastn -i $prefix.contigs  -d $d -e 1e-3 -o $prefix.$d.1e3.blastn -a 10";
 #         if (defined($debug)) {
-#             print $LOG_FH "running ($c1)...\n";
+#             print "running ($c1)...\n";
 #         }
 #         `$c1`;
         
 #         my $c2 = "/home/ubuntu/bin/filterblast.pl -b $prefix.$d.1e3.blastn --best --desc > $prefix.$d.1e3.blastn.filterblast";
 #         if (defined($debug)) {
-#             print $LOG_FH "running ($c2)...\n";
+#             print "running ($c2)...\n";
 #         }
 #         `$c2`;
         
@@ -361,7 +342,7 @@ foreach $c (keys %f) {
 #     foreach my $s (keys %blast) {
     
 #         if (defined($debug)) {
-#             print $LOG_FH "openning $s...\n";
+#             print "openning $s...\n";
 #         }
         
 #         open(O2,"<".$blast{$s});
@@ -407,7 +388,7 @@ foreach $c (keys %f) {
     
 #         my $c3 = "R --no-save $out $s $size $prefix $org_name < $path_analyse_contigs_blastn_r";
 #         if (defined($debug)) {
-#             print $LOG_FH "Runinng $c3 ...\n\n";
+#             print "Runinng $c3 ...\n\n";
 #         }
 #         `$c3`;
 #     }

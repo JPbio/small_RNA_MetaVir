@@ -150,6 +150,7 @@ FROM stage_dependencies AS stage_main
 RUN mkdir /srna_metavir \
     && mkdir /srna_metavir/src \
     && mkdir /srna_metavir/asset \
+    && mkdir /srna_metavir/runs \
     && chmod -R +x /srna_metavir/src
 
 WORKDIR /srna_metavir

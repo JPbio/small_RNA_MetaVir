@@ -1,5 +1,3 @@
-#!/usr/bin/perl
-
 if (@ARGV<1) {
     print "usage: 
 
@@ -19,9 +17,6 @@ $outfasta = shift or die "Must provide an output fasta file name \n";
 $| = 1;
 # forces immediate prints into files rather than the buffer.
 
-# 
-# TODO: 2023-05-23 - Check what to do whith these 'parallel' logging files
-# 
 open(LIST, "<$listfile") or die "Could not open $listfile";
 open(INFASTA, "<$infasta") or die "Could not open $infasta";
 open(OUTFASTA, ">$outfasta") or die "Could not open $outfasta";
