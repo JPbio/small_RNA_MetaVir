@@ -120,7 +120,7 @@ if (not defined($minimo) or ($minimo < 0)) {
 # open filehandle log.txt
 my $LOG_FH;
 open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
-select $LOG_FH;
+# select $LOG_FH;
 
 #######################################################################
 ### Main... -----------------------------------------------------------
@@ -184,7 +184,7 @@ for (my $i = 15 ; $i <= 35 ; $i++) {
 
 }
 
-warn("Loading SAM file...\n");
+print $LOG_FH "[plot geral dist. per base by reads] Loading SAM file...\n";
 
 my %read;
 my $nmappings = 0;
@@ -303,7 +303,7 @@ while (<IN>) {
 
                 $base{$c}{"pos"}{$size}{$first} = $base{$c}{"pos"}{$size}{$first} + 1;
 
-				#print "POSITIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"pos"}{$size} ."\n";
+				# print $LOG_FH "POSITIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"pos"}{$size} ."\n";
                 $base_per_size{$size}{"+"}{$first} = $base_per_size{$size}{"+"}{$first} + 1;
             } elsif ($campos[1] eq $sneg) {
                 $cn++;
@@ -313,7 +313,7 @@ while (<IN>) {
 
                 $base{$c}{"neg"}{$size}{$first} = $base{$c}{"neg"}{$size}{$first} + 1;
 
-				#print "NEGATIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"neg"}{$size} ."\n";
+				# print $LOG_FH "NEGATIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"neg"}{$size} ."\n";
                 $base_per_size{$size}{"-"}{$first} = $base_per_size{$size}{"-"}{$first} + 1;
             }
             if (not exists $total_reads{$c}) {
@@ -327,8 +327,8 @@ while (<IN>) {
 
 my $t = $cp + $cn;
 
-print "Tn: $cn \t Tp: $cp \t Tt: $t \n";
-print "si: %total_si \npi: %total_pi \ntotal: %total_reads\n";
+print $LOG_FH "Tn: $cn \t Tp: $cp \t Tt: $t \n";
+print $LOG_FH "si: %total_si \npi: %total_pi \ntotal: %total_reads\n";
 
 #
 #Load fasta file
@@ -407,7 +407,7 @@ close(O5);
 ###################
 
 #
-#Print total of reads per chromosome
+# print total of reads per chromosome
 #
 
 ##############
@@ -481,7 +481,7 @@ if (defined($plot)) {
 }
 
 if (defined($base)) {
-    print "\n\nBase preference \n\n";
+    print $LOG_FH "\n\nBase preference \n\n";
 
     foreach my $c (keys %ch2) {
         if ($total_reads{$c} > $minimo) {
@@ -529,10 +529,10 @@ if (defined($base)) {
             close(B);
 
         } else {
-            print "\t\tDiscarting segment $c, ".$total_reads{$c}." <  $minimo \n";
+            print $LOG_FH "\t\tDiscarting segment $c, ".$total_reads{$c}." <  $minimo \n";
         }
 
     }
 
 }
-print "Total number of mappings:\t$nmappings\nTotal number of reads:\t$nreads\n";
+print $LOG_FH "Total number of mappings:\t$nmappings\nTotal number of reads:\t$nreads\n";

@@ -340,6 +340,10 @@ if (not -e $step9) {
 }
 if (not -e $step10) {
     `mkdir $step10`;
+
+    if (not -e "$step10/plots") {
+        `mkdir $step10/plots`;
+    }
 }
 
 #######################################################################
@@ -828,9 +832,8 @@ chomp($hitsBlastn);
 # 
 
 # print metrics "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
-print "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
 # print interest "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
-print "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
+print "# Contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
 
 $hitsBlastn = `grep '>' $step9/seq_ViralHits_and_NoHits.withSiRNA_and_PiRNA.fasta | grep blastN | wc -l `;
 chomp($hitsBlastn);
@@ -840,9 +843,8 @@ chomp($hitsBlastn);
 # 
 
 # print metrics "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
-print "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
 # print interest "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
-print "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
+print "# Contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
 
 $hitsBlastn = `grep '>' $step9/seq_ViralHits_and_NoHits.withPiRNA.fasta | grep blastN | wc -l `;
 chomp($hitsBlastn);
@@ -852,9 +854,8 @@ chomp($hitsBlastn);
 # 
 
 # print metrics "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn."\n";
-print "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn."\n";
 # print interest "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn. "\n";
-print  "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn. "\n";
+print "# Contigs hit VIRUS blastN with piRNA\t".$hitsBlastn."\n";
 
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA.fasta | grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
@@ -864,9 +865,8 @@ chomp($hitsVirusBlastn);
 # 
 
 # print metrics "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
-print "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
-print "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
+print "# Contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
 
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA_and_PiRNA.fasta| grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
@@ -876,9 +876,8 @@ chomp($hitsVirusBlastn);
 # 
 
 # print metrics "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
-print "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
-print "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
+print "# Contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withPiRNA.fasta | grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
@@ -888,9 +887,8 @@ chomp($hitsVirusBlastn);
 # 
 
 # print metrics "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
-print "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
-print "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
+print "# Contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
 
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA.fasta | grep -v blastX | grep -v blastN | wc -l `;
 chomp($hitsVirusBlastn);
@@ -900,9 +898,8 @@ chomp($hitsVirusBlastn);
 # 
 
 # print metrics "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
-print "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
-print "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
+print "# Contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
 
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA_and_PiRNA.fasta | grep -v blastN | -v grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
@@ -912,9 +909,8 @@ chomp($hitsVirusBlastn);
 # 
 
 # print metrics "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
-print "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
-print "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
+print "# Contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withPiRNA.fasta | grep -v blastN | -v grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
@@ -924,9 +920,8 @@ chomp($hitsVirusBlastn);
 # 
 
 # print metrics "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
-print "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
-print "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
+print "# Contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
 
 # close(metrics);
 
@@ -944,12 +939,13 @@ my $path_contig_viral_hits_all = "$step10/all_contigs_hit_virus.fasta";
 my $count_hit_lines = `cat $path_contig_viral_hits_all | wc -l`;
 chomp($count_hit_lines);
 
-if ($count_hit_lines > 0) {
-    `bowtie-build $path_contig_viral_hits_all $path_contig_viral_hits_all`;
+# if ($count_hit_lines > 0) {
+#     `bowtie-build $path_contig_viral_hits_all $path_contig_viral_hits_all`;
 
-} else {
-    print "\nNo contig viral hits found...\n";
-}
+# } else {
+#     print "\nNo contig viral hits found...\n";
+# }
+
 `bowtie-build $path_contig_viral_hits_all $path_contig_viral_hits_all`;
 
 `bowtie -f -S -k 1 -p $process -v 1  $path_contig_viral_hits_all $step2/trimmed_filtered_gt15.fasta | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $step10/reads.VS.contigs_hit_virus_blast.sam`;
@@ -992,9 +988,6 @@ print "\n\n Calculating pattern viral contigs and candidates - HEATMAP \n\n";
 `bowtie -f -S -k 1 -p $process -v 1  $step10/reads.VS.contigs_virus_and_nohit.withSiRNA_and_PiRNA.fasta $step2/trimmed_filtered_gt15.fasta | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam`;
 
 print "\n\n Creating plots \n\n";
-
-# Creating folder to store plots
-`mkdir $step10/plots`;
 
 # Plotting distribution and density plots
 `perl $path_plot_map_data_base_preference -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam -s $si -e $se -fa $step10/reads.VS.contigs_virus_and_nohit.withSiRNA.fasta -pace 1 -p $step10/plots/reads.VS.contigs_virus_and_nohit.withSiRNA --profile --pattern`;

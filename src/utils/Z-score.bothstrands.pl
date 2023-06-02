@@ -116,7 +116,7 @@ sub analyzeProfile {
 	my %ch;
 	my %ch2;
 
-	print $LOG_FH "Analyzing $file...\n";
+	print $LOG_FH "\nAnalyzing $file...\n";
 	
 	open(IN, "<$file");
 	while (<IN>) {
@@ -179,7 +179,7 @@ sub analyzeProfile {
 	my @neg;
 	my @tot;
 
-	print $LOG_FH "Calculating Z-score...\n";
+	print $LOG_FH "\nCalculating Z-score...\n";
 
 	foreach my $chr (keys %ch2) { # for each sequence
 		

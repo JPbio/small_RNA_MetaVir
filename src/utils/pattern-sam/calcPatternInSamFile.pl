@@ -75,7 +75,7 @@ if (not(defined($search))) {
 # open filehandle log.txt
 my $LOG_FH;
 open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
-select $LOG_FH;
+# select $LOG_FH;
 
 #######################################################################
 ### Main... -----------------------------------------------------------
@@ -95,7 +95,7 @@ my %tamanhos_n;
 my %ch;
 my %ch2;
 
-print "Analyzing $search...\n";
+print $LOG_FH "\nAnalyzing $search...\n";
 
 open(IN, "<$search");
 while (<IN>) {
@@ -140,13 +140,13 @@ while (<IN>) {
             $ch{$c}{"neg"} = $ch{$c}{"neg"} + 1;
             $tamanhos_n{$size} = $tamanhos_n{$size} + 1;
             $ch2{$c}{"neg"}{$size} = $ch2{$c}{"neg"}{$size} + 1;
-            #print "NEGATIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"neg"}{$size} ."\n";
+            #print $LOG_FH "NEGATIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"neg"}{$size} ."\n";
         }
     }
 }
 # $t = $cp + $cn;
 
-print "Calculating Z-score...\n";
+print $LOG_FH "Calculating Z-score...\n";
 
 open(ALL, ">$output");
 

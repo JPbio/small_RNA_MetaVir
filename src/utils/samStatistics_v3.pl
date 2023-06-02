@@ -5,6 +5,11 @@ use Bio::SeqIO;
 use Bio::Seq::Quality;
 use Getopt::Long;
 
+#
+# TODO: 2023-05-15 - Use a decent logger
+# 
+use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+
 #######################################################################
 ### PARSE INPUTS ------------------------------------------------------
 #######################################################################
@@ -53,6 +58,28 @@ if (not(defined($prefix))) {
 }
 
 #######################################################################
+### Configure logging -------------------------------------------------
+#######################################################################
+
+# 
+# TODO: 2023-02-27 - Find a better way to do this...
+# TODO: 2023-02-27 - Restablish the custom log file(s) option
+# 
+
+# open(metrics, ">$step8/full_metrics.txt");
+# open(interest, ">$step8/metrics_of_interest.txt");
+# open(LOG, ">$log");
+
+# 
+# NOTE: From here on all printed stuff will be sent to the log file
+# 
+
+# open filehandle log.txt
+my $LOG_FH;
+open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
+select $LOG_FH;
+
+#######################################################################
 ### Main... -----------------------------------------------------------
 #######################################################################
 
@@ -73,8 +100,9 @@ my %contig;
 
 if (defined($fasta)) {
 
-	warn("Loading FASTA file...\n");
-	my $in = Bio::SeqIO->new(-format => 'fasta', -file => $fasta);
+	print "[sam statistics] Loading FASTA file...\n";
+	
+    my $in = Bio::SeqIO->new(-format => 'fasta', -file => $fasta);
 	while (my $data = $in->next_seq) {
 		my $size = $data->length;
 		$contig{$data->primary_id} = $data->seq;

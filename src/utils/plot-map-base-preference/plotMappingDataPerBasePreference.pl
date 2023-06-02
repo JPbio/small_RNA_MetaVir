@@ -115,7 +115,7 @@ if (not defined($minimo) or($minimo < 0)) {
 # open filehandle log.txt
 my $LOG_FH;
 open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
-select $LOG_FH;
+# select $LOG_FH;
 
 #######################################################################
 ### Main... -----------------------------------------------------------
@@ -171,7 +171,7 @@ if (defined($antisense)) {
     $sneg = "0";
 }
 
-warn("Loading SAM file...\n");
+print $LOG_FH "[plot mapping data per base preference] Loading SAM file...\n";
 
 while (<IN>) {
 
@@ -259,7 +259,7 @@ while (<IN>) {
             $ch2{$c}{"pos"}{"$size"} = ($ch2{$c}{"pos"}{"$size"} // 0) + 1;
             $base{$c}{"pos"}{$size}{$first} = ($base{$c}{"pos"}{$size}{$first} // 0) + 1;
             
-            # print "POSITIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"pos"}{$size} ."\n";
+            # print $LOG_FH "POSITIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"pos"}{$size} ."\n";
             $base_per_size{$size}{"+"}{$first} = $base_per_size{$size}{"+"}{$first} + 1;
 
         } elsif ($campos[1] eq $sneg) {
@@ -270,7 +270,7 @@ while (<IN>) {
             $ch2{$c}{"neg"}{$size} = ($ch2{$c}{"neg"}{$size} // 0) + 1;
             $base{$c}{"neg"}{$size}{$first} = ($base{$c}{"neg"}{$size}{$first} // 0) + 1;
             
-            #print "NEGATIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"neg"}{$size} ."\n";
+            #print $LOG_FH "NEGATIVE in [$c] fita [pos]  size [$size] amount: ".$ch{$c}{"neg"}{$size} ."\n";
             $base_per_size{$size}{"-"}{$first} = ($base_per_size{$size}{"-"}{$first} // 0) + 1;
         }
     }
@@ -280,7 +280,7 @@ while (<IN>) {
 # Load fasta file
 our %contig;
 
-warn("Loading FASTA file...\n");
+print $LOG_FH "[plot mapping data per base preference] Loading FASTA file...\n";
 my $in = Bio::SeqIO -> new(-format => 'fasta', -file => $fasta);
 
 while (my $data = $in -> next_seq) {
@@ -290,7 +290,9 @@ while (my $data = $in -> next_seq) {
 
 # Writing file with total mappings
 if (not defined($profile)) {
-    print "\n\n[Total read distribution]\n";
+    
+    print $LOG_FH "\n\n[Total read distribution]\n";
+    
     for (my $i = $start; $i<=$end; $i++) {
         
         my $p = 0;
@@ -304,7 +306,7 @@ if (not defined($profile)) {
         }
 
         my $t = $p + $n;
-        print "$i\t$p\t$n\t$t\n";
+        print $LOG_FH "$i\t$p\t$n\t$t\n";
     }
 }
 
@@ -313,7 +315,7 @@ if (not defined($profile)) {
 # Print total of reads per chromosome
 if (defined($profile)) {
 
-    print "\n\nReads per chromosoes\n";
+    print $LOG_FH "\n\nReads per chromosoes\n";
 
     open(O, ">$prefix.readsPerChromossome");
 
@@ -338,7 +340,8 @@ if (defined($profile)) {
     # `R --no-save --args $prefix.$c.distribution < file.R`;
 
     ##############
-    print "\n\nReads per chromosoes\n";
+    
+    print $LOG_FH "\n\nReads per chromosoes\n";
 
     foreach my $c (keys %ch2) {
         
@@ -347,7 +350,7 @@ if (defined($profile)) {
 
         print O2 "\tA\tC\tG\tT\n";
 
-        # print "\n\nChromossome [$c]\n";
+        # print $LOG_FH "\n\nChromossome [$c]\n";
         
         for (my $s = $start; $s <= $end; $s++) {
             
@@ -399,7 +402,7 @@ if (defined($profile)) {
 
         if ($counting >= $minimo) {
             
-            print "####### $cp was USED, $counting > $minimo \n";
+            print $LOG_FH "####### $cp was USED, $counting > $minimo \n";
 
             my $f0 = "perl $path_filter_sam_bowtie -i $samFile -si 20 -se 23 -o $cp.20to23.sam";
             my $f1 = "perl $path_filter_sam_bowtie -i $samFile -si 21 -se 21 -o $cp.21.sam";
@@ -413,7 +416,7 @@ if (defined($profile)) {
             `$f3`;
             `$f4`;
 
-            # print "$f1\n$f2\n";
+            # print $LOG_FH "$f1\n$f2\n";
             my $comm0 = "perl $path_calc_density_base -sam $cp.20to23.sam -pace $pace -ref ".$contig{$c}."  -out  $cp.20to23.density";
             my $comm = "perl $path_calc_density_base -sam $samFile -pace $pace -ref ".$contig{$c}."  -out  $cp.density";
             my $comm2 = "perl $path_calc_density_base -sam $cp.21.sam -pace $pace -ref ".$contig{$c}."  -out $cp.21.density";
@@ -421,7 +424,7 @@ if (defined($profile)) {
             my $comm4 = "perl $path_calc_density_base -sam $cp.22to22.sam -pace $pace -ref ".$contig{$c}."  -out $cp.22to22.density";
             my $comm5 = "perl $path_calc_density_base -sam $cp.15to19.sam -pace $pace -ref ".$contig{$c}."  -out $cp.15to19.density";
 
-            # print "$comm \n $comm2 \n $comm3 \t $comm0 \n";
+            # print $LOG_FH "$comm \n $comm2 \n $comm3 \t $comm0 \n";
             `$comm0`;
             `$comm`;
             `$comm2`;
@@ -429,7 +432,7 @@ if (defined($profile)) {
             `$comm4`;
             `$comm5`;
 
-            # print "Plotting graphs [$c]...\n";
+            # print $LOG_FH "Plotting graphs [$c]...\n";
             # `/opt/R/4.1.2/bin/R --no-save $prefix.$c.distribution $cp.distribution < $path_plot_dist 2>/dev/null `;
             # `/opt/R/4.1.2/bin/R --no-save $cp.density $cp.all.density < $path_plot_density 2>/dev/null`;
             # `/opt/R/4.1.2/bin/R --no-save $cp.21.density $cp.21.density < $path_plot_density 2>/dev/null`;       
@@ -446,7 +449,7 @@ if (defined($profile)) {
             `R --no-save $prefix.$c.base_distribution $prefix.$c.publication < $path_calc_dist_base_publication 2>/dev/null`;
 
         } else {
-            print "--> $cp was [DISCARDED], $counting < $minimo <--\n";
+            print $LOG_FH "--> $cp was [DISCARDED], $counting < $minimo <--\n";
         }
         
         # `rm -rf  $cp.21.sam $cp.24to29.sam $cp.sam`;
@@ -459,7 +462,7 @@ if (defined($profile)) {
         # $exec = "R --no-save --args $prefix.$c.distribution $cp.density $cp.21.density $cp.24to29.density $refsize $c < /Users/eric/Desktop/projetos/scripts_servers/R/plotMappingDensity.R ";
         # `$exec`;
 
-        # print "$comm \n";
+        # print $LOG_FH "$comm \n";
     }
     
     # calcDensityPerBase.pl - sam - pace - ref ";
@@ -501,7 +504,7 @@ for (my $i = 15; $i <= 35; $i++) {
 }
 close(O4);
 
-print "Plotting graphs...\n";
+print $LOG_FH "Plotting graphs...\n";
 
 #`montage -mode concatenate -tile 3x $prefix*density.png $prefix.merge.pdf`;
 #`convert $prefix*density.png +append $prefix.merge.2.pdf`;
