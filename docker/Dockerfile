@@ -6,14 +6,10 @@
 
 FROM docker.io/library/perl:5.36.0-threaded AS stage_perl
 
-# RUN cpanm --notest --quiet \
-#     Bio::SeqIO \
-#     Statistics::Basic \
-#     Statistics::RankCorrelation
-
-RUN cpanm --notest --quiet Bio::SeqIO
-RUN cpanm --notest --quiet Statistics::Basic
-RUN cpanm --notest --quiet Statistics::RankCorrelation
+RUN cpanm --notest --quiet \
+    Bio::SeqIO \
+    Statistics::Basic \
+    Statistics::RankCorrelation
 
 # ====================================
 # -- Stage: Python --
@@ -46,41 +42,27 @@ RUN apt-get update && \
 FROM stage_r AS stage_dependencies
 
 # Add Blast
-# RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.13.0/ncbi-blast-2.13.0+-x64-linux.tar.gz && \
-#         tar xvpf ncbi-blast-2.13.0+-x64-linux.tar.gz && \
-#         mv ncbi-blast-2.13.0+/bin/* /usr/bin/ && \
-#         rm -rf ncbi-blast-2.13.0+* && \
-#     wget https://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/blast-2.2.26-x64-linux.tar.gz
-#         tar xvpf blast-2.2.26-x64-linux.tar.gz && \
-#         mv blast-2.2.26/bin/formatdb /usr/bin/ && \
-#         mv blast-2.2.26/bin/blastall /usr/bin/ && \
-#         rm -rf blast-2.2.26*
 
 # 
 # TODO: 2023-06-01 - Use blast 2014
 # 
 
 RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.13.0/ncbi-blast-2.13.0+-x64-linux.tar.gz && \
-    tar xvpf ncbi-blast-2.13.0+-x64-linux.tar.gz && \
-    mv ncbi-blast-2.13.0+/bin/* /usr/bin/ && \
-    rm -rf ncbi-blast-2.13.0+*
-
-RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/blast-2.2.26-x64-linux.tar.gz && \
+        tar xvpf ncbi-blast-2.13.0+-x64-linux.tar.gz && \
+        mv ncbi-blast-2.13.0+/bin/* /usr/bin/ && \
+        rm -rf ncbi-blast-2.13.0+* && \
+    wget https://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/blast-2.2.26-x64-linux.tar.gz && \
         tar xvpf blast-2.2.26-x64-linux.tar.gz && \
         mv blast-2.2.26/bin/formatdb /usr/bin/ && \
         mv blast-2.2.26/bin/blastall /usr/bin/ && \
         rm -rf blast-2.2.26*
 
 # Add the ones available trhough apt-get
-# RUN apt-get update && \
-#     apt-get install -y \
-#         bowtie=1.3.0+dfsg1-1 \
-#         velvetoptimiser=2.2.6-3 ncbi-blast+- \
-#         spades=3.13.1+dfsg-2+b2
-RUN apt-get update
-RUN apt-get install -y bowtie=1.3.0+dfsg1-1
-RUN apt-get install -y velvetoptimiser=2.2.6-3 ncbi-blast+-
-RUN apt-get install -y spades=3.13.1+dfsg-2+b2
+RUN apt-get update && \
+    apt-get install -y \
+        bowtie=1.3.0+dfsg1-1 \
+        velvetoptimiser=2.2.6-3 ncbi-blast+- \
+        spades=3.13.1+dfsg-2+b2
 
 # Add cap3
 COPY ./cap3.linux.opteron64.tar /usr/bin/
@@ -94,45 +76,24 @@ ENV PATH="${PATH}:/usr/bin/CAP3"
 # Add FASTX-Toolkit
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}/usr/local/lib"
 
-# RUN git clone https://github.com/agordon/libgtextutils.git && \
-#         cd libgtextutils/ && \
-#         ./reconf && \
-#         ./configure && \
-#         make && \
-#         make install && \
-#         cd .. && \
-#         rm -rf libgtextutils && \
-#     git clone https://github.com/agordon/fastx_toolkit.git && \
-#         cd fastx_toolkit && \
-#         wget -t 0 https://github.com/agordon/fastx_toolkit/files/1182724/fastx-toolkit-gcc7-patch.txt && \
-#         patch -p1 < fastx-toolkit-gcc7-patch.txt && \
-#         ./reconf && \
-#         ./configure && \
-#         make && \
-#         make install && \
-#         cd .. && \
-#         rm -rf fastx_toolkit && \
-#     ldconfig
-
-RUN mkdir /temp && \
-    cd /temp && \
-        git clone https://github.com/agordon/libgtextutils.git && \
-            cd /temp/libgtextutils/ && \
-            ./reconf && \
-            ./configure && \
-            make && \
-            make install && \
-    cd /temp && \
-        git clone https://github.com/agordon/fastx_toolkit.git && \
-            cd /temp/fastx_toolkit && \
-            wget -t 0 https://github.com/agordon/fastx_toolkit/files/1182724/fastx-toolkit-gcc7-patch.txt && \
-            patch -p1 < fastx-toolkit-gcc7-patch.txt && \
-            ./reconf && \
-            ./configure && \
-            make && \
-            make install && \
-    cd / && \
-    rm -rf /temp && \
+RUN git clone https://github.com/agordon/libgtextutils.git && \
+        cd libgtextutils/ && \
+        ./reconf && \
+        ./configure && \
+        make && \
+        make install && \
+        cd .. && \
+        rm -rf libgtextutils && \
+    git clone https://github.com/agordon/fastx_toolkit.git && \
+        cd fastx_toolkit && \
+        wget -t 0 https://github.com/agordon/fastx_toolkit/files/1182724/fastx-toolkit-gcc7-patch.txt && \
+        patch -p1 < fastx-toolkit-gcc7-patch.txt && \
+        ./reconf && \
+        ./configure && \
+        make && \
+        make install && \
+        cd .. && \
+        rm -rf fastx_toolkit && \
     ldconfig
 
 # Add diamond
