@@ -66,7 +66,7 @@ my $size;
 # TODO: 2023-03-06 - Reenable custom naming for this folder
 # 
 # my $prefix = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
-my $prefix = EXEC_ROOT_DIR . "/exec_test_02";
+my $prefix = EXEC_ROOT_DIR . "/exec_test_03";
 
 my $se;
 my $si;
@@ -445,13 +445,13 @@ if (not defined($nohostfilter)) {
     "\n";
 
     print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST ]\n";
-    my $exec3_1 = "perl $path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s $si -e $se -p $step3/$prefix.mapped_host.v1.$si.$se -norm $nReads --plot";
+    my $exec3_1 = "perl $path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s $si -e $se -p $step3/mapped_host.v1.$si.$se -norm $nReads --plot";
     
     print "\n[STEP 03]\n\t $exec3_1\n";
     `$exec3_1`;
 
     print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST - 15-35nt ]\n";
-    my $exec3_11 = "perl $path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s 15 -e 35 -p $step3/$prefix.mapped_host.v1 -norm $nReads --plot";
+    my $exec3_11 = "perl $path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s 15 -e 35 -p $step3/mapped_host.v1 -norm $nReads --plot";
     
     print "\n[STEP 03]\n\t $exec3_11\n";
     `$exec3_11`;
@@ -461,27 +461,27 @@ if (not defined($nohostfilter)) {
     my $mapped = $nReads - $nReadsUnmapHost;
 
     # print metrics "#reads mapped host\t".$mapped. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "#reads mapped host\t".$mapped.
+    print "# Reads mapped host\t".$mapped.
     "\n";
     # mapped reads HOST
     # print metrics "#reads unmapped host\t".$nReadsUnmapHost. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "#reads unmapped host\t".$nReadsUnmapHost.
+    print "# Reads unmapped host\t".$nReadsUnmapHost.
     "\n";
     # unmapped reads HOST
 
     # print interest "#reads mapped host\t".$mapped. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "#reads mapped host\t".$mapped.
+    print "# Reads mapped host\t".$mapped.
     "\n";
     # mapped reads HOST
     # print interest "#reads unmapped host\t".$nReadsUnmapHost. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "#reads unmapped host\t".$nReadsUnmapHost.
+    print "# Reads unmapped host\t".$nReadsUnmapHost.
     "\n";
     # unmapped reads HOST
 
+    # Deleting sam file mapped reads on host genome
     `rm -rf $step3/mapped_host.v1.sam`;
-    # deleting sam file mapped reads on host genome
 
-    #Mapping Host - filtered reads against bacters reference
+    # Mapping Host - filtered reads against bacters reference
     print "[MAPPING HOST-FILTERED READS AGAINST BACTERIAL GENOMES]... \n";
     my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index $path_bacterial_genome_all $step4/unmappedVectorReads.fasta > /dev/null 2>>$path_warns ";
     
