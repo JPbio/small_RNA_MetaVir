@@ -8,16 +8,113 @@ use Getopt::Long;
 #
 # TODO: 2023-03-07 - Use a decent logger
 # 
-use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+# use constant PATH_LOG_MAIN => "srna_metavir.main.log";
 use constant EXEC_ROOT_DIR => "/srna_metavir/runs";
 
-# 
-# TODO: 2023-03-01 - Standardize naming as snake_case
-# 
-
 # $| = 1;     # forces immediate prints into files rather than the buffer.
+
+#######################################################################
+### TIME HANDLERS -----------------------------------------------------
+#######################################################################
+
+sub getTimeDiff {
+
+    # print STDOUT "\ngetTimeDiff\n (@_)";
+    
+    # my $t0 = shift or die "Must provide at least one date for calculation!";
+    # my $t1 = shift;
+
+    my $t0 = $_[0] or die "Must provide at least one date for calculation!";
+    my $t1 = $_[1];
+
+    # my ($t0, $t1) = @_;
+    # print STDOUT "\ngetTimeDiff\n (t0 == '$t0' / t1 == '$t1')";
+
+    # my $t0_str = strftime("%Y-%m-%d %H:%M:%S", localtime($t0));
+    # print "t0_str: '$t0_str'\n";
+    
+    # my $t1_str = strftime("%Y-%m-%d %H:%M:%S", localtime($t1));
+    # print "t1_str: '$t1_str'\n";
+
+    my $time_diff = Time::HiRes::tv_interval([$t0], [$t1]);
+
+    # print STDOUT "\ngetTimeDiff\n (@_)";
+
+    return $time_diff;
+}
+
+sub getTimeStr {
+
+    # print STDOUT "\ngetTimeStr\n (@_)";
+    
+    # my $time = shift // $^T;
+    my $time = $_[0] // $^T;
+    # print "time: '$time'\n";
+
+    # print STDOUT "\ngetTimeStr\n (@_)";
+
+    my $time_ms = 1000 * ($time - int($time));
+    my $time_str = strftime("%H:%M:%S", localtime($time)) . sprintf ":%03d", ($time_ms);
+
+    # print STDOUT "\ngetTimeStr\n (@_)";
+    return $time_str;
+}
+
+sub getStepTimeInfoMsg {
+
+    # print STDOUT "\ngetStepTimeInfoMsg\n (@_)";
+
+    my @params = @_;
+
+    # print STDOUT "\ngetStepTimeInfoMsg\n '@params'";
+ 
+    # die "Parameter 'to' is required" if not $params{to};
+
+    # my $title = shift or die "Must provide step title!";
+    # my $t0 = shift or die "Must provide time 00!";
+    # my $t1 = shift or die "Must provide time 01!";
+
+    # my ($title, $t0, $t1) = @_;
+
+    my $title = $_[0] or die "Must provide step title!";
+    my $t0 = $_[1] or die "Must provide time 00!";
+    my $t1 = $_[2] or die "Must provide time 01!";
+
+    # print STDOUT "\ngetStepTimeInfoMsg\n";
+
+    my $t0_str = getTimeStr($t0);
+    my $t1_str = getTimeStr($t1);
+    my $time_diff_str = getTimeStr(getTimeDiff($t0, $t1));
+
+    # my $aux = getTimeDiff($t0, $t1);
+
+    # print STDOUT "\ngetStepTimeInfoMsg\n";
+
+    # my $time_diff_str = getTimeStr($aux);
+
+    # print STDOUT "\ngetStepTimeInfoMsg\n";
+
+    print STDOUT "\ngetStepTimeInfoMsg\n";
+
+    return "
+------------------------------------------------------
+>> End of step '$title'
+
+From '$t0_str' to '$t1_str'
+Time elapsed: $time_diff_str
+
+------------------------------------------------------
+";
+}
+
 my $time_start = $^T;
-my $time_start_str = strftime("%Y-%m-%d %H:%M:%S", localtime($time_start));
+my $current_time = $time_start;
+my $last_time = $time_start;
+
+my $time_diff = 0;
+my $time_msg = "";
+
+my $step_name = "";
 
 #######################################################################
 ### PARSE INPUTS ------------------------------------------------------
@@ -159,10 +256,11 @@ if (not(defined($hash))) {
 }
 
 #######################################################################
-### Print details -----------------------------------------------------
+### Set running details -----------------------------------------------
 #######################################################################
 
-my $runDetails = "
+my $time_start_str = getTimeStr($time_start);
+my $runningDetails = "
 
 -------------------------------------------
 > Details:
@@ -178,14 +276,14 @@ Start Time: $time_start_str
 ";
 
 if (defined($deg)) {
-    $runDetails .= "> Searching for degradation: TRUE\n";
+    $runningDetails .= "> Searching for degradation: TRUE\n";
 } else {
-    $runDetails .= "> Searching for degradation: FALSE\n";
+    $runningDetails .= "> Searching for degradation: FALSE\n";
 }
 
-$runDetails .= "\n-------------------------------------------\n";
+$runningDetails .= "\n-------------------------------------------\n";
 
-print $runDetails . "\n";
+print STDOUT $runningDetails . "\n";
 
 #######################################################################
 ### Configure logging -------------------------------------------------
@@ -207,13 +305,14 @@ print $runDetails . "\n";
 
 # open filehandle log.txt
 my $LOG_FH;
-open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
+# open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
+open($LOG_FH, ">>", "$prefix.log") or die "Couldn't open: $!"; # $! is a special variable holding the error
 select $LOG_FH;
 
 print "\n\n";
 print "#######################################################################\n";
 print ">> New execution";
-print $runDetails;
+print $runningDetails;
 
 #######################################################################
 ### Define paths ------------------------------------------------------
@@ -358,9 +457,17 @@ if (not -e $step10) {
 ### Handle FASTA sequences --------------------------------------------
 #######################################################################
 
+$step_name = "Handle FASTA sequences";
+
 # 
 # REVIEW: 2023-03-01 - Shall we think of better names?
 # 
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeInfoMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
 
 my $mappedbac;
 my $nReadsUnmapHostBac;
@@ -504,6 +611,13 @@ if (not defined($nohostfilter)) {
 
     print "\n  PRE-PROCESSING FINISHED \n";
 }
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeInfoMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
 
 #######################################################################
 ### Select filtered sequences by size ---------------------------------
@@ -1020,17 +1134,21 @@ print "\n\n Creating plots \n\n";
 # 
 
 # Calculate elapsed time
-my $time_elapsed = Time::HiRes::tv_interval([$time_start]);
-my $time_elapsed_ms = 1000 * ($time_elapsed - int($time_elapsed));
-my $time_elapsed_str = strftime("%H:%M:%S", localtime($time_elapsed)) . sprintf ":%03d", ($time_elapsed_ms);
+# my $time_elapsed = Time::HiRes::tv_interval([$time_start]);
+# my $time_elapsed_ms = 1000 * ($time_elapsed - int($time_elapsed));
+# my $time_elapsed_str = strftime("%H:%M:%S", localtime($time_elapsed)) . sprintf ":%03d", ($time_elapsed_ms);
+$current_time = Time::HiRes::gettimeofday();
+$time_diff = getTimeDiff($time_start, $current_time);
+my $time_elapsed_str = getTimeStr($time_diff);
 
 my $msg_finish = "
+
 -- THE END --
 Time elapsed: $time_elapsed_str
+
 ";
 
 print $msg_finish;
 close($LOG_FH);
 
-select STDOUT;
-print "$msg_finish \n";
+print STDOUT "$msg_finish \n";
