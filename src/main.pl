@@ -122,7 +122,9 @@ my $size;
 # TODO: 2023-03-06 - Reenable custom naming for this folder
 # 
 # my $prefix = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
-my $prefix = EXEC_ROOT_DIR . "/exec_test_03";
+
+my $exec_id = "exec_test_04";
+my $prefix = EXEC_ROOT_DIR . "/$exec_id";
 
 my $se;
 my $si;
@@ -149,6 +151,7 @@ my $nohostfilter;
 my $large_index;
 my $deg; # TODO: 2023-02-25 - Can we please call it 'degradation'?
 my $help;
+my $temp_prefix;
 
 GetOptions("qual=s" => \$qual,
     "hostgenome=s" => \$hostgenome,
@@ -156,6 +159,7 @@ GetOptions("qual=s" => \$qual,
     "fastqgz=s" => \$fastqgz,
     "fastq=s" => \$fastq,
     # "prefix=s" => \$prefix, # TODO: 2023-03-06 - Reenable custom naming for this folder
+    "temp_prefix=s" => \$temp_prefix, # TODO: 2023-03-06 - Reenable custom naming for this folder
     "size=s" => \$size,
     "hash=s" => \$hash,
     # "log=s" => \$log,
@@ -265,7 +269,7 @@ print STDOUT $runningDetails . "\n";
 # open filehandle log.txt
 my $LOG_FH;
 # open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
-open($LOG_FH, ">>", "$prefix.log") or die "Couldn't open: $!"; # $! is a special variable holding the error
+open($LOG_FH, ">>", "$prefix/$exec_id.log") or die "Couldn't open: $!"; # $! is a special variable holding the error
 select $LOG_FH;
 
 print "\n\n";
@@ -315,7 +319,7 @@ my $path_bacterial_genome_all = "$path_assets/refs/bacterial_genomes/all_bacters
 my $path_blast_db_nt = "$path_assets/blastdb/nt";
 my $path_diamond_nr = "$path_assets/diamond/nr.dmnd";
 
-my $path_warns = "$prefix.warn";
+my $path_warns = "$prefix/$exec_id.warn";
 
 my $path_filter_diamond = "$path_utils/filter_diamond.sh";
 my $path_filter_fasta_by_size = "$path_utils/filter_fasta_by_size.py";
@@ -666,7 +670,7 @@ $time_msg = getStepTimebBeginMsg($step_name);
 print STDOUT $time_msg;
 print $time_msg;
 
------------------------------------------------------------------------
+# -----------------------------------------------------------------------
 
 print "\n[RUNNING DEFAULT VELVET]\n";
 print "\t#Running step 6 [ Assemble unmapped 21 nt - velvet hash $hash ]\n";
@@ -711,7 +715,7 @@ $time_msg = getStepTimebBeginMsg($step_name);
 print STDOUT $time_msg;
 print $time_msg;
 
------------------------------------------------------------------------
+# -----------------------------------------------------------------------
 
 print "\n[VELVET OPTIMISER HASH ONLY 15]\n";
 print "\t#Running step 6_6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
@@ -752,7 +756,7 @@ $time_msg = getStepTimebBeginMsg($step_name);
 print STDOUT $time_msg;
 print $time_msg;
 
------------------------------------------------------------------------
+# -----------------------------------------------------------------------
 
 print "\n[VELVET OPTIMISER HASH ONLY 15 - 20-23nt]\n";
 print "\t#Running step 6_10 [ Assemble unmapped 20-23nt nt - velvetOptimser.pl ]\n";
@@ -1015,6 +1019,33 @@ my $exec9_11 = "$path_filter_diamond -f $step7/diamond_blastx_Hits.fasta -o $ste
 print "\nSTEP9_11\n\t $exec9_11\n";
 `$exec9_11`;
 
+# Replace '\t' characters with actual tabs
+
+# 
+# TODO: 2023-06-05 - Find better names...
+# 
+# my $cmd_fix_seq_no_hit = `sed -i 's/\\t/\t/g' $foo`;
+# my $cmd_fix_seq_no_hit = `sed -i 's/\\t/\t/g' $step7/diamond_blastx_NoHits.fasta`;
+# `$cmd_fix_seq_no_hit`;
+
+my $foo = "$step7/diamond_blastx_NoHits.fasta";
+$foo =~ s/\\t/\t/g;
+`cat $foo > "$step7/test_sed.fasta"`;
+
+# Join all fasta's sequence pieces
+# `fasta_formatter -i $step7/test_sed.fasta -o $step7/test_sed_linear.fasta`;
+`fasta_formatter -i $foo -o $step7/diamond_blastx_NoHits_linear.fasta`;
+# `rm $foo`;
+
+# Add prefix to all contig names
+`
+for i in $step7/*.fasta
+    do
+        name=\`echo \$i | cut -f 1 -d "."\`
+        sed "s/>/>${temp_prefix}_/" \${i} > \${name}_header.fasta
+    done
+`;
+
 # -----------------------------------------------------------------------
 
 $current_time = Time::HiRes::gettimeofday();
@@ -1028,7 +1059,7 @@ print $time_msg;
 ### Merge sequences viral hits (blastn & diamond) & nohits ------------
 #######################################################################
 
-`cat $step7/contigs.virus.blastN.formatted.fasta $step7/diamond_blastx_Viral.fasta $step7/diamond_blastx_NoHits.fasta > $step9/seq_ViralHits_and_NoHits.fasta`;
+`cat $step7/contigs.virus.blastN.formatted.fasta $step7/diamond_blastx_Viral.fasta $step7/diamond_blastx_NoHits_linear.fasta > $step9/seq_ViralHits_and_NoHits.fasta`;
 
 `bowtie-build $step9/seq_ViralHits_and_NoHits.fasta $step9/seq_ViralHits_and_NoHits.fasta`;
 

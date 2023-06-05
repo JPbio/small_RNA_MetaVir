@@ -12,6 +12,7 @@ do
     esac
 done
 
+sed -i 's/\\t/\t/g' ${fasta}
 cp ${fasta} temp_diamond_blastx_Hits.fasta
 grep '>' temp_diamond_blastx_Hits.fasta > temp_headers
 
