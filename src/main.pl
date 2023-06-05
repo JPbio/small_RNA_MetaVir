@@ -9,7 +9,8 @@ use Getopt::Long;
 # TODO: 2023-03-07 - Use a decent logger
 # 
 # use constant PATH_LOG_MAIN => "srna_metavir.main.log";
-use constant EXEC_ROOT_DIR => "/srna_metavir/runs";
+# use constant EXEC_ROOT_DIR => "/srna_metavir/runs";
+use constant EXEC_ROOT_DIR => "./runs";
 
 # $| = 1;     # forces immediate prints into files rather than the buffer.
 
@@ -18,87 +19,45 @@ use constant EXEC_ROOT_DIR => "/srna_metavir/runs";
 #######################################################################
 
 sub getTimeDiff {
-
-    # print STDOUT "\ngetTimeDiff\n (@_)";
-    
-    # my $t0 = shift or die "Must provide at least one date for calculation!";
-    # my $t1 = shift;
-
     my $t0 = $_[0] or die "Must provide at least one date for calculation!";
     my $t1 = $_[1];
-
-    # my ($t0, $t1) = @_;
-    # print STDOUT "\ngetTimeDiff\n (t0 == '$t0' / t1 == '$t1')";
-
-    # my $t0_str = strftime("%Y-%m-%d %H:%M:%S", localtime($t0));
-    # print "t0_str: '$t0_str'\n";
-    
-    # my $t1_str = strftime("%Y-%m-%d %H:%M:%S", localtime($t1));
-    # print "t1_str: '$t1_str'\n";
-
     my $time_diff = Time::HiRes::tv_interval([$t0], [$t1]);
-
-    # print STDOUT "\ngetTimeDiff\n (@_)";
-
     return $time_diff;
 }
 
 sub getTimeStr {
-
-    # print STDOUT "\ngetTimeStr\n (@_)";
-    
-    # my $time = shift // $^T;
-    my $time = $_[0] // $^T;
-    # print "time: '$time'\n";
-
-    # print STDOUT "\ngetTimeStr\n (@_)";
-
+    my $time = $_[0] // Time::HiRes::gettimeofday();
     my $time_ms = 1000 * ($time - int($time));
     my $time_str = strftime("%H:%M:%S", localtime($time)) . sprintf ":%03d", ($time_ms);
-
-    # print STDOUT "\ngetTimeStr\n (@_)";
     return $time_str;
 }
 
-sub getStepTimeInfoMsg {
+sub getStepTimebBeginMsg {
 
-    # print STDOUT "\ngetStepTimeInfoMsg\n (@_)";
+    my $title = $_[0] or die "Must provide step title!";
+    my $time = getTimeStr(Time::HiRes::gettimeofday());
+    
+    return "
+------------------------------------------------------
+>> Begin of step '$title'
 
-    my @params = @_;
+At $time...
+";
+}
 
-    # print STDOUT "\ngetStepTimeInfoMsg\n '@params'";
- 
-    # die "Parameter 'to' is required" if not $params{to};
-
-    # my $title = shift or die "Must provide step title!";
-    # my $t0 = shift or die "Must provide time 00!";
-    # my $t1 = shift or die "Must provide time 01!";
-
-    # my ($title, $t0, $t1) = @_;
+sub getStepTimeEndMsg {
 
     my $title = $_[0] or die "Must provide step title!";
     my $t0 = $_[1] or die "Must provide time 00!";
     my $t1 = $_[2] or die "Must provide time 01!";
 
-    # print STDOUT "\ngetStepTimeInfoMsg\n";
-
     my $t0_str = getTimeStr($t0);
     my $t1_str = getTimeStr($t1);
     my $time_diff_str = getTimeStr(getTimeDiff($t0, $t1));
 
-    # my $aux = getTimeDiff($t0, $t1);
-
-    # print STDOUT "\ngetStepTimeInfoMsg\n";
-
-    # my $time_diff_str = getTimeStr($aux);
-
-    # print STDOUT "\ngetStepTimeInfoMsg\n";
-
-    print STDOUT "\ngetStepTimeInfoMsg\n";
-
     return "
-------------------------------------------------------
->> End of step '$title'
+
+>> End of step '$title'...
 
 From '$t0_str' to '$t1_str'
 Time elapsed: $time_diff_str
@@ -459,15 +418,15 @@ if (not -e $step10) {
 
 $step_name = "Handle FASTA sequences";
 
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
+
 # 
 # REVIEW: 2023-03-01 - Shall we think of better names?
 # 
-
-$current_time = Time::HiRes::gettimeofday();
-$time_msg = getStepTimeInfoMsg($step_name, $last_time, $current_time);
-$last_time = $current_time;
-
-print STDOUT $time_msg;
 
 my $mappedbac;
 my $nReadsUnmapHostBac;
@@ -495,8 +454,7 @@ if (defined($fasta)) {
         # Mapping Host - unfiltered reads against bacters reference
         print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
         
-
-        my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index $path_bacterial_genome_all $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log ";
+        my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index $path_bacterial_genome_all $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log";
         
         print "\n[STEP 05.1]\n\t $exec5_1\n";
         `$exec5_1`;
@@ -593,7 +551,7 @@ if (not defined($nohostfilter)) {
     my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index $path_bacterial_genome_all $step4/unmappedVectorReads.fasta > /dev/null 2>>$path_warns ";
     
     print "\n[STEP 05.1]\n\t $exec5_1\n";
-    `$exec5_1`;
+    # `$exec5_1`;
 
     $nReadsUnmapHostBac = `grep -c '>' $path_unmapped_vector_bacters`;
     chomp($nReadsUnmapHostBac);
@@ -613,15 +571,21 @@ if (not defined($nohostfilter)) {
 }
 
 $current_time = Time::HiRes::gettimeofday();
-$time_msg = getStepTimeInfoMsg($step_name, $last_time, $current_time);
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
 $last_time = $current_time;
-
 print STDOUT $time_msg;
-print $time_msg;
 
 #######################################################################
 ### Select filtered sequences by size ---------------------------------
 #######################################################################
+
+$step_name = "Select filtered sequences by size";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
 
 # By default we've being using 18 ~ 30 nt as arguments
 
@@ -646,12 +610,26 @@ my $exec5_2 = "python3 $path_filter_fasta_by_size $path_unmapped_vector_bacters 
 print "\n[STEP 05.2]\n\t $exec5_2\n";
 `$exec5_2`;
 
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+print STDOUT $time_msg;
+
 #######################################################################
 ### Run Velvet optmiser (automatically defined hash) ------------------
 #######################################################################
 
+$step_name = "Run Velvet optmiser (automatically defined hash)";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
+
 print "\n#[RUNNING VELVET OPTIMIZER]\n";
 print "\t#Running step 6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
+
 my $exec6_1 = "velvetoptimiser --d $step5_opt/run1 --t $process --s 13 --e 19 --f '-short -fasta $path_unmapped_trimmed_filtered' --a $process 2>>$path_warns";
 
 print "\n[STEP 06.1]\n\t $exec6_1\n";
@@ -669,12 +647,30 @@ my $exec6_5 = "perl $path_merge_contigs -contig1 $step5_opt/run1/contigs.fa -con
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_5`;
 
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
+
 #######################################################################
 ### Running velvet (fixed hash) ---------------------------------------
 #######################################################################
 
+$step_name = "Running velvet (fixed hash)";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+-----------------------------------------------------------------------
+
 print "\n[RUNNING DEFAULT VELVET]\n";
 print "\t#Running step 6 [ Assemble unmapped 21 nt - velvet hash $hash ]\n";
+
 my $exec6 = "velveth $step5_fix/run1 $hash -fasta -short $path_unmapped_trimmed_filtered 2>>$path_warns";
 
 print "\n[STEP 06]\n\t $exec6\n";
@@ -696,9 +692,26 @@ $exec6_5 = "perl $path_merge_contigs -contig1 $step5_fix/run1/contigs.fa -contig
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_5`;
 
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
+
 #######################################################################
 ### Running velvet optmiser (FIXED hash) ------------------------------
 #######################################################################
+
+$step_name = "Running velvet optmiser (FIXED hash)";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+-----------------------------------------------------------------------
 
 print "\n[VELVET OPTIMISER HASH ONLY 15]\n";
 print "\t#Running step 6_6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
@@ -720,9 +733,26 @@ my $exec6_9 = "perl $path_merge_contigs -contig1 $step5_opt_fix/run1/contigs.fa 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_9`;
 
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
+
 #######################################################################
 ### Running velvet optmiser (FIXED hash) 20-23 ------------------------
 #######################################################################
+
+$step_name = "Running velvet optmiser (FIXED hash) 20-23";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+-----------------------------------------------------------------------
 
 print "\n[VELVET OPTIMISER HASH ONLY 15 - 20-23nt]\n";
 print "\t#Running step 6_10 [ Assemble unmapped 20-23nt nt - velvetOptimser.pl ]\n";
@@ -743,10 +773,27 @@ my $exec6_13 = "perl $path_merge_contigs -contig1 $step5_opt_20to23/run1/contigs
 
 print "\n[STEP 06.13]\n\t $exec6_13\n";
 `$exec6_13`;
-   
+
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
+
 #######################################################################
 ### Running velvet optmiser (hash 17) 24-30 ---------------------------
 #######################################################################
+
+$step_name = "Running velvet optmiser (hash 17) 24-30";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
 
 #
 # TODO: 2023-05-31 - Test this condition
@@ -776,9 +823,26 @@ if (defined($deg)) {
     `$exec62_13`;
 }
 
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
+
 #######################################################################
 ### Merging assemblies ------------------------------------------------
 #######################################################################
+
+$step_name = "Merging assemblies";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
 
 if (not defined($deg)) {
     `touch $step5_opt_24to30/contigs.final.fasta`;
@@ -811,9 +875,9 @@ print "\n[STEP 06.7]\n\t $step6_7\n";
 my $countAssembledContigs = `grep -c '>' $step5_cap3/contigs_merged.final.gt50.fasta`;
 chomp($countAssembledContigs);
 # print metrics "#total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
-print "#total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
+print "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
 # print interest "#total assembled contigs\t" . $countAssembledContigs . "\n"; # Assembled Contigs
-print "#total assembled contigs\t" . $countAssembledContigs . "\n"; # Assembled Contigs
+print "# Total assembled contigs\t" . $countAssembledContigs . "\n"; # Assembled Contigs
 
 print "[FILTER CONTIGS gt 200 nt]\n";
 my $exec_FC2 = "python3 $path_filter_fasta_by_size $step5_cap3/contigs_merged.final.gt50.fasta 200 1000000 $step5_cap3/contigs_merged.final.gt200.fasta";
@@ -824,13 +888,30 @@ print "\n[STEP 05.2]\n\t $exec_FC2\n";
 $countAssembledContigs = `grep -c '>' $step5_cap3/contigs_merged.final.gt200.fasta`;
 chomp($countAssembledContigs);
 # print metrics "#contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
-print "#contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
+print "# Contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
 # print interest "#contigs gt200\t".$countAssembledContigs . "\n"; # Assembled Contigs
-print "#contigs gt200\t".$countAssembledContigs . "\n"; # Assembled Contigs
+print "# Contigs gt200\t".$countAssembledContigs . "\n"; # Assembled Contigs
+
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
 
 #######################################################################
 ### Blastn ------------------------------------------------------------
 #######################################################################
+
+$step_name = "Blastn";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
 
 print "\n[BlastN contigs gt 200]\n";
 print "\t#Running step 10_111 [ Blast against NT - blast+ blastn ]\n";
@@ -899,23 +980,49 @@ print "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
 # Assembled Contigs
 `cat $step7/contigs.bN.blastn.analyze.virus.contigs.fasta | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $step7/contigs.virus.blastN.formatted.fasta`;
 
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
+
 #######################################################################
 ### DIAMOND (Blastx) --------------------------------------------------
 #######################################################################
 
+$step_name = "DIAMOND (Blastx)";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
+
 print "\n[Diamond (BlastX) contigs gt 200]\n";
-print "\t#Running step 9 [ Diamond-Blast against NR ]\n";
+print "\t# Running step 9 [ Diamond-Blast against NR ]\n";
 
 my $exec9 = "diamond blastx -q $step6/seqNoHit.blastN.1e5.fasta -d $path_diamond_nr -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $step7/diamond_blastx.out --un $step7/diamond_blastx_NoHits.fasta --unfmt fasta --al $step7/diamond_blastx_Hits.fasta --alfmt fasta 2>  $step7/diamond.log ";
 
 print "\nSTEP9\n\t $exec9\n";
 `$exec9`;
 
-print "\t#Filtering Diamond results... ]\n";   
+print "\t# Filtering Diamond results... ]\n";   
 my $exec9_11 = "$path_filter_diamond -f $step7/diamond_blastx_Hits.fasta -o $step7/diamond_blastx.out -d $step7";
 
 print "\nSTEP9_11\n\t $exec9_11\n";
 `$exec9_11`;
+
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
 
 #######################################################################
 ### Merge sequences viral hits (blastn & diamond) & nohits ------------
@@ -942,102 +1049,71 @@ $hitsBlastn = `grep '>' $step9/seq_ViralHits_and_NoHits.withSiRNA.fasta | grep b
 chomp($hitsBlastn);
 
 # 
-# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
+# TODO: 2023-05-25 - Check what to do with all these 'parallel' logging files
 # 
 
 # print metrics "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
 # print interest "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
 print "# Contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
-
 $hitsBlastn = `grep '>' $step9/seq_ViralHits_and_NoHits.withSiRNA_and_PiRNA.fasta | grep blastN | wc -l `;
 chomp($hitsBlastn);
-
-# 
-# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
-# 
 
 # print metrics "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
 # print interest "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
 print "# Contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
-
 $hitsBlastn = `grep '>' $step9/seq_ViralHits_and_NoHits.withPiRNA.fasta | grep blastN | wc -l `;
 chomp($hitsBlastn);
-
-# 
-# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
-# 
 
 # print metrics "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn."\n";
 # print interest "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn. "\n";
 print "# Contigs hit VIRUS blastN with piRNA\t".$hitsBlastn."\n";
-
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA.fasta | grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
-
-# 
-# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
-# 
 
 # print metrics "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
 print "# Contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
-
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA_and_PiRNA.fasta| grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
-
-# 
-# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
-# 
 
 # print metrics "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 print "# Contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
-
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withPiRNA.fasta | grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
-
-# 
-# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
-# 
 
 # print metrics "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
 print "# Contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
-
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA.fasta | grep -v blastX | grep -v blastN | wc -l `;
 chomp($hitsVirusBlastn);
-
-# 
-# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
-# 
 
 # print metrics "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
 print "# Contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
-
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withSiRNA_and_PiRNA.fasta | grep -v blastN | -v grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
-
-# 
-# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
-# 
 
 # print metrics "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 print "# Contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
-
 $hitsVirusBlastn = `grep  '>' $step9/seq_ViralHits_and_NoHits.withPiRNA.fasta | grep -v blastN | -v grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
-
-# 
-# TODO: 2023-05-25 - Check what to do with these 'parallel' logging files
-# 
 
 # print metrics "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
 print "# Contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
 
 # close(metrics);
+
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
 
 #######################################################################
 ### Pattern based analysis --------------------------------------------
