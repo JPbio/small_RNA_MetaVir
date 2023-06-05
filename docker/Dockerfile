@@ -43,14 +43,10 @@ FROM stage_r AS stage_dependencies
 
 # Add Blast
 
-# 
-# TODO: 2023-06-01 - Use blast 2014
-# 
-
-RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.13.0/ncbi-blast-2.13.0+-x64-linux.tar.gz && \
-        tar xvpf ncbi-blast-2.13.0+-x64-linux.tar.gz && \
-        mv ncbi-blast-2.13.0+/bin/* /usr/bin/ && \
-        rm -rf ncbi-blast-2.13.0+* && \
+RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.14.0/ncbi-blast-2.14.0+-x64-linux.tar.gz && \
+        tar xvpf ncbi-blast-2.14.0+-x64-linux.tar.gz && \
+        mv ncbi-blast-2.14.0+/bin/* /usr/bin/ && \
+        rm -rf ncbi-blast-2.14.0+* && \
     wget https://ftp.ncbi.nlm.nih.gov/blast/executables/legacy.NOTSUPPORTED/2.2.26/blast-2.2.26-x64-linux.tar.gz && \
         tar xvpf blast-2.2.26-x64-linux.tar.gz && \
         mv blast-2.2.26/bin/formatdb /usr/bin/ && \
