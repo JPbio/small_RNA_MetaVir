@@ -11,6 +11,9 @@ use Getopt::Long;
 # use constant PATH_LOG_MAIN => "srna_metavir.main.log";
 # use constant EXEC_ROOT_DIR => "/srna_metavir/runs";
 use constant EXEC_ROOT_DIR => "./runs";
+use constant REF_BACTERIA_GENOMES => "/srna_metavir/asset/refs/bacterial_genomes/all_bacters.fasta";
+use constant REF_BLAST_DB_NT => "/srna_metavir/asset/blastdb/nt";
+use constant REF_DIAMOND_NR => "/srna_metavir/asset/diamond/nr.dmnd";
 
 # $| = 1;     # forces immediate prints into files rather than the buffer.
 
@@ -313,11 +316,6 @@ my $step_virus	="$prefix/virus";
 
 # Utils scripts
 my $path_utils = "/srna_metavir/src/utils";
-my $path_assets = "/srna_metavir/asset";
-
-my $path_bacterial_genome_all = "$path_assets/refs/bacterial_genomes/all_bacters.fasta";
-my $path_blast_db_nt = "$path_assets/blastdb/nt";
-my $path_diamond_nr = "$path_assets/diamond/nr.dmnd";
 
 my $path_warns = "$prefix/$exec_id.warn";
 
@@ -477,7 +475,7 @@ if (defined($fasta)) {
         # Mapping Host - unfiltered reads against bacters reference
         print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
         
-        my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index $path_bacterial_genome_all $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log";
+        my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log";
         
         print "\n[STEP 05.1]\n\t $exec5_1\n";
         `$exec5_1`;
@@ -571,7 +569,7 @@ if (not defined($nohostfilter)) {
 
     # Mapping Host - filtered reads against bacters reference
     print "[MAPPING HOST-FILTERED READS AGAINST BACTERIAL GENOMES]... \n";
-    my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index $path_bacterial_genome_all $step4/unmappedVectorReads.fasta > /dev/null 2>>$path_warns ";
+    my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $step4/unmappedVectorReads.fasta > /dev/null 2>>$path_warns ";
     
     print "\n[STEP 05.1]\n\t $exec5_1\n";
     # `$exec5_1`;
@@ -875,6 +873,8 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
+my $path_05_cap3_gt200 = "$step5_cap3/contigs_merged.final.gt200.fasta";
+
 if (not defined($deg)) {
     `touch $step5_opt_24to30/contigs.final.fasta`;
 }
@@ -911,12 +911,12 @@ print "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled 
 print "# Total assembled contigs\t" . $countAssembledContigs . "\n"; # Assembled Contigs
 
 print "[FILTER CONTIGS gt 200 nt]\n";
-my $exec_FC2 = "python3 $path_filter_fasta_by_size $step5_cap3/contigs_merged.final.gt50.fasta 200 1000000 $step5_cap3/contigs_merged.final.gt200.fasta";
+my $exec_FC2 = "python3 $path_filter_fasta_by_size $step5_cap3/contigs_merged.final.gt50.fasta 200 1000000 $path_05_cap3_gt200";
 
 print "\n[STEP 05.2]\n\t $exec_FC2\n";
 `$exec_FC2`;
 
-$countAssembledContigs = `grep -c '>' $step5_cap3/contigs_merged.final.gt200.fasta`;
+$countAssembledContigs = `grep -c '>' $path_05_cap3_gt200`;
 chomp($countAssembledContigs);
 # print metrics "#contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
 print "# Contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
@@ -945,38 +945,59 @@ print $time_msg;
 # -----------------------------------------------------------------------
 
 my $path_06_blastn_no_hit_1e5 = "$step6/seqNoHit.blastN.1e5.fasta";
+my $path_06_blastn_merge_gt200_1e5 = "$step6/contigs_merged.final.gt200.1e5.blastn";
 
+my $path_07_bN_analyse_blastn_prefix = "$step7/contigs.bN.blastn.analyze";
+my $path_07_bN_analyze_prefix = "$step7/contigs.bN.analyze";
+my $path_07_bN_analize = "$path_07_bN_analyze_prefix..contigs.fasta"; # "$step7/contigs.bN.analyze..contigs.fasta"
+my $path_07_bN_analize_viral = "$path_07_bN_analyze_prefix.virus.contigs.fasta"; # "$step7/contigs.bN.blastn.analyze.virus.contigs.fasta"
+my $path_07_bN_analize_non_viral = "$path_07_bN_analyze_prefix.nonviral.contigs.fasta"; # "$step7/contigs.bN.analyze.nonviral.contigs.fasta";
+
+my $path_07_blastn_analyse = "$step7/contigs.blastN.analyze";
+my $path_07_blastn_analize_virus = "$step7/contigs.blastN.virus.analyze";
+my $path_07_blastn_1e5_report = "$step7/contigs.blastn.1e5.report";
 my $path_07_blastn_virus = "$step7/contigs.virus.blastN.formatted.fasta";
 my $path_07_blastn_virus_header = "$step7/contigs.virus.blastN.formatted.header.fasta";
 
+my $path_07_dmnd_log = "$step7/diamond.log";
+my $path_07_dmnd_hits = "$step7/diamond_blastx_Hits.fasta";
+my $path_07_dmnd_out = "$step7/diamond_blastx.out";
+my $path_07_dmnd_no_hits = "$step7/diamond_blastx_NoHits.fasta";
+my $path_07_dmnd_no_hits_linear = "$step7/diamond_blastx_NoHits_linear.fasta";
+my $path_07_dmnd_no_hits_header = "$step7/diamond_blastx_NoHits_linear.header.fasta";
+my $path_07_dmnd_viral_header = "$step7/diamond_blastx_Viral.header.fasta";
+
+my $path_07_aux_fasta = "$step7/aux.fasta";
+my $path_07_aux_non_viral = "$step7/aux_nonviral";
+
 print "\n[BlastN contigs gt 200]\n";
 print "\t#Running step 10_111 [ Blast against NT - blast+ blastn ]\n";
-my $exec10_111 = "blastn -query $step5_cap3/contigs_merged.final.gt200.fasta -db $path_blast_db_nt/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $step6/contigs_merged.final.gt200.1e5.blastn  -num_threads $process";
+my $exec10_111 = "blastn -query $path_05_cap3_gt200 -db ".REF_BLAST_DB_NT."/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $path_06_blastn_merge_gt200_1e5  -num_threads $process";
 
 print "\nSTEP10_111\n\t $exec10_111\n";
 `$exec10_111`;
 
 print "\t#Running filterblast...\n";
-my $exec10_112 = "perl $path_filter_blast -b $step6/contigs_merged.final.gt200.1e5.blastn -evalue 1e-5 --best --desc > $step7/contigs.blastn.1e5.report";
+my $exec10_112 = "perl $path_filter_blast -b $path_06_blastn_merge_gt200_1e5 -evalue 1e-5 --best --desc > $path_07_blastn_1e5_report";
 
 print "\nSTEP10_112\n\t $exec10_112\n";
 `$exec10_112`;
 
 print "\n[Extracting contigs all Hits blastn 1e-5]\n";
-`perl $path_analyse_contigs_blastn -i $step7/contigs.blastn.1e5.report  -f $step5_cap3/contigs_merged.final.gt200.fasta -q "" -p  $step7/contigs.bN.analyze --fasta > $step7/contigs.blastN.analyze`;
+`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200 -q "" -p  $path_07_bN_analyze_prefix --fasta > $path_07_blastn_analyse`;
 
 print "\n[Extracting contigs viral blastn 1e-5]\n";
-`perl $path_analyse_contigs_blastn -i $step7/contigs.blastn.1e5.report  -f $step5_cap3/contigs_merged.final.gt200.fasta -q "virus" -p  $step7/contigs.bN.blastn.analyze --fasta > $step7/contigs.blastN.virus.analyze`;
+`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200 -q "virus" -p  $path_07_bN_analyse_blastn_prefix --fasta > $path_07_blastn_analize_virus`;
 
 print "\n[Extracting contigs nonviral blastn 1e-5]\n";
-`grep -v -i "virus" $step7/contigs.bN.analyze..contigs.fasta | grep '>' | cut -f1 -d " " >  $step7/aux_nonviral`;
+`grep -v -i "virus" $path_07_bN_analize | grep '>' | cut -f1 -d " " >  $path_07_aux_non_viral`;
 
-`fasta_formatter -i $step7/contigs.bN.analyze..contigs.fasta > $step7/aux.fasta`;
-`while read p; do grep -A1 \${p} $step7/aux.fasta >> $step7/contigs.bN.analyze.nonviral.contigs.fasta;done < $step7/aux_nonviral`;
-`rm -f $step7/aux.fasta`;
-`rm -f $step7/aux_nonviral`;
+`fasta_formatter -i $path_07_bN_analize > $path_07_aux_fasta`;
+`while read p; do grep -A1 \${p} $path_07_aux_fasta >> $path_07_bN_analize_non_viral;done < $path_07_aux_non_viral`;
+`rm -f $path_07_aux_fasta`;
+`rm -f $path_07_aux_non_viral`;
 
-my $hitsBlastn = `grep -c '>' $step7/contigs.bN.analyze..contigs.fasta`;
+my $hitsBlastn = `grep -c '>' $path_07_bN_analize`;
 chomp($hitsBlastn);
 
 # 
@@ -989,7 +1010,7 @@ chomp($hitsBlastn);
 print "# Contigs hit blastN\t".$hitsBlastn."\n";
 
 # Assembled Contigs
-my $hitsVirusBlastn = `grep -c '>' $step7/contigs.bN.blastn.analyze.virus.contigs.fasta`;
+my $hitsVirusBlastn = `grep -c '>' $path_07_bN_analize_viral`;
 chomp($hitsVirusBlastn);
 
 # print metrics "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
@@ -998,7 +1019,7 @@ print "# Contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
 
 # Assembled Contigs
 print "\n[Extracting contigs no hit blastn 1e-5]\n";
-my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $step5_cap3/contigs_merged.final.gt200.fasta -blast $step7/contigs.blastn.1e5.report -out $path_06_blastn_no_hit_1e5";
+my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $path_05_cap3_gt200 -blast $path_07_blastn_1e5_report -out $path_06_blastn_no_hit_1e5";
 
 print "\nSTEP10_113\n\t $exec10_113\n";
 `$exec10_113`;
@@ -1013,7 +1034,7 @@ chomp($seqsNoHitBlastn);
 # print metrics "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
 print "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
 # Assembled Contigs
-`cat $step7/contigs.bN.blastn.analyze.virus.contigs.fasta | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $path_07_blastn_virus`;
+`cat $path_07_bN_analize_viral | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $path_07_blastn_virus`;
 
 # -----------------------------------------------------------------------
 
@@ -1036,18 +1057,10 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_07_dmnd_hits = "$step7/diamond_blastx_Hits.fasta";
-my $path_07_dmnd_out = "$step7/diamond_blastx.out";
-my $path_07_dmnd_no_hits = "$step7/diamond_blastx_NoHits.fasta";
-my $path_07_dmnd_no_hits_linear = "$step7/diamond_blastx_NoHits_linear.fasta";
-my $path_07_dmnd_no_hits_header = "$step7/diamond_blastx_NoHits_linear.header.fasta";
-
-my $path_07_dmnd_viral_header = "$step7/diamond_blastx_Viral.header.fasta";
-
 print "\n[Diamond (BlastX) contigs gt 200]\n";
 print "\t# Running step 9 [ Diamond-Blast against NR ]\n";
 
-my $exec9 = "diamond blastx -q $path_06_blastn_no_hit_1e5 -d $path_diamond_nr -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $path_07_dmnd_out --un $path_07_dmnd_no_hits --unfmt fasta --al $path_07_dmnd_hits --alfmt fasta 2>  $step7/diamond.log ";
+my $exec9 = "diamond blastx -q $path_06_blastn_no_hit_1e5 -d ".REF_DIAMOND_NR." -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $path_07_dmnd_out --un $path_07_dmnd_no_hits --unfmt fasta --al $path_07_dmnd_hits --alfmt fasta 2>  $path_07_dmnd_log";
 
 print "\nSTEP9\n\t $exec9\n";
 `$exec9`;
