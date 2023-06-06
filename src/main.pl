@@ -123,7 +123,7 @@ my $size;
 # 
 # my $prefix = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
 
-my $exec_id = "exec_test_04";
+my $exec_id = "exec_test_05";
 my $prefix = EXEC_ROOT_DIR . "/$exec_id";
 
 my $se;
@@ -159,7 +159,7 @@ GetOptions("qual=s" => \$qual,
     "fastqgz=s" => \$fastqgz,
     "fastq=s" => \$fastq,
     # "prefix=s" => \$prefix, # TODO: 2023-03-06 - Reenable custom naming for this folder
-    "temp_prefix=s" => \$temp_prefix, # TODO: 2023-03-06 - Reenable custom naming for this folder
+    "tempprefix=s" => \$temp_prefix, # TODO: 2023-03-06 - Reenable custom naming for this folder
     "size=s" => \$size,
     "hash=s" => \$hash,
     # "log=s" => \$log,
@@ -412,9 +412,28 @@ if (not -e $step10) {
 ### Handle FASTQ sequences --------------------------------------------
 #######################################################################
 
+$step_name = "Handle FASTQ sequences";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
+
+my $path_00_trim_quality = "$step0/trimming.quality.fastq";
+my $path_02_trim_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
+my $path_02_trim_quality_gt15 = "$step2/trimmed.quality.gt15.fastq";
+
 # 
 # TODO: 2023-02-27 - Handle FastQ sequences
 # 
+
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+print STDOUT $time_msg;
 
 #######################################################################
 ### Handle FASTA sequences --------------------------------------------
@@ -574,6 +593,8 @@ if (not defined($nohostfilter)) {
     print "\n  PRE-PROCESSING FINISHED \n";
 }
 
+# -----------------------------------------------------------------------
+
 $current_time = Time::HiRes::gettimeofday();
 $time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
 $last_time = $current_time;
@@ -636,6 +657,12 @@ print "\t#Running step 6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
 
 my $exec6_1 = "velvetoptimiser --d $step5_opt/run1 --t $process --s 13 --e 19 --f '-short -fasta $path_unmapped_trimmed_filtered' --a $process 2>>$path_warns";
 
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+print STDOUT $time_msg;
 print "\n[STEP 06.1]\n\t $exec6_1\n";
 `$exec6_1`;
 
@@ -1059,7 +1086,15 @@ print $time_msg;
 ### Merge sequences viral hits (blastn & diamond) & nohits ------------
 #######################################################################
 
-`cat $step7/contigs.virus.blastN.formatted.fasta $step7/diamond_blastx_Viral.fasta $step7/diamond_blastx_NoHits_linear.fasta > $step9/seq_ViralHits_and_NoHits.fasta`;
+$step_name = "Merge sequences viral hits (blastn & diamond) & nohits";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
+
+`cat $step7/contigs.virus.blastN.formatted.fasta $step7/diamond_blastx_Viral.fasta $path_07_diamond_no_hits_linear > $step9/seq_ViralHits_and_NoHits.fasta`;
 
 `bowtie-build $step9/seq_ViralHits_and_NoHits.fasta $step9/seq_ViralHits_and_NoHits.fasta`;
 
@@ -1150,6 +1185,14 @@ print $time_msg;
 ### Pattern based analysis --------------------------------------------
 #######################################################################
 
+$step_name = "Pattern based analysis";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
+
 `mkdir $step_virus`;
 
 # Merge 02 files with contigs hit virus
@@ -1233,6 +1276,15 @@ print "\n\n Creating plots \n\n";
 `R --no-save $step10/reads.VS.contigs_virus_and_nohit.siRNAs.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs < $path_heatmap_corr 2>/dev/null`;
 
 `R --no-save $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs < $path_heatmap_corr 2>/dev/null`;
+
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
 
 #######################################################################
 
