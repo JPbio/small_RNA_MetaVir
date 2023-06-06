@@ -1290,14 +1290,6 @@ print $time_msg;
 
 #######################################################################
 
-# 
-# TODO: 2023-03-01 - Encapsulate these date / time formatting stuff
-# 
-
-# Calculate elapsed time
-# my $time_elapsed = Time::HiRes::tv_interval([$time_start]);
-# my $time_elapsed_ms = 1000 * ($time_elapsed - int($time_elapsed));
-# my $time_elapsed_str = strftime("%H:%M:%S", localtime($time_elapsed)) . sprintf ":%03d", ($time_elapsed_ms);
 $current_time = Time::HiRes::gettimeofday();
 $time_diff = getTimeDiff($time_start, $current_time);
 my $time_elapsed_str = getTimeStr($time_diff);
