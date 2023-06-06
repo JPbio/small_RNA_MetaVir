@@ -123,7 +123,7 @@ my $size;
 # 
 # my $prefix = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
 
-my $exec_id = "exec_test_05";
+my $exec_id = "exec_test_06";
 my $prefix = EXEC_ROOT_DIR . "/$exec_id";
 
 my $se;
@@ -944,6 +944,11 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
+my $path_06_blastn_no_hit_1e5 = "$step6/seqNoHit.blastN.1e5.fasta";
+
+my $path_07_blastn_virus = "$step7/contigs.virus.blastN.formatted.fasta";
+my $path_07_blastn_virus_header = "$step7/contigs.virus.blastN.formatted.header.fasta";
+
 print "\n[BlastN contigs gt 200]\n";
 print "\t#Running step 10_111 [ Blast against NT - blast+ blastn ]\n";
 my $exec10_111 = "blastn -query $step5_cap3/contigs_merged.final.gt200.fasta -db $path_blast_db_nt/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $step6/contigs_merged.final.gt200.1e5.blastn  -num_threads $process";
@@ -993,12 +998,12 @@ print "# Contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
 
 # Assembled Contigs
 print "\n[Extracting contigs no hit blastn 1e-5]\n";
-my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $step5_cap3/contigs_merged.final.gt200.fasta -blast $step7/contigs.blastn.1e5.report -out $step6/seqNoHit.blastN.1e5.fasta";
+my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $step5_cap3/contigs_merged.final.gt200.fasta -blast $step7/contigs.blastn.1e5.report -out $path_06_blastn_no_hit_1e5";
 
 print "\nSTEP10_113\n\t $exec10_113\n";
 `$exec10_113`;
 
-my $seqsNoHitBlastn = `grep -c '>' $step6/seqNoHit.blastN.1e5.fasta`;
+my $seqsNoHitBlastn = `grep -c '>' $path_06_blastn_no_hit_1e5`;
 chomp($seqsNoHitBlastn);
 
 # 
@@ -1007,9 +1012,8 @@ chomp($seqsNoHitBlastn);
 
 # print metrics "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
 print "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
-
 # Assembled Contigs
-`cat $step7/contigs.bN.blastn.analyze.virus.contigs.fasta | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $step7/contigs.virus.blastN.formatted.fasta`;
+`cat $step7/contigs.bN.blastn.analyze.virus.contigs.fasta | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $path_07_blastn_virus`;
 
 # -----------------------------------------------------------------------
 
@@ -1032,45 +1036,43 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
+my $path_07_dmnd_hits = "$step7/diamond_blastx_Hits.fasta";
+my $path_07_dmnd_out = "$step7/diamond_blastx.out";
+my $path_07_dmnd_no_hits = "$step7/diamond_blastx_NoHits.fasta";
+my $path_07_dmnd_no_hits_linear = "$step7/diamond_blastx_NoHits_linear.fasta";
+my $path_07_dmnd_no_hits_header = "$step7/diamond_blastx_NoHits_linear.header.fasta";
+
+my $path_07_dmnd_viral_header = "$step7/diamond_blastx_Viral.header.fasta";
+
 print "\n[Diamond (BlastX) contigs gt 200]\n";
 print "\t# Running step 9 [ Diamond-Blast against NR ]\n";
 
-my $exec9 = "diamond blastx -q $step6/seqNoHit.blastN.1e5.fasta -d $path_diamond_nr -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $step7/diamond_blastx.out --un $step7/diamond_blastx_NoHits.fasta --unfmt fasta --al $step7/diamond_blastx_Hits.fasta --alfmt fasta 2>  $step7/diamond.log ";
+my $exec9 = "diamond blastx -q $path_06_blastn_no_hit_1e5 -d $path_diamond_nr -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $path_07_dmnd_out --un $path_07_dmnd_no_hits --unfmt fasta --al $path_07_dmnd_hits --alfmt fasta 2>  $step7/diamond.log ";
 
 print "\nSTEP9\n\t $exec9\n";
 `$exec9`;
 
 print "\t# Filtering Diamond results... ]\n";   
-my $exec9_11 = "$path_filter_diamond -f $step7/diamond_blastx_Hits.fasta -o $step7/diamond_blastx.out -d $step7";
+my $exec9_11 = "$path_filter_diamond -f $path_07_dmnd_hits -o $path_07_dmnd_out -d $step7";
 
 print "\nSTEP9_11\n\t $exec9_11\n";
 `$exec9_11`;
 
 # Replace '\t' characters with actual tabs
+`sed -i 's/\\\\t/\\t/g' $path_07_dmnd_no_hits`;
 
-# 
-# TODO: 2023-06-05 - Find better names...
-# 
-# my $cmd_fix_seq_no_hit = `sed -i 's/\\t/\t/g' $foo`;
-# my $cmd_fix_seq_no_hit = `sed -i 's/\\t/\t/g' $step7/diamond_blastx_NoHits.fasta`;
-# `$cmd_fix_seq_no_hit`;
-
-my $foo = "$step7/diamond_blastx_NoHits.fasta";
-$foo =~ s/\\t/\t/g;
-`cat $foo > "$step7/test_sed.fasta"`;
-
-# Join all fasta's sequence pieces
-# `fasta_formatter -i $step7/test_sed.fasta -o $step7/test_sed_linear.fasta`;
-`fasta_formatter -i $foo -o $step7/diamond_blastx_NoHits_linear.fasta`;
-# `rm $foo`;
+# Make a 'linear' version of 'no hits' fasta (join all pieces for each sequence)
+`fasta_formatter -i $path_07_dmnd_no_hits -o $path_07_dmnd_no_hits_linear`;
+# `rm $path_07_dmnd_no_hits`;
 
 # Add prefix to all contig names
-`
-for i in $step7/*.fasta
-    do
-        name=\`echo \$i | cut -f 1 -d "."\`
-        sed "s/>/>${temp_prefix}_/" \${i} > \${name}_header.fasta
-    done
+`for file in $step7/*.fasta; do
+    if [ -f "\$file" ]; then
+        filename=\$(basename "\$file")
+        filename_without_ext="\${filename%.*}"
+        sed 's/^>/>${temp_prefix}_/' $step7/\$filename > $step7/\${filename_without_ext}.header.fasta
+    fi
+done
 `;
 
 # -----------------------------------------------------------------------
@@ -1094,7 +1096,7 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-`cat $step7/contigs.virus.blastN.formatted.fasta $step7/diamond_blastx_Viral.fasta $path_07_diamond_no_hits_linear > $step9/seq_ViralHits_and_NoHits.fasta`;
+`cat $path_07_blastn_virus_header $path_07_dmnd_viral_header $path_07_dmnd_no_hits_header > $step9/seq_ViralHits_and_NoHits.fasta`;
 
 `bowtie-build $step9/seq_ViralHits_and_NoHits.fasta $step9/seq_ViralHits_and_NoHits.fasta`;
 
@@ -1198,7 +1200,7 @@ print $time_msg;
 # Merge 02 files with contigs hit virus
 my $path_contig_viral_hits_all = "$step10/all_contigs_hit_virus.fasta";
 
-`cat $step7/contigs.virus.blastN.formatted.fasta $step7/diamond_blastx_Viral.fasta > $path_contig_viral_hits_all`;
+`cat $path_07_blastn_virus_header $path_07_dmnd_viral_header > $path_contig_viral_hits_all`;
 
 my $count_hit_lines = `cat $path_contig_viral_hits_all | wc -l`;
 chomp($count_hit_lines);
