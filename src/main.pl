@@ -126,7 +126,7 @@ my $size;
 # 
 # my $prefix = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
 
-my $exec_id = "exec_test_06";
+my $exec_id = "exec_test_07";
 my $prefix = EXEC_ROOT_DIR . "/$exec_id";
 
 my $se;
@@ -252,35 +252,6 @@ $runningDetails .= "\n-------------------------------------------\n";
 print STDOUT $runningDetails . "\n";
 
 #######################################################################
-### Configure logging -------------------------------------------------
-#######################################################################
-
-
-# 
-# TODO: 2023-02-27 - Find a better way to do this...
-# TODO: 2023-02-27 - Restablish the custom log file(s) option
-# 
-
-# open(metrics, ">$step8/full_metrics.txt");
-# open(interest, ">$step8/metrics_of_interest.txt");
-# open(LOG, ">$log");
-
-# 
-# NOTE: From here on all printed stuff will be sent to the log file
-# 
-
-# open filehandle log.txt
-my $LOG_FH;
-# open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
-open($LOG_FH, ">>", "$prefix/$exec_id.log") or die "Couldn't open: $!"; # $! is a special variable holding the error
-select $LOG_FH;
-
-print "\n\n";
-print "#######################################################################\n";
-print ">> New execution";
-print $runningDetails;
-
-#######################################################################
 ### Define paths ------------------------------------------------------
 #######################################################################
 
@@ -333,13 +304,6 @@ my $path_z_score = "$path_utils/Z-score.bothstrands.pl";
 my $path_heatmap_corr = "$path_utils/heatmap_correlation_VISA.R";
 my $path_plot_map_data_base_preference = "$path_utils/plot-map-base-preference/plotMappingDataPerBasePreference.pl";
 my $path_calc_pattern_sam = "$path_utils/pattern-sam/calcPatternInSamFile.pl";
-
-my $path_trimmed_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
-
-my $path_unmapped_vector_bacters = "$step4/unmappedVectorBacters.fasta";
-my $path_unmapped_trimmed_filtered = "$step4/unmapped_trimmed_filtered.fasta";
-my $path_unmapped_trimmed_filtered_20_23 = "$step4/unmapped_trimmed_filtered.20-23.fasta";
-my $path_unmapped_trimmed_filtered_24_30 = "$step4/unmapped_trimmed_filtered.24-30.fasta";
 
 #######################################################################
 ### Create step folders -----------------------------------------------
@@ -407,16 +371,45 @@ if (not -e $step10) {
 }
 
 #######################################################################
-### Handle FASTQ sequences --------------------------------------------
+### Configure logging -------------------------------------------------
 #######################################################################
 
-$step_name = "Handle FASTQ sequences";
 
-$time_msg = getStepTimebBeginMsg($step_name);
-print STDOUT $time_msg;
-print $time_msg;
+# 
+# TODO: 2023-02-27 - Find a better way to do this...
+# TODO: 2023-02-27 - Restablish the custom log file(s) option
+# 
 
-# -----------------------------------------------------------------------
+# open(metrics, ">$step8/full_metrics.txt");
+# open(interest, ">$step8/metrics_of_interest.txt");
+# open(LOG, ">$log");
+
+# 
+# NOTE: From here on all printed stuff will be sent to the log file
+# 
+
+# open filehandle log.txt
+my $LOG_FH;
+# open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
+open($LOG_FH, ">>", "$prefix/$exec_id.log") or die "Couldn't open: $!"; # $! is a special variable holding the error
+select $LOG_FH;
+
+print "\n\n";
+print "#######################################################################\n";
+print ">> New execution";
+print $runningDetails;
+
+# #######################################################################
+# ### Handle FASTQ sequences --------------------------------------------
+# #######################################################################
+
+# $step_name = "Handle FASTQ sequences";
+
+# $time_msg = getStepTimebBeginMsg($step_name);
+# print STDOUT $time_msg;
+# print $time_msg;
+
+# # -----------------------------------------------------------------------
 
 my $path_00_trim_quality = "$step0/trimming.quality.fastq";
 my $path_02_trim_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
@@ -426,12 +419,12 @@ my $path_02_trim_quality_gt15 = "$step2/trimmed.quality.gt15.fastq";
 # TODO: 2023-02-27 - Handle FastQ sequences
 # 
 
-# -----------------------------------------------------------------------
+# # -----------------------------------------------------------------------
 
-$current_time = Time::HiRes::gettimeofday();
-$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
-$last_time = $current_time;
-print STDOUT $time_msg;
+# $current_time = Time::HiRes::gettimeofday();
+# $time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+# $last_time = $current_time;
+# print STDOUT $time_msg;
 
 #######################################################################
 ### Handle FASTA sequences --------------------------------------------
@@ -445,6 +438,15 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
+my $path_03_map_host_sam = "$step3/mapped_host.v1.sam";
+
+my $path_04_unmap_vector_reads = "$step4/unmappedVectorReads.fasta";
+my $path_04_unmap_vector_bacters = "$step4/unmappedVectorBacters.fasta";
+my $path_04_unmap_trim_filter = "$step4/unmapped_trimmed_filtered.fasta";
+my $path_04_unmap_trim_filter_20_23 = "$step4/unmapped_trimmed_filtered.20-23.fasta";
+my $path_04_unmap_trim_filter_24_30 = "$step4/unmapped_trimmed_filtered.24-30.fasta";
+my $path_04_reads_map_bacteria_log = "$step4/reads_mapped_to_bacteria.log";
+
 # 
 # REVIEW: 2023-03-01 - Shall we think of better names?
 # 
@@ -453,68 +455,66 @@ my $mappedbac;
 my $nReadsUnmapHostBac;
 # my $nReadsUnmapHost;
 
-if (defined($fasta)) {
-    print "#Loading FASTA file ... \n";
+print "# Loading FASTA file ... \n";
 
-    if (not defined($nohostfilter)) {
+if (not defined($nohostfilter)) {
 
-        my $cmd = "cp $fasta $path_trimmed_filtered_gt15";
+    my $cmd = "cp $fasta $path_02_trim_filtered_gt15";
 
-        print "[COPING $fasta TO $path_trimmed_filtered_gt15]\n";
-        `$cmd`;
-        
-        print "\n[STEP 03]\n\t $cmd\n";
+    print "[COPING $fasta TO $path_02_trim_filtered_gt15]\n";
+    `$cmd`;
+    
+    print "\n[STEP 03]\n\t $cmd\n";
 
-    } else {
+# } else {
 
-        # 
-        # REVIEW: 2023-03-01 - Check this step numbering
-        # TODO: 2023-03-01 - Test it
-        # 
+#     # 
+#     # REVIEW: 2023-03-01 - Check this step numbering
+#     # TODO: 2023-03-01 - Test it
+#     # 
 
-        # Mapping Host - unfiltered reads against bacters reference
-        print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
-        
-        my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $fasta > /dev/null 2>> $step4/reads_mapped_to_bacteria.log";
-        
-        print "\n[STEP 05.1]\n\t $exec5_1\n";
-        `$exec5_1`;
+#     # Mapping Host - unfiltered reads against bacters reference
+#     print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
 
-        $nReadsUnmapHostBac = `grep -c '>' $path_unmapped_vector_bacters`;
-        chomp($nReadsUnmapHostBac);
+#     my $exec5_1 = "bowtie -f -S -v 1 --un $path_04_unmap_vector_bacters -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $fasta > /dev/null 2>> $path_04_reads_map_bacteria_log";
+    
+#     print "\n[STEP 05.1]\n\t $exec5_1\n";
+#     `$exec5_1`;
 
-        # Mapped reads Bacterial genomes
-        # print metrics "#preprocessed reads\t".$nReadsUnmapHostBac."\n"; # TODO: 2023-03-01 - Check this 'metrics' log
-        print "#preprocessed reads\t $nReadsUnmapHostBac \n"; # REVIEW: 2023-03-01 - Does this message really make sense?
-        
-        # $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac; # REVIEW: 2023-03-01 - It doesn't look like it works
-        # print metrics "#reads mapped bacter\t".$mappedbac."\n"; # TODO: 2023-03-01 - Check this 'metrics' log
-        # print "#reads mapped bacter\t".$mappedbac."\n";
-        
-        print "\n  PRE-PROCESSING FINISHED \n"; # REVIEW: 2023-03-01 - Does this message really make sense?
-    }
+#     $nReadsUnmapHostBac = `grep -c '>' $path_04_unmap_vector_bacters`;
+#     chomp($nReadsUnmapHostBac);
+
+#     # Mapped reads Bacterial genomes
+#     # print metrics "# Pre processed reads\t".$nReadsUnmapHostBac."\n"; # TODO: 2023-03-01 - Check this 'metrics' log
+#     print "# Pre processed reads\t $nReadsUnmapHostBac \n"; # REVIEW: 2023-03-01 - Does this message really make sense?
+    
+#     # $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac; # REVIEW: 2023-03-01 - It doesn't look like it works
+#     # print metrics "#reads mapped bacter\t".$mappedbac."\n"; # TODO: 2023-03-01 - Check this 'metrics' log
+#     # print "#reads mapped bacter\t".$mappedbac."\n";
+    
+#     print "\n  PRE-PROCESSING FINISHED \n"; # REVIEW: 2023-03-01 - Does this message really make sense?
 }
 
 if (not defined($nohostfilter)) {
-    if (defined($fastqgz)) {
+    # if (defined($fastqgz)) {
 
-        # 
-        # TODO: 2023-03-06 - Test it
-        # 
+    #     # 
+    #     # TODO: 2023-03-06 - Test it
+    #     # 
 
-        # # # dealing with FASTQ TRIMMED files compacted with GZIP
+    #     # # # dealing with FASTQ TRIMMED files compacted with GZIP
 
-        print "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
+    #     print "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
 
-        #converting fastq to fasta
-        my $exec_fq_2 = "gunzip -dc $fastqgz | fastq_to_fasta -Q 33 -o $step2/trimmed_filtered_gt15.fasta";
+    #     #converting fastq to fasta
+    #     my $exec_fq_2 = "gunzip -dc $fastqgz | fastq_to_fasta -Q 33 -o $step2/trimmed_filtered_gt15.fasta";
         
-        print "\n[STEP 02]\n\t $exec_fq_2\n";
-        `$exec_fq_2`;
-    }
+    #     print "\n[STEP 02]\n\t $exec_fq_2\n";
+    #     `$exec_fq_2`;
+    # }
 
     print "[MAPPING SEQUENCE AGAINST VECTOR]\n";
-    my $exec3 = "bowtie $large_index -f -S -k 1 -p $process -v 1 --un $step4/unmappedVectorReads.fasta $hostgenome $step2/trimmed_filtered_gt15.fasta | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $step3/mapped_host.v1.sam  2>mapping_host.stats  ";
+    my $exec3 = "bowtie $large_index -f -S -k 1 -p $process -v 1 --un $path_04_unmap_vector_reads $hostgenome $step2/trimmed_filtered_gt15.fasta | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $path_03_map_host_sam  2>mapping_host.stats  ";
     
     print "\n[STEP 03]\n\t $exec3\n";
     `$exec3`;
@@ -524,70 +524,59 @@ if (not defined($nohostfilter)) {
     chomp($nReads);
 
     # print metrics "#total reads\t".$nReads. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "#total reads\t".$nReads.
-    "\n";
     # print interest "#total reads\t".$nReads. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "#total reads\t".$nReads.
-    "\n";
+    print "# Total reads\t".$nReads."\n";
+
+    # 
+    # TODO: 2023-06-06 - Convert .sam into .bam
+    # 
 
     print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST ]\n";
-    my $exec3_1 = "perl $path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s $si -e $se -p $step3/mapped_host.v1.$si.$se -norm $nReads --plot";
+    my $exec3_1 = "perl $path_plot_dist_per_base_by_reads -sam $path_03_map_host_sam  -s $si -e $se -p $step3/mapped_host.v1.$si.$se -norm $nReads --plot";
     
     print "\n[STEP 03]\n\t $exec3_1\n";
     `$exec3_1`;
 
     print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST - 15-35nt ]\n";
-    my $exec3_11 = "perl $path_plot_dist_per_base_by_reads -sam $step3/mapped_host.v1.sam  -s 15 -e 35 -p $step3/mapped_host.v1 -norm $nReads --plot";
+    my $exec3_11 = "perl $path_plot_dist_per_base_by_reads -sam $path_03_map_host_sam  -s 15 -e 35 -p $step3/mapped_host.v1 -norm $nReads --plot";
     
     print "\n[STEP 03]\n\t $exec3_11\n";
     `$exec3_11`;
 
-    my $nReadsUnmapHost = `grep -c '>' $step4/unmappedVectorReads.fasta`;
+    my $nReadsUnmapHost = `grep -c '>' $path_04_unmap_vector_reads`;
     chomp($nReadsUnmapHost);
     my $mapped = $nReads - $nReadsUnmapHost;
 
-    # print metrics "#reads mapped host\t".$mapped. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "# Reads mapped host\t".$mapped.
-    "\n";
-    # mapped reads HOST
-    # print metrics "#reads unmapped host\t".$nReadsUnmapHost. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "# Reads unmapped host\t".$nReadsUnmapHost.
-    "\n";
-    # unmapped reads HOST
-
-    # print interest "#reads mapped host\t".$mapped. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "# Reads mapped host\t".$mapped.
-    "\n";
-    # mapped reads HOST
-    # print interest "#reads unmapped host\t".$nReadsUnmapHost. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "# Reads unmapped host\t".$nReadsUnmapHost.
-    "\n";
-    # unmapped reads HOST
+    # Mapped reads HOST
+    # print interest "# Reads mapped host\t".$mapped. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "# Reads mapped host\t".$mapped."\n";
+    
+    # Unmapped reads HOST
+    # print interest "# Reads unmapped host\t".$nReadsUnmapHost. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "# Reads unmapped host\t".$nReadsUnmapHost."\n";
 
     # Deleting sam file mapped reads on host genome
-    `rm -rf $step3/mapped_host.v1.sam`;
+    # `rm -rf $path_03_map_host_sam`;
 
     # Mapping Host - filtered reads against bacters reference
     print "[MAPPING HOST-FILTERED READS AGAINST BACTERIAL GENOMES]... \n";
-    my $exec5_1 = "bowtie -f -S -v 1 --un $path_unmapped_vector_bacters -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $step4/unmappedVectorReads.fasta > /dev/null 2>>$path_warns ";
+    my $exec5_1 = "bowtie -f -S -v 1 --un $path_04_unmap_vector_bacters -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $path_04_unmap_vector_reads > /dev/null 2>>$path_warns ";
     
     print "\n[STEP 05.1]\n\t $exec5_1\n";
-    # `$exec5_1`;
+    `$exec5_1`;
 
-    $nReadsUnmapHostBac = `grep -c '>' $path_unmapped_vector_bacters`;
+    $nReadsUnmapHostBac = `grep -c '>' $path_04_unmap_vector_bacters`;
     chomp($nReadsUnmapHostBac);
     $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac;
 
-    # print metrics "#reads mapped bacter\t".$mappedbac. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "#reads mapped bacter\t".$mappedbac.
-    "\n";
+    # Mapped reads Bacterial genomes
+    # print metrics "# Reads mapped bacter\t".$mappedbac. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "# Reads mapped bacter\t".$mappedbac."\n";
     
-    # mapped reads Bacterial genomes
-    # print metrics "#preprocessed reads\t".$nReadsUnmapHostBac. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    print "#preprocessed reads\t".$nReadsUnmapHostBac.
-    "\n";
-    # pre - processed reads
-
+    # Pre processed reads
+    # print metrics "# Preprocessed reads\t".$nReadsUnmapHostBac. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    print "# Preprocessed reads\t".$nReadsUnmapHostBac."\n";
+    
     print "\n  PRE-PROCESSING FINISHED \n";
 }
 
@@ -618,18 +607,18 @@ print $time_msg;
 
 print "[FILTER UNMAPPED SEQUENCES BY SIZE (variable size $si to $se)]\n";
 
-my $exec5 = "python3 $path_filter_fasta_by_size $path_unmapped_vector_bacters $si $se $path_unmapped_trimmed_filtered -t F ";
+my $exec5 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters $si $se $path_04_unmap_trim_filter -t F ";
 
 print "\n[STEP 05]\n\t $exec5\n";
 `$exec5`;
 
 print "[FILTER UNMAPPED SEQUENCES BY SIZE (20-23NT)]\n";
-my $exec5_1 = "python3 $path_filter_fasta_by_size $path_unmapped_vector_bacters 20 23 $path_unmapped_trimmed_filtered_20_23";
+my $exec5_1 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters 20 23 $path_04_unmap_trim_filter_20_23";
 print "\n[STEP 05.1]\n\t $exec5_1\n";
 `$exec5_1`;
 
 print "[FILTER UNMAPPED SEQUENCES BY SIZE (24-30NT)]\n";
-my $exec5_2 = "python3 $path_filter_fasta_by_size $path_unmapped_vector_bacters 24 30 $path_unmapped_trimmed_filtered_24_30";
+my $exec5_2 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters 24 30 $path_04_unmap_trim_filter_24_30";
 print "\n[STEP 05.2]\n\t $exec5_2\n";
 `$exec5_2`;
 
@@ -650,28 +639,30 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
+my $path_05_opt_contigs_final = "$step5_opt/contigs.final.fasta";
+
+my $path_05_opt_run1_dir = "$step5_opt/run1";
+my $path_05_opt_run1_contigs = "$path_05_opt_run1_dir/contigs.fa"; # $step5_opt/run1/contigs.fa
+
+my $path_05_opt_run2_dir = "$step5_opt/run2";
+my $path_05_opt_run2_scaffolds = "$path_05_opt_run2_dir/scaffolds.fasta"; # $step5_opt/run2/scaffolds.fasta
+
 print "\n#[RUNNING VELVET OPTIMIZER]\n";
 print "\t#Running step 6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
 
-my $exec6_1 = "velvetoptimiser --d $step5_opt/run1 --t $process --s 13 --e 19 --f '-short -fasta $path_unmapped_trimmed_filtered' --a $process 2>>$path_warns";
+my $exec6_1 = "velvetoptimiser --d $path_05_opt_run1_dir --t $process --s 13 --e 19 --f '-short -fasta $path_04_unmap_trim_filter' --a $process 2>>$path_warns";
 
-# -----------------------------------------------------------------------
-
-$current_time = Time::HiRes::gettimeofday();
-$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
-$last_time = $current_time;
-print STDOUT $time_msg;
 print "\n[STEP 06.1]\n\t $exec6_1\n";
 `$exec6_1`;
 
 print "\t#Running step 6_4 [ SPADES ] \n";
-my $exec6_4 = "spades -s $path_unmapped_trimmed_filtered --careful --only-assembler -t $process -k 13,15,17,19 -o $step5_opt/run2";
+my $exec6_4 = "spades -s $path_04_unmap_trim_filter --careful --only-assembler -t $process -k 13,15,17,19 -o $path_05_opt_run2_dir";
 
 print "\n[STEP 06.4]\n\t $exec6_4\n";
 `$exec6_4`;
 
 print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_5 = "perl $path_merge_contigs -contig1 $step5_opt/run1/contigs.fa -contig2 $step5_opt/run2/scaffolds.fasta -output $step5_opt/contigs.final.fasta ";
+my $exec6_5 = "perl $path_merge_contigs -contig1 $path_05_opt_run1_contigs -contig2 $path_05_opt_run2_scaffolds -output $path_05_opt_contigs_final ";
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_5`;
@@ -697,26 +688,34 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
+my $path_05_fix_contigs_final = "$step5_fix/contigs.final.fasta";
+
+my $path_05_fix_run1_dir = "$step5_fix/run1";
+my $path_05_fix_run1_contigs = "$path_05_fix_run1_dir/contigs.fa"; # $step5_fix/run1/contigs.fa
+
+my $path_05_fix_run2_dir = "$step5_fix/run2";
+my $path_05_fix_run2_scaffolds = "$path_05_fix_run2_dir/scaffolds.fasta"; # $step5_fix/run2/scaffolds.fasta
+
 print "\n[RUNNING DEFAULT VELVET]\n";
 print "\t#Running step 6 [ Assemble unmapped 21 nt - velvet hash $hash ]\n";
 
-my $exec6 = "velveth $step5_fix/run1 $hash -fasta -short $path_unmapped_trimmed_filtered 2>>$path_warns";
+my $exec6 = "velveth $path_05_fix_run1_dir $hash -fasta -short $path_04_unmap_trim_filter 2>>$path_warns";
 
 print "\n[STEP 06]\n\t $exec6\n";
 `$exec6`;
 
-`velvetg $step5_fix/run1 -exp_cov auto -cov_cutoff auto 2>$path_warns`;
+`velvetg $path_05_fix_run1_dir -exp_cov auto -cov_cutoff auto 2>$path_warns`;
 
-`mkdir $step5_fix/run2`;
+`mkdir $path_05_fix_run2_dir`;
 
 print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-my $exec6_2 = "spades -s $path_unmapped_trimmed_filtered --careful --only-assembler -t $process  -k $hash -o $step5_fix/run2 ";
+my $exec6_2 = "spades -s $path_04_unmap_trim_filter --careful --only-assembler -t $process  -k $hash -o $path_05_fix_run2_dir";
 
 print "\n[STEP 06.2]\n\t $exec6_2\n";
 `$exec6_2`;
 
 print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
-$exec6_5 = "perl $path_merge_contigs -contig1 $step5_fix/run1/contigs.fa -contig2 $step5_fix/run2/scaffolds.fasta -output $step5_fix/contigs.final.fasta ";
+$exec6_5 = "perl $path_merge_contigs -contig1 $path_05_fix_run1_contigs -contig2 $path_05_fix_run2_scaffolds -output $path_05_fix_contigs_final";
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_5`;
@@ -742,22 +741,30 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
+my $path_05_opt_fix_contigs_final = "$step5_opt_fix/contigs.final.fasta";
+
+my $path_05_opt_fix_run1_dir = "$step5_opt_fix/run1";
+my $path_05_opt_fix_run1_contigs = "$path_05_opt_fix_run1_dir/contigs.fa"; # $step5_opt_fix/run1/contigs.fa
+
+my $path_05_opt_fix_run2_dir = "$step5_opt_fix/run2";
+my $path_05_opt_fix_run2_scaffolds = "$path_05_opt_fix_run2_dir/scaffolds.fasta"; # $step5_opt_fix/run2/scaffolds.fasta
+
 print "\n[VELVET OPTIMISER HASH ONLY 15]\n";
 print "\t#Running step 6_6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
-my $exec6_6 = "velvetoptimiser --d $step5_opt_fix/run1 --t $process --s $hash --e $hash --f '-short -fasta $path_unmapped_trimmed_filtered' --a 2>>$path_warns";
+my $exec6_6 = "velvetoptimiser --d $path_05_opt_fix_run1_dir --t $process --s $hash --e $hash --f '-short -fasta $path_04_unmap_trim_filter' --a 2>>$path_warns";
 
 print "\n[STEP 06.1]\n\t $exec6_6\n";
 `$exec6_6`;
 
 `mkdir $step5_opt_fix/run2`;
 print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-my $exec6_6_2 = "spades -s $path_unmapped_trimmed_filtered --careful --only-assembler -t $process  -k 15 -o $step5_opt_fix/run2 ";
+my $exec6_6_2 = "spades -s $path_04_unmap_trim_filter --careful --only-assembler -t $process  -k 15 -o $step5_opt_fix/run2 ";
 
 print "\n[STEP 06.2]\n\t $exec6_2\n";
 `$exec6_6_2`;
 
 print "\t#Running step 6_9 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_9 = "perl $path_merge_contigs -contig1 $step5_opt_fix/run1/contigs.fa -contig2 $step5_opt_fix/run2/scaffolds.fasta -output $step5_opt_fix/contigs.final.fasta ";
+my $exec6_9 = "perl $path_merge_contigs -contig1 $path_05_opt_fix_run1_contigs -contig2 $path_05_opt_fix_run2_scaffolds -output $path_05_opt_fix_contigs_final";
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_9`;
@@ -783,22 +790,30 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
+my $path_05_opt_20_23_contigs_final = "$step5_opt_20to23/contigs.final.fasta";
+
+my $path_05_opt_20_23_run1_dir = "$step5_opt_20to23/run1";
+my $path_05_opt_20_23_run1_contigs = "$path_05_opt_20_23_run1_dir/contigs.fa"; # $step5_opt_20to23/run1/contigs.fa
+
+my $path_05_opt_20_23_run2_dir = "$step5_opt_20to23/run2";
+my $path_05_opt_20_23_run2_scaffolds = "$path_05_opt_20_23_run2_dir/scaffolds.fasta"; # $step5_opt_20to23/run2/scaffolds.fasta
+
 print "\n[VELVET OPTIMISER HASH ONLY 15 - 20-23nt]\n";
 print "\t#Running step 6_10 [ Assemble unmapped 20-23nt nt - velvetOptimser.pl ]\n";
-my $exec6_10 = "velvetoptimiser --d $step5_opt_20to23/run1 --t $process --s $hash --e $hash --f '-short -fasta $path_unmapped_trimmed_filtered_20_23' --a 2>>$path_warns";
+my $exec6_10 = "velvetoptimiser --d $path_05_opt_20_23_run1_dir --t $process --s $hash --e $hash --f '-short -fasta $path_04_unmap_trim_filter_20_23' --a 2>>$path_warns";
 
 print "\n[STEP 06.1]\n\t $exec6_10\n";
 `$exec6_10`;
 
-`mkdir $step5_opt_20to23/run2`;
+`mkdir $path_05_opt_20_23_run2_dir`;
 print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-my $exec6_10_2 = "spades -s $path_unmapped_trimmed_filtered_20_23  --careful --only-assembler -t $process  -k $hash -o $step5_opt_20to23/run2 ";
+my $exec6_10_2 = "spades -s $path_04_unmap_trim_filter_20_23  --careful --only-assembler -t $process  -k $hash -o $path_05_opt_20_23_run2_dir";
 
 print "\n[STEP 06.10.2]\n\t $exec6_2\n";
 `$exec6_10_2`;
 
 print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_13 = "perl $path_merge_contigs -contig1 $step5_opt_20to23/run1/contigs.fa -contig2 $step5_opt_20to23/run2/scaffolds.fasta -output $step5_opt_20to23/contigs.final.fasta ";
+my $exec6_13 = "perl $path_merge_contigs -contig1 $path_05_opt_20_23_run1_contigs -contig2 $path_05_opt_20_23_run2_scaffolds -output $path_05_opt_20_23_contigs_final ";
 
 print "\n[STEP 06.13]\n\t $exec6_13\n";
 `$exec6_13`;
@@ -812,54 +827,54 @@ $last_time = $current_time;
 print STDOUT $time_msg;
 print $time_msg;
 
-#######################################################################
-### Running velvet optmiser (hash 17) 24-30 ---------------------------
-#######################################################################
+# #######################################################################
+# ### Running velvet optmiser (hash 17) 24-30 ---------------------------
+# #######################################################################
 
-$step_name = "Running velvet optmiser (hash 17) 24-30";
+# $step_name = "Running velvet optmiser (hash 17) 24-30";
 
-$time_msg = getStepTimebBeginMsg($step_name);
-print STDOUT $time_msg;
-print $time_msg;
+# $time_msg = getStepTimebBeginMsg($step_name);
+# print STDOUT $time_msg;
+# print $time_msg;
 
-# -----------------------------------------------------------------------
+# # -----------------------------------------------------------------------
 
 #
 # TODO: 2023-05-31 - Test this condition
 # 
 
-if (defined($deg)) {
+# if (defined($deg)) {
     
-    print "\n[VELVET OPTIMISER - 24-30nt]\n";
-    print "\t#Running step 6_10 [ Assemble unmapped 24-30nt nt - velvetOptimser.pl ]\n";
+#     print "\n[VELVET OPTIMISER - 24-30nt]\n";
+#     print "\t#Running step 6_10 [ Assemble unmapped 24-30nt nt - velvetOptimser.pl ]\n";
     
-    my $exec62_10 = "velvetoptimiser --d $step5_opt_24to30/run1 --t $process --s 15 --e 17 --f '-short -fasta $path_unmapped_trimmed_filtered_24_30' --a 2>>$path_warns";
+#     my $exec62_10 = "velvetoptimiser --d $step5_opt_24to30/run1 --t $process --s 15 --e 17 --f '-short -fasta $path_04_unmap_trim_filter_24_30' --a 2>>$path_warns";
     
-    print "\nSTEP62_10\n\t $exec62_10\n";
-    `$exec62_10`;
+#     print "\nSTEP62_10\n\t $exec62_10\n";
+#     `$exec62_10`;
 
-    `mkdir $step5_opt_24to30/run2 `;
+#     `mkdir $step5_opt_24to30/run2 `;
 
-    print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-    my $exec6_10_3 = "spades -s $path_unmapped_trimmed_filtered_24_30 --careful --only-assembler -t $process  -k 15,17 -o $step5_opt_24to30/run2 ";
+#     print "\t#Running SPADES fixed hash  [ SPADES ] \n";
+#     my $exec6_10_3 = "spades -s $path_04_unmap_trim_filter_24_30 --careful --only-assembler -t $process  -k 15,17 -o $step5_opt_24to30/run2 ";
     
-    print "\n[STEP 06.10_3\n\t $exec6_2\n";
-    `$exec6_10_3`;
+#     print "\n[STEP 06.10_3\n\t $exec6_2\n";
+#     `$exec6_10_3`;
 
-    print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
-    my $exec62_13 = "perl $path_merge_contigs -contig1 $step5_opt_24to30/run1/contigs.fa -contig2 $step5_opt_24to30/run2/scaffolds.fasta -output $step5_opt_24to30/contigs.final.fasta ";
-    print "\nSTEP62_13\n\t $exec62_13\n";
-    `$exec62_13`;
-}
+#     print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
+#     my $exec62_13 = "perl $path_merge_contigs -contig1 $step5_opt_24to30/run1/contigs.fa -contig2 $step5_opt_24to30/run2/scaffolds.fasta -output $step5_opt_24to30/contigs.final.fasta ";
+#     print "\nSTEP62_13\n\t $exec62_13\n";
+#     `$exec62_13`;
+# }
 
-# -----------------------------------------------------------------------
+# # -----------------------------------------------------------------------
 
-$current_time = Time::HiRes::gettimeofday();
-$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
-$last_time = $current_time;
+# $current_time = Time::HiRes::gettimeofday();
+# $time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+# $last_time = $current_time;
 
-print STDOUT $time_msg;
-print $time_msg;
+# print STDOUT $time_msg;
+# print $time_msg;
 
 #######################################################################
 ### Merging assemblies ------------------------------------------------
@@ -881,7 +896,7 @@ if (not defined($deg)) {
 
 print "\n[MERGING CONTIGS AND RUNNING CAP3]\n";
 print "\t#Running STEP [CAT] Concatenating contigs...\n";
-my $exec_cat = "cat $step5_opt_20to23/contigs.final.fasta $step5_opt_fix/contigs.final.fasta  $step5_fix/contigs.final.fasta $step5_opt/contigs.final.fasta $step5_opt_24to30/contigs.final.fasta > $step5_cap3/all_contigs.fasta";
+my $exec_cat = "cat $path_05_opt_20_23_contigs_final $path_05_opt_fix_contigs_final  $path_05_fix_contigs_final $path_05_opt_contigs_final $step5_opt_24to30/contigs.final.fasta > $step5_cap3/all_contigs.fasta";
 
 print "\n[STEP 06.CAT] \n\t $exec_cat\n";
 `$exec_cat`;
@@ -905,10 +920,10 @@ print "\n[STEP 06.7]\n\t $step6_7\n";
 
 my $countAssembledContigs = `grep -c '>' $step5_cap3/contigs_merged.final.gt50.fasta`;
 chomp($countAssembledContigs);
-# print metrics "#total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
+
+# print metrics "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
+# print interest "# Total assembled contigs\t" . $countAssembledContigs . "\n"; # Assembled Contigs
 print "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
-# print interest "#total assembled contigs\t" . $countAssembledContigs . "\n"; # Assembled Contigs
-print "# Total assembled contigs\t" . $countAssembledContigs . "\n"; # Assembled Contigs
 
 print "[FILTER CONTIGS gt 200 nt]\n";
 my $exec_FC2 = "python3 $path_filter_fasta_by_size $step5_cap3/contigs_merged.final.gt50.fasta 200 1000000 $path_05_cap3_gt200";
@@ -918,10 +933,10 @@ print "\n[STEP 05.2]\n\t $exec_FC2\n";
 
 $countAssembledContigs = `grep -c '>' $path_05_cap3_gt200`;
 chomp($countAssembledContigs);
-# print metrics "#contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
+
+# print metrics "# Contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
+# print interest "# Contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
 print "# Contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
-# print interest "#contigs gt200\t".$countAssembledContigs . "\n"; # Assembled Contigs
-print "# Contigs gt200\t".$countAssembledContigs . "\n"; # Assembled Contigs
 
 # -----------------------------------------------------------------------
 
@@ -1031,8 +1046,8 @@ chomp($seqsNoHitBlastn);
 # TODO: 2023-05-23 - Check what to do with these 'parallel' logging files
 # 
 
-# print metrics "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
-print "#contigs not hit blastN\t".$seqsNoHitBlastn."\n";
+# print metrics "# Contigs not hit blastN\t".$seqsNoHitBlastn."\n";
+print "# Contigs not hit blastN\t".$seqsNoHitBlastn."\n";
 # Assembled Contigs
 `cat $path_07_bN_analize_viral | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $path_07_blastn_virus`;
 
@@ -1114,7 +1129,7 @@ print $time_msg;
 `bowtie-build $step9/seq_ViralHits_and_NoHits.fasta $step9/seq_ViralHits_and_NoHits.fasta`;
 
 print "\t#Mapping reads against viral hits(blastn and diamond) and nohits\n";
-my $exec10_13 = "bowtie -f -S -p $process -v 1 $step9/seq_ViralHits_and_NoHits.fasta $step4/unmappedVectorBacters.fasta 2>>$path_warns | awk -F'\t' '{if( \$2 != 4) print \$0}' > $step9/reads_vs_contigsHitNoHit.v1.sam ";
+my $exec10_13 = "bowtie -f -S -p $process -v 1 $step9/seq_ViralHits_and_NoHits.fasta $path_04_unmap_vector_bacters 2>>$path_warns | awk -F'\t' '{if( \$2 != 4) print \$0}' > $step9/reads_vs_contigsHitNoHit.v1.sam ";
 
 print"\nSTEP10_13\n\t $exec10_13\n";
 `$exec10_13`;
