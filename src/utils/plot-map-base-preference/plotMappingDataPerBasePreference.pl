@@ -81,17 +81,17 @@ if (not(defined($pace))) {
 }
 
 if (not defined($start) or $start < 0) {
-    warn("\n\n\t\t[Bad value for start, start setted to 15]\n");
+    warn("\n\n\t\t[Bad value for start (".($start // "undef")."), start setted to 15]\n");
     $start = 15;
 }
 
 if (not defined($end) or($end < 0) or($end < $start)) {
-    warn("\n\t\t[Bad value for end, end setted to 30]\n");
+    warn("\n\t\t[Bad value for end (".($end // "undef")."), end setted to 30]\n");
     $end = 30;
 }
 
-if (not defined($minimo) or($minimo < 0)) {
-    warn("\n\t\t[Bad value for min, min setted to 30]\n");
+if (not defined($minimo) or ($minimo < 0)) {
+    warn("\n\t\t[Bad value for min (".($minimo // "undef")."), min setted to 30]\n");
     $minimo = 30;
 }
 
