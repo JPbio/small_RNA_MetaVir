@@ -97,6 +97,9 @@ open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special
 ### Main... -----------------------------------------------------------
 #######################################################################
 
+# 
+# TODO: 2023-06-08 - This 2nd parameter doesn't seem to be used
+# 
 analyzeProfile($search, 0);
 
 `touch $prefix.zscore.tab`;

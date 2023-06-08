@@ -126,7 +126,7 @@ my $size;
 # 
 # my $prefix = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
 
-my $exec_id = "exec_test_07";
+my $exec_id = "exec_test_08";
 my $prefix = EXEC_ROOT_DIR . "/$exec_id";
 
 my $se;
@@ -418,9 +418,9 @@ print $runningDetails;
 
 # # -----------------------------------------------------------------------
 
-my $path_00_trim_quality = "$step0/trimming.quality.fastq";
-my $path_02_trim_filtered_gt15 = "$step2/trimmed_filtered_gt15.fasta";
-my $path_02_trim_quality_gt15 = "$step2/trimmed.quality.gt15.fastq";
+my $path_00_trim_quality_fq = "$step0/trimming.quality.fastq";
+my $path_02_trim_gt15_fa = "$step2/trimmed_filtered_gt15.fasta";
+my $path_02_trim_gt15_fq = "$step2/trimmed.quality.gt15.fastq";
 
 # 
 # TODO: 2023-02-27 - Handle FastQ sequences
@@ -445,13 +445,15 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_03_map_host_sam = "$step3/mapped_host.v1.sam";
+my $path_03_map_host_prefix = "$step3/mapped_host.v1";
+my $path_03_map_host_sam = "$path_03_map_host_prefix.sam"; # $step3/mapped_host.v1.sam
+my $path_03_map_host_stats = "$step3/mapping_host.stats";
 
-my $path_04_unmap_vector_reads = "$step4/unmappedVectorReads.fasta";
-my $path_04_unmap_vector_bacters = "$step4/unmappedVectorBacters.fasta";
-my $path_04_unmap_trim_filter = "$step4/unmapped_trimmed_filtered.fasta";
-my $path_04_unmap_trim_filter_20_23 = "$step4/unmapped_trimmed_filtered.20-23.fasta";
-my $path_04_unmap_trim_filter_24_30 = "$step4/unmapped_trimmed_filtered.24-30.fasta";
+my $path_04_unmap_vector_reads_fa = "$step4/unmappedVectorReads.fasta";
+my $path_04_unmap_vector_bacters_fa = "$step4/unmappedVectorBacters.fasta";
+my $path_04_unmap_trim_filter_fa = "$step4/unmapped_trimmed_filtered.fasta";
+my $path_04_unmap_trim_filter_20_23_fa = "$step4/unmapped_trimmed_filtered.20-23.fasta";
+my $path_04_unmap_trim_filter_24_30_fa = "$step4/unmapped_trimmed_filtered.24-30.fasta";
 my $path_04_reads_map_bacteria_log = "$step4/reads_mapped_to_bacteria.log";
 
 # 
@@ -466,9 +468,9 @@ print "# Loading FASTA file ... \n";
 
 if (not defined($nohostfilter)) {
 
-    my $cmd = "cp $fasta $path_02_trim_filtered_gt15";
+    my $cmd = "cp $fasta $path_02_trim_gt15_fa";
 
-    print "[COPING $fasta TO $path_02_trim_filtered_gt15]\n";
+    print "[COPING $fasta TO $path_02_trim_gt15_fa]\n";
     `$cmd`;
     
     print "\n[STEP 03]\n\t $cmd\n";
@@ -483,12 +485,12 @@ if (not defined($nohostfilter)) {
 #     # Mapping Host - unfiltered reads against bacters reference
 #     print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
 
-#     my $exec5_1 = "bowtie -f -S -v 1 --un $path_04_unmap_vector_bacters -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $fasta > /dev/null 2>> $path_04_reads_map_bacteria_log";
+#     my $exec5_1 = "bowtie -f -S -v 1 --un $path_04_unmap_vector_bacters_fa -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $fasta > /dev/null 2>> $path_04_reads_map_bacteria_log";
     
 #     print "\n[STEP 05.1]\n\t $exec5_1\n";
 #     `$exec5_1`;
 
-#     $nReadsUnmapHostBac = `grep -c '>' $path_04_unmap_vector_bacters`;
+#     $nReadsUnmapHostBac = `grep -c '>' $path_04_unmap_vector_bacters_fa`;
 #     chomp($nReadsUnmapHostBac);
 
 #     # Mapped reads Bacterial genomes
@@ -514,43 +516,49 @@ if (not defined($nohostfilter)) {
     #     print "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
 
     #     #converting fastq to fasta
-    #     my $exec_fq_2 = "gunzip -dc $fastqgz | fastq_to_fasta -Q 33 -o $path_02_trim_filtered_gt15";
+    #     my $exec_fq_2 = "gunzip -dc $fastqgz | fastq_to_fasta -Q 33 -o $path_02_trim_gt15_fa";
         
     #     print "\n[STEP 02]\n\t $exec_fq_2\n";
     #     `$exec_fq_2`;
     # }
 
     print "[MAPPING SEQUENCE AGAINST VECTOR]\n";
-    my $exec3 = "bowtie $large_index -f -S -k 1 -p $process -v 1 --un $path_04_unmap_vector_reads $hostgenome $path_02_trim_filtered_gt15 | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $path_03_map_host_sam  2>mapping_host.stats  ";
+    my $exec3 = "bowtie $large_index -f -S -k 1 -p $process -v 1 --un $path_04_unmap_vector_reads_fa $hostgenome $path_02_trim_gt15_fa | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $path_03_map_host_sam  2>$path_03_map_host_stats";
     
     print "\n[STEP 03]\n\t $exec3\n";
     `$exec3`;
 
-    # #count total reads
-    my $nReads = `grep -c '>' $path_02_trim_filtered_gt15`;
+    # Count total reads
+    my $nReads = `grep -c '>' $path_02_trim_gt15_fa`;
     chomp($nReads);
 
-    # print metrics "#total reads\t".$nReads. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
-    # print interest "#total reads\t".$nReads. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    # print metrics "# Total reads\t".$nReads. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
+    # print interest "# Total reads\t".$nReads. # REVIEW: 2023-03-06 - What should we do with these 'special' logs?
     print "# Total reads\t".$nReads."\n";
 
     # 
     # TODO: 2023-06-06 - Convert .sam into .bam
     # 
 
-    print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST ]\n";
-    my $exec3_1 = "perl $path_plot_dist_per_base_by_reads -sam $path_03_map_host_sam  -s $si -e $se -p $step3/mapped_host.v1.$si.$se -norm $nReads --plot";
-    
-    print "\n[STEP 03]\n\t $exec3_1\n";
-    `$exec3_1`;
+    my $si_default = 15;
+    my $se_default = 35;
+
+    if (($si ne $si_default) or ($se ne $se_default)) {
+        
+        print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST ]\n";
+        my $exec3_1 = "perl $path_plot_dist_per_base_by_reads -sam $path_03_map_host_sam  -s $si -e $se -p $path_03_map_host_prefix.$si.$se -norm $nReads --plot";
+        
+        print "\n[STEP 03]\n\t $exec3_1\n";
+        `$exec3_1`;
+    }
 
     print "[PLOT GERAL DISTRIBUTION READS MAPPED HOST - 15-35nt ]\n";
-    my $exec3_11 = "perl $path_plot_dist_per_base_by_reads -sam $path_03_map_host_sam  -s 15 -e 35 -p $step3/mapped_host.v1 -norm $nReads --plot";
+    my $exec3_11 = "perl $path_plot_dist_per_base_by_reads -sam $path_03_map_host_sam  -s $si_default -e $se_default -p $path_03_map_host_prefix -norm $nReads --plot";
     
     print "\n[STEP 03]\n\t $exec3_11\n";
     `$exec3_11`;
 
-    my $nReadsUnmapHost = `grep -c '>' $path_04_unmap_vector_reads`;
+    my $nReadsUnmapHost = `grep -c '>' $path_04_unmap_vector_reads_fa`;
     chomp($nReadsUnmapHost);
     my $mapped = $nReads - $nReadsUnmapHost;
 
@@ -567,12 +575,12 @@ if (not defined($nohostfilter)) {
 
     # Mapping Host - filtered reads against bacters reference
     print "[MAPPING HOST-FILTERED READS AGAINST BACTERIAL GENOMES]... \n";
-    my $exec5_1 = "bowtie -f -S -v 1 --un $path_04_unmap_vector_bacters -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $path_04_unmap_vector_reads > /dev/null 2>>$path_warns ";
+    my $exec5_1 = "bowtie -f -S -v 1 --un $path_04_unmap_vector_bacters_fa -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $path_04_unmap_vector_reads_fa > /dev/null 2>>$path_warns ";
     
     print "\n[STEP 05.1]\n\t $exec5_1\n";
     `$exec5_1`;
 
-    $nReadsUnmapHostBac = `grep -c '>' $path_04_unmap_vector_bacters`;
+    $nReadsUnmapHostBac = `grep -c '>' $path_04_unmap_vector_bacters_fa`;
     chomp($nReadsUnmapHostBac);
     $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac;
 
@@ -610,22 +618,23 @@ print $time_msg;
 
 # 
 # TODO: 2023-05-11 - Use 15 ~ 35nt as default
+# TODO: 2023-06-08 - Avoid running the same thing twice depending on user chosen span values
 # 
 
 print "[FILTER UNMAPPED SEQUENCES BY SIZE (variable size $si to $se)]\n";
 
-my $exec5 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters $si $se $path_04_unmap_trim_filter -t F ";
+my $exec5 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters_fa $si $se $path_04_unmap_trim_filter_fa -t F ";
 
 print "\n[STEP 05]\n\t $exec5\n";
 `$exec5`;
 
 print "[FILTER UNMAPPED SEQUENCES BY SIZE (20-23NT)]\n";
-my $exec5_1 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters 20 23 $path_04_unmap_trim_filter_20_23";
+my $exec5_1 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters_fa 20 23 $path_04_unmap_trim_filter_20_23_fa";
 print "\n[STEP 05.1]\n\t $exec5_1\n";
 `$exec5_1`;
 
 print "[FILTER UNMAPPED SEQUENCES BY SIZE (24-30NT)]\n";
-my $exec5_2 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters 24 30 $path_04_unmap_trim_filter_24_30";
+my $exec5_2 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters_fa 24 30 $path_04_unmap_trim_filter_24_30_fa";
 print "\n[STEP 05.2]\n\t $exec5_2\n";
 `$exec5_2`;
 
@@ -646,30 +655,30 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_05_opt_contigs_final = "$step5_opt/contigs.final.fasta";
+my $path_05_opt_contigs_final_fa = "$step5_opt/contigs.final.fasta";
 
 my $path_05_opt_run1_dir = "$step5_opt/run1";
-my $path_05_opt_run1_contigs = "$path_05_opt_run1_dir/contigs.fa"; # $step5_opt/run1/contigs.fa
+my $path_05_opt_run1_contigs_fa = "$path_05_opt_run1_dir/contigs.fa"; # $step5_opt/run1/contigs.fa
 
 my $path_05_opt_run2_dir = "$step5_opt/run2";
-my $path_05_opt_run2_scaffolds = "$path_05_opt_run2_dir/scaffolds.fasta"; # $step5_opt/run2/scaffolds.fasta
+my $path_05_opt_run2_scaffolds_fa = "$path_05_opt_run2_dir/scaffolds.fasta"; # $step5_opt/run2/scaffolds.fasta
 
 print "\n#[RUNNING VELVET OPTIMIZER]\n";
 print "\t#Running step 6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
 
-my $exec6_1 = "velvetoptimiser --d $path_05_opt_run1_dir --t $process --s 13 --e 19 --f '-short -fasta $path_04_unmap_trim_filter' --a $process 2>>$path_warns";
+my $exec6_1 = "velvetoptimiser --d $path_05_opt_run1_dir --t $process --s 13 --e 19 --f '-short -fasta $path_04_unmap_trim_filter_fa' --a $process 2>>$path_warns";
 
 print "\n[STEP 06.1]\n\t $exec6_1\n";
 `$exec6_1`;
 
 print "\t#Running step 6_4 [ SPADES ] \n";
-my $exec6_4 = "spades -s $path_04_unmap_trim_filter --careful --only-assembler -t $process -k 13,15,17,19 -o $path_05_opt_run2_dir";
+my $exec6_4 = "spades -s $path_04_unmap_trim_filter_fa --careful --only-assembler -t $process -k 13,15,17,19 -o $path_05_opt_run2_dir";
 
 print "\n[STEP 06.4]\n\t $exec6_4\n";
 `$exec6_4`;
 
 print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_5 = "perl $path_merge_contigs -contig1 $path_05_opt_run1_contigs -contig2 $path_05_opt_run2_scaffolds -output $path_05_opt_contigs_final ";
+my $exec6_5 = "perl $path_merge_contigs -contig1 $path_05_opt_run1_contigs_fa -contig2 $path_05_opt_run2_scaffolds_fa -output $path_05_opt_contigs_final_fa";
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_5`;
@@ -695,18 +704,18 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_05_fix_contigs_final = "$step5_fix/contigs.final.fasta";
+my $path_05_fix_contigs_final_fa = "$step5_fix/contigs.final.fasta";
 
 my $path_05_fix_run1_dir = "$step5_fix/run1";
-my $path_05_fix_run1_contigs = "$path_05_fix_run1_dir/contigs.fa"; # $step5_fix/run1/contigs.fa
+my $path_05_fix_run1_contigs_fa = "$path_05_fix_run1_dir/contigs.fa"; # $step5_fix/run1/contigs.fa
 
 my $path_05_fix_run2_dir = "$step5_fix/run2";
-my $path_05_fix_run2_scaffolds = "$path_05_fix_run2_dir/scaffolds.fasta"; # $step5_fix/run2/scaffolds.fasta
+my $path_05_fix_run2_scaffolds_fa = "$path_05_fix_run2_dir/scaffolds.fasta"; # $step5_fix/run2/scaffolds.fasta
 
 print "\n[RUNNING DEFAULT VELVET]\n";
 print "\t#Running step 6 [ Assemble unmapped 21 nt - velvet hash $hash ]\n";
 
-my $exec6 = "velveth $path_05_fix_run1_dir $hash -fasta -short $path_04_unmap_trim_filter 2>>$path_warns";
+my $exec6 = "velveth $path_05_fix_run1_dir $hash -fasta -short $path_04_unmap_trim_filter_fa 2>>$path_warns";
 
 print "\n[STEP 06]\n\t $exec6\n";
 `$exec6`;
@@ -716,13 +725,13 @@ print "\n[STEP 06]\n\t $exec6\n";
 `mkdir $path_05_fix_run2_dir`;
 
 print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-my $exec6_2 = "spades -s $path_04_unmap_trim_filter --careful --only-assembler -t $process  -k $hash -o $path_05_fix_run2_dir";
+my $exec6_2 = "spades -s $path_04_unmap_trim_filter_fa --careful --only-assembler -t $process -k $hash -o $path_05_fix_run2_dir";
 
 print "\n[STEP 06.2]\n\t $exec6_2\n";
 `$exec6_2`;
 
 print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
-$exec6_5 = "perl $path_merge_contigs -contig1 $path_05_fix_run1_contigs -contig2 $path_05_fix_run2_scaffolds -output $path_05_fix_contigs_final";
+$exec6_5 = "perl $path_merge_contigs -contig1 $path_05_fix_run1_contigs_fa -contig2 $path_05_fix_run2_scaffolds_fa -output $path_05_fix_contigs_final_fa";
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_5`;
@@ -748,30 +757,30 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_05_opt_fix_contigs_final = "$step5_opt_fix/contigs.final.fasta";
+my $path_05_opt_fix_contigs_final_fa = "$step5_opt_fix/contigs.final.fasta";
 
 my $path_05_opt_fix_run1_dir = "$step5_opt_fix/run1";
-my $path_05_opt_fix_run1_contigs = "$path_05_opt_fix_run1_dir/contigs.fa"; # $step5_opt_fix/run1/contigs.fa
+my $path_05_opt_fix_run1_contigs_fa = "$path_05_opt_fix_run1_dir/contigs.fa"; # $step5_opt_fix/run1/contigs.fa
 
 my $path_05_opt_fix_run2_dir = "$step5_opt_fix/run2";
-my $path_05_opt_fix_run2_scaffolds = "$path_05_opt_fix_run2_dir/scaffolds.fasta"; # $step5_opt_fix/run2/scaffolds.fasta
+my $path_05_opt_fix_run2_scaffolds_fa = "$path_05_opt_fix_run2_dir/scaffolds.fasta"; # $step5_opt_fix/run2/scaffolds.fasta
 
 print "\n[VELVET OPTIMISER HASH ONLY 15]\n";
 print "\t#Running step 6_6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
-my $exec6_6 = "velvetoptimiser --d $path_05_opt_fix_run1_dir --t $process --s $hash --e $hash --f '-short -fasta $path_04_unmap_trim_filter' --a 2>>$path_warns";
+my $exec6_6 = "velvetoptimiser --d $path_05_opt_fix_run1_dir --t $process --s $hash --e $hash --f '-short -fasta $path_04_unmap_trim_filter_fa' --a 2>>$path_warns";
 
 print "\n[STEP 06.1]\n\t $exec6_6\n";
 `$exec6_6`;
 
 `mkdir $step5_opt_fix/run2`;
 print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-my $exec6_6_2 = "spades -s $path_04_unmap_trim_filter --careful --only-assembler -t $process  -k 15 -o $step5_opt_fix/run2 ";
+my $exec6_6_2 = "spades -s $path_04_unmap_trim_filter_fa --careful --only-assembler -t $process  -k 15 -o $step5_opt_fix/run2 ";
 
 print "\n[STEP 06.2]\n\t $exec6_2\n";
 `$exec6_6_2`;
 
 print "\t#Running step 6_9 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_9 = "perl $path_merge_contigs -contig1 $path_05_opt_fix_run1_contigs -contig2 $path_05_opt_fix_run2_scaffolds -output $path_05_opt_fix_contigs_final";
+my $exec6_9 = "perl $path_merge_contigs -contig1 $path_05_opt_fix_run1_contigs_fa -contig2 $path_05_opt_fix_run2_scaffolds_fa -output $path_05_opt_fix_contigs_final_fa";
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_9`;
@@ -797,30 +806,30 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_05_opt_20_23_contigs_final = "$step5_opt_20to23/contigs.final.fasta";
+my $path_05_opt_20_23_contigs_final_fa = "$step5_opt_20to23/contigs.final.fasta";
 
 my $path_05_opt_20_23_run1_dir = "$step5_opt_20to23/run1";
-my $path_05_opt_20_23_run1_contigs = "$path_05_opt_20_23_run1_dir/contigs.fa"; # $step5_opt_20to23/run1/contigs.fa
+my $path_05_opt_20_23_run1_contigs_fa = "$path_05_opt_20_23_run1_dir/contigs.fa"; # $step5_opt_20to23/run1/contigs.fa
 
 my $path_05_opt_20_23_run2_dir = "$step5_opt_20to23/run2";
-my $path_05_opt_20_23_run2_scaffolds = "$path_05_opt_20_23_run2_dir/scaffolds.fasta"; # $step5_opt_20to23/run2/scaffolds.fasta
+my $path_05_opt_20_23_run2_scaffolds_fa = "$path_05_opt_20_23_run2_dir/scaffolds.fasta"; # $step5_opt_20to23/run2/scaffolds.fasta
 
 print "\n[VELVET OPTIMISER HASH ONLY 15 - 20-23nt]\n";
 print "\t#Running step 6_10 [ Assemble unmapped 20-23nt nt - velvetOptimser.pl ]\n";
-my $exec6_10 = "velvetoptimiser --d $path_05_opt_20_23_run1_dir --t $process --s $hash --e $hash --f '-short -fasta $path_04_unmap_trim_filter_20_23' --a 2>>$path_warns";
+my $exec6_10 = "velvetoptimiser --d $path_05_opt_20_23_run1_dir --t $process --s $hash --e $hash --f '-short -fasta $path_04_unmap_trim_filter_20_23_fa' --a 2>>$path_warns";
 
 print "\n[STEP 06.1]\n\t $exec6_10\n";
 `$exec6_10`;
 
 `mkdir $path_05_opt_20_23_run2_dir`;
 print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-my $exec6_10_2 = "spades -s $path_04_unmap_trim_filter_20_23  --careful --only-assembler -t $process  -k $hash -o $path_05_opt_20_23_run2_dir";
+my $exec6_10_2 = "spades -s $path_04_unmap_trim_filter_20_23_fa  --careful --only-assembler -t $process  -k $hash -o $path_05_opt_20_23_run2_dir";
 
 print "\n[STEP 06.10.2]\n\t $exec6_2\n";
 `$exec6_10_2`;
 
 print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_13 = "perl $path_merge_contigs -contig1 $path_05_opt_20_23_run1_contigs -contig2 $path_05_opt_20_23_run2_scaffolds -output $path_05_opt_20_23_contigs_final ";
+my $exec6_13 = "perl $path_merge_contigs -contig1 $path_05_opt_20_23_run1_contigs_fa -contig2 $path_05_opt_20_23_run2_scaffolds_fa -output $path_05_opt_20_23_contigs_final_fa";
 
 print "\n[STEP 06.13]\n\t $exec6_13\n";
 `$exec6_13`;
@@ -846,6 +855,8 @@ print $time_msg;
 
 # # -----------------------------------------------------------------------
 
+my $path_05_opt_24_30_final_fa = "$step5_opt_24to30/contigs.final.fasta";
+
 #
 # TODO: 2023-05-31 - Test this condition
 # 
@@ -855,7 +866,7 @@ print $time_msg;
 #     print "\n[VELVET OPTIMISER - 24-30nt]\n";
 #     print "\t#Running step 6_10 [ Assemble unmapped 24-30nt nt - velvetOptimser.pl ]\n";
     
-#     my $exec62_10 = "velvetoptimiser --d $step5_opt_24to30/run1 --t $process --s 15 --e 17 --f '-short -fasta $path_04_unmap_trim_filter_24_30' --a 2>>$path_warns";
+#     my $exec62_10 = "velvetoptimiser --d $step5_opt_24to30/run1 --t $process --s 15 --e 17 --f '-short -fasta $path_04_unmap_trim_filter_24_30_fa' --a 2>>$path_warns";
     
 #     print "\nSTEP62_10\n\t $exec62_10\n";
 #     `$exec62_10`;
@@ -863,13 +874,13 @@ print $time_msg;
 #     `mkdir $step5_opt_24to30/run2 `;
 
 #     print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-#     my $exec6_10_3 = "spades -s $path_04_unmap_trim_filter_24_30 --careful --only-assembler -t $process  -k 15,17 -o $step5_opt_24to30/run2 ";
+#     my $exec6_10_3 = "spades -s $path_04_unmap_trim_filter_24_30_fa --careful --only-assembler -t $process  -k 15,17 -o $step5_opt_24to30/run2 ";
     
 #     print "\n[STEP 06.10_3\n\t $exec6_2\n";
 #     `$exec6_10_3`;
 
 #     print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
-#     my $exec62_13 = "perl $path_merge_contigs -contig1 $step5_opt_24to30/run1/contigs.fa -contig2 $step5_opt_24to30/run2/scaffolds.fasta -output $step5_opt_24to30/contigs.final.fasta ";
+#     my $exec62_13 = "perl $path_merge_contigs -contig1 $step5_opt_24to30/run1/contigs.fa -contig2 $step5_opt_24to30/run2/scaffolds.fasta -output $path_05_opt_24_30_final_fa ";
 #     print "\nSTEP62_13\n\t $exec62_13\n";
 #     `$exec62_13`;
 # }
@@ -895,37 +906,42 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_05_cap3_gt200 = "$step5_cap3/contigs_merged.final.gt200.fasta";
+my $path_05_cap3_all_fa = "$step5_cap3/all_contigs.fasta";
+
+my $path_05_cap3_merge_prefix = "$step5_cap3/contigs_merged.final";
+my $path_05_cap3_merge_fa = "$path_05_cap3_merge_prefix.fasta"; # $step5_cap3/contigs_merged.final.fasta
+my $path_05_cap3_merge_gt200_fa = "$path_05_cap3_merge_prefix.gt200.fasta";
+my $path_05_cap3_merge_gt50_fa = "$path_05_cap3_merge_prefix.gt50.fasta"; # $step5_cap3/contigs_merged.final.gt50.fasta
 
 if (not defined($deg)) {
-    `touch $step5_opt_24to30/contigs.final.fasta`;
+    `touch $path_05_opt_24_30_final_fa`;
 }
 
 print "\n[MERGING CONTIGS AND RUNNING CAP3]\n";
 print "\t#Running STEP [CAT] Concatenating contigs...\n";
-my $exec_cat = "cat $path_05_opt_20_23_contigs_final $path_05_opt_fix_contigs_final  $path_05_fix_contigs_final $path_05_opt_contigs_final $step5_opt_24to30/contigs.final.fasta > $step5_cap3/all_contigs.fasta";
+my $exec_cat = "cat $path_05_opt_20_23_contigs_final_fa $path_05_opt_fix_contigs_final_fa  $path_05_fix_contigs_final_fa $path_05_opt_contigs_final_fa $path_05_opt_24_30_final_fa > $path_05_cap3_all_fa";
 
 print "\n[STEP 06.CAT] \n\t $exec_cat\n";
 `$exec_cat`;
 
 print "\t#Running step CAP3 [ assembly contigs from different assemblies ] \n";
-my $exec_cap3 = "cap3 $step5_cap3/all_contigs.fasta  > $step5_cap3/log.cap3";
+my $exec_cap3 = "cap3 $path_05_cap3_all_fa  > $step5_cap3/log.cap3";
 print "\nSTEP CAP3\n\t $exec_cap3\n";
 `$exec_cap3`;
 
 print "\t#Running [ Concatenning contigs and singlets from CAP3]\n";
-my $exec_cap3_1 = "cat $step5_cap3/all_contigs.fasta.cap.contigs $step5_cap3/all_contigs.fasta.cap.singlets > $step5_cap3/contigs_merged.final.fasta";
+my $exec_cap3_1 = "cat $step5_cap3/all_contigs.fasta.cap.contigs $step5_cap3/all_contigs.fasta.cap.singlets > $path_05_cap3_merge_fa";
 
 print "\n[STEP 06.CAT]\n\t $exec_cap3_1\n";
 `$exec_cap3_1`;
 
 print "\t#Running step 6_7 [ selecting contigs larger than n50 - calcN50.pl ] \n";
-my $step6_7 = "perl $path_fix_cap3_contigs -i $step5_cap3/contigs_merged.final.fasta -s 50  -p $step5_cap3/contigs_merged.final";
+my $step6_7 = "perl $path_fix_cap3_contigs -i $path_05_cap3_merge_fa -s 50 -p $path_05_cap3_merge_prefix";
 
 print "\n[STEP 06.7]\n\t $step6_7\n";
 `$step6_7`;
 
-my $countAssembledContigs = `grep -c '>' $step5_cap3/contigs_merged.final.gt50.fasta`;
+my $countAssembledContigs = `grep -c '>' $path_05_cap3_merge_gt50_fa`;
 chomp($countAssembledContigs);
 
 # print metrics "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
@@ -933,12 +949,12 @@ chomp($countAssembledContigs);
 print "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
 
 print "[FILTER CONTIGS gt 200 nt]\n";
-my $exec_FC2 = "python3 $path_filter_fasta_by_size $step5_cap3/contigs_merged.final.gt50.fasta 200 1000000 $path_05_cap3_gt200";
+my $exec_FC2 = "python3 $path_filter_fasta_by_size $path_05_cap3_merge_gt50_fa 200 1000000 $path_05_cap3_merge_gt200_fa";
 
 print "\n[STEP 05.2]\n\t $exec_FC2\n";
 `$exec_FC2`;
 
-$countAssembledContigs = `grep -c '>' $path_05_cap3_gt200`;
+$countAssembledContigs = `grep -c '>' $path_05_cap3_merge_gt200_fa`;
 chomp($countAssembledContigs);
 
 # print metrics "# Contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
@@ -966,36 +982,43 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_06_blastn_no_hit_1e5 = "$step6/seqNoHit.blastN.1e5.fasta";
+# 
+# TODO: 2023-06-08 - Remove redundant files
+# 
+
+my $path_06_blastn_no_hit_1e5_fa = "$step6/seqNoHit.blastN.1e5.fasta";
 my $path_06_blastn_merge_gt200_1e5 = "$step6/contigs_merged.final.gt200.1e5.blastn";
 
+# 
+# TODO: 2023-06-08 - Does this differentiation really make sense (contigs.bN.blastn.analyze × contigs.bN.analyze) ?
+# 
 my $path_07_bN_analyse_blastn_prefix = "$step7/contigs.bN.blastn.analyze";
-my $path_07_bN_analize_viral = "$path_07_bN_analyse_blastn_prefix.virus.contigs.fasta"; # $step7/contigs.bN.blastn.analyze.virus.contigs.fasta"
+my $path_07_bN_analize_viral_fa = "$path_07_bN_analyse_blastn_prefix.virus.contigs.fasta"; # $step7/contigs.bN.blastn.analyze.virus.contigs.fasta"
 
 my $path_07_bN_analyze_prefix = "$step7/contigs.bN.analyze";
-my $path_07_bN_analize_contigs = "$path_07_bN_analyze_prefix..contigs.fasta"; # "$step7/contigs.bN.analyze..contigs.fasta"
-my $path_07_bN_analize_non_viral = "$path_07_bN_analyze_prefix.nonviral.contigs.fasta"; # "$step7/contigs.bN.analyze.nonviral.contigs.fasta";
+my $path_07_bN_analize_contigs_fa = "$path_07_bN_analyze_prefix..contigs.fasta"; # "$step7/contigs.bN.analyze..contigs.fasta"
+my $path_07_bN_analize_non_viral_fa = "$path_07_bN_analyze_prefix.nonviral.contigs.fasta"; # "$step7/contigs.bN.analyze.nonviral.contigs.fasta";
 
 my $path_07_blastn_analyse = "$step7/contigs.blastN.analyze";
 my $path_07_blastn_analize_virus = "$step7/contigs.blastN.virus.analyze";
 my $path_07_blastn_1e5_report = "$step7/contigs.blastn.1e5.report";
-my $path_07_blastn_virus = "$step7/contigs.virus.blastN.formatted.fasta";
-my $path_07_blastn_virus_header = "$step7/contigs.virus.blastN.formatted.header.fasta";
+my $path_07_blastn_virus_fa = "$step7/contigs.virus.blastN.formatted.fasta";
+my $path_07_blastn_virus_header_fa = "$step7/contigs.virus.blastN.formatted.header.fasta";
 
 my $path_07_dmnd_log = "$step7/diamond.log";
-my $path_07_dmnd_hits = "$step7/diamond_blastx_Hits.fasta";
+my $path_07_dmnd_hits_fa = "$step7/diamond_blastx_Hits.fasta";
 my $path_07_dmnd_out = "$step7/diamond_blastx.out";
-my $path_07_dmnd_no_hits = "$step7/diamond_blastx_NoHits.fasta";
-my $path_07_dmnd_no_hits_linear = "$step7/diamond_blastx_NoHits_linear.fasta";
-my $path_07_dmnd_no_hits_header = "$step7/diamond_blastx_NoHits_linear.header.fasta";
-my $path_07_dmnd_viral_header = "$step7/diamond_blastx_Viral.header.fasta";
+my $path_07_dmnd_no_hits_fa = "$step7/diamond_blastx_NoHits.fasta";
+my $path_07_dmnd_no_hits_linear_fa = "$step7/diamond_blastx_NoHits_linear.fasta";
+my $path_07_dmnd_no_hits_header_fa = "$step7/diamond_blastx_NoHits_linear.header.fasta";
+my $path_07_dmnd_viral_header_fa = "$step7/diamond_blastx_Viral.header.fasta";
 
 my $path_07_aux_fasta = "$step7/aux.fasta";
 my $path_07_aux_non_viral = "$step7/aux_nonviral";
 
 print "\n[BlastN contigs gt 200]\n";
 print "\t#Running step 10_111 [ Blast against NT - blast+ blastn ]\n";
-my $exec10_111 = "blastn -query $path_05_cap3_gt200 -db ".REF_BLAST_DB_NT."/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $path_06_blastn_merge_gt200_1e5  -num_threads $process";
+my $exec10_111 = "blastn -query $path_05_cap3_merge_gt200_fa -db ".REF_BLAST_DB_NT."/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $path_06_blastn_merge_gt200_1e5  -num_threads $process";
 
 print "\nSTEP10_111\n\t $exec10_111\n";
 `$exec10_111`;
@@ -1007,47 +1030,49 @@ print "\nSTEP10_112\n\t $exec10_112\n";
 `$exec10_112`;
 
 print "\n[Extracting contigs all Hits blastn 1e-5]\n";
-`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200 -q "" -p  $path_07_bN_analyze_prefix --fasta > $path_07_blastn_analyse`;
+`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report -f $path_05_cap3_merge_gt200_fa -q "" -p  $path_07_bN_analyze_prefix --fasta > $path_07_blastn_analyse`;
 
 print "\n[Extracting contigs viral blastn 1e-5]\n";
-`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200 -q "virus" -p  $path_07_bN_analyse_blastn_prefix --fasta > $path_07_blastn_analize_virus`;
+`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_merge_gt200_fa -q "virus" -p  $path_07_bN_analyse_blastn_prefix --fasta > $path_07_blastn_analize_virus`;
 
 print "\n[Extracting contigs nonviral blastn 1e-5]\n";
-`grep -v -i "virus" $path_07_bN_analize_contigs | grep '>' | cut -f1 -d " " >  $path_07_aux_non_viral`;
+`grep -v -i "virus" $path_07_bN_analize_contigs_fa | grep '>' | cut -f1 -d " " >  $path_07_aux_non_viral`;
 
-`fasta_formatter -i $path_07_bN_analize_contigs > $path_07_aux_fasta`;
-`while read p; do grep -A1 \${p} $path_07_aux_fasta >> $path_07_bN_analize_non_viral;done < $path_07_aux_non_viral`;
+`fasta_formatter -i $path_07_bN_analize_contigs_fa > $path_07_aux_fasta`;
+
+`while read p; do grep -A1 \${p} $path_07_aux_fasta >> $path_07_bN_analize_non_viral_fa;done < $path_07_aux_non_viral`;
 `rm -f $path_07_aux_fasta`;
 `rm -f $path_07_aux_non_viral`;
 
-my $hitsBlastn = `grep -c '>' $path_07_bN_analize_contigs`;
+my $hitsBlastn = `grep -c '>' $path_07_bN_analize_contigs_fa`;
 chomp($hitsBlastn);
 
 # 
 # TODO: 2023-05-23 - Check what to do with these 'parallel' logging files
 # 
 
-# Assembled Contigs
 # print metrics "#contigs hit blastN\t".$hitsBlastn."\n";
 # print interest "#contigs hit blastN\t".$hitsBlastn."\n";
 print "# Contigs hit blastN\t".$hitsBlastn."\n";
 
-# Assembled Contigs
-my $hitsVirusBlastn = `grep -c '>' $path_07_bN_analize_viral`;
+# 
+# TODO: 2023-05-23 - Check what to do with these 'parallel' logging files
+# 
+
+my $hitsVirusBlastn = `grep -c '>' $path_07_bN_analize_viral_fa`;
 chomp($hitsVirusBlastn);
 
 # print metrics "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
 # print interest "#contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
 print "# Contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
 
-# Assembled Contigs
 print "\n[Extracting contigs no hit blastn 1e-5]\n";
-my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $path_05_cap3_gt200 -blast $path_07_blastn_1e5_report -out $path_06_blastn_no_hit_1e5";
+my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $path_05_cap3_merge_gt200_fa -blast $path_07_blastn_1e5_report -out $path_06_blastn_no_hit_1e5_fa";
 
 print "\nSTEP10_113\n\t $exec10_113\n";
 `$exec10_113`;
 
-my $seqsNoHitBlastn = `grep -c '>' $path_06_blastn_no_hit_1e5`;
+my $seqsNoHitBlastn = `grep -c '>' $path_06_blastn_no_hit_1e5_fa`;
 chomp($seqsNoHitBlastn);
 
 # 
@@ -1056,8 +1081,13 @@ chomp($seqsNoHitBlastn);
 
 # print metrics "# Contigs not hit blastN\t".$seqsNoHitBlastn."\n";
 print "# Contigs not hit blastN\t".$seqsNoHitBlastn."\n";
+
+# 
+# REVIEW: 2023-06-08 - Can this be placed next to the viral contigs handling block?
+# 
+
 # Assembled Contigs
-`cat $path_07_bN_analize_viral | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $path_07_blastn_virus`;
+`cat $path_07_bN_analize_viral_fa | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $path_07_blastn_virus_fa`;
 
 # -----------------------------------------------------------------------
 
@@ -1083,23 +1113,23 @@ print $time_msg;
 print "\n[Diamond (BlastX) contigs gt 200]\n";
 print "\t# Running step 9 [ Diamond-Blast against NR ]\n";
 
-my $exec9 = "diamond blastx -q $path_06_blastn_no_hit_1e5 -d ".REF_DIAMOND_NR." -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $path_07_dmnd_out --un $path_07_dmnd_no_hits --unfmt fasta --al $path_07_dmnd_hits --alfmt fasta 2>  $path_07_dmnd_log";
+my $exec9 = "diamond blastx -q $path_06_blastn_no_hit_1e5_fa -d ".REF_DIAMOND_NR." -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $path_07_dmnd_out --un $path_07_dmnd_no_hits_fa --unfmt fasta --al $path_07_dmnd_hits_fa --alfmt fasta 2>  $path_07_dmnd_log";
 
 print "\nSTEP9\n\t $exec9\n";
 `$exec9`;
 
 print "\t# Filtering Diamond results... ]\n";   
-my $exec9_11 = "$path_filter_diamond -f $path_07_dmnd_hits -o $path_07_dmnd_out -d $step7";
+my $exec9_11 = "$path_filter_diamond -f $path_07_dmnd_hits_fa -o $path_07_dmnd_out -d $step7";
 
 print "\nSTEP9_11\n\t $exec9_11\n";
 `$exec9_11`;
 
 # Replace '\t' characters with actual tabs
-`sed -i 's/\\\\t/\\t/g' $path_07_dmnd_no_hits`;
+`sed -i 's/\\\\t/\\t/g' $path_07_dmnd_no_hits_fa`;
 
 # Make a 'linear' version of 'no hits' fasta (join all pieces for each sequence)
-`fasta_formatter -i $path_07_dmnd_no_hits -o $path_07_dmnd_no_hits_linear`;
-# `rm $path_07_dmnd_no_hits`;
+`fasta_formatter -i $path_07_dmnd_no_hits_fa -o $path_07_dmnd_no_hits_linear_fa`;
+# `rm $path_07_dmnd_no_hits_fa`;
 
 # Add prefix to all contig names
 `for file in $step7/*.fasta; do
@@ -1132,30 +1162,34 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_09_seq_viral_hit_no_hit_prefix = "$step9/seq_ViralHits_and_NoHits";
-my $path_09_seq_viral_hit_no_hit = "$path_09_seq_viral_hit_no_hit_prefix.fasta"; # $step9/seq_ViralHits_and_NoHits.fasta
-my $path_09_seq_viral_hit_no_hit_pirna = "$path_09_seq_viral_hit_no_hit_prefix.withPiRNA.fasta"; # step9/seq_ViralHits_and_NoHits.withPiRNA.fasta
-my $path_09_seq_viral_hit_no_hit_sirna = "$path_09_seq_viral_hit_no_hit_prefix.withSiRNA.fasta"; # $step9/seq_ViralHits_and_NoHits.withSiRNA.fasta
-my $path_09_seq_viral_hit_no_hit_sirna_pirna = "$path_09_seq_viral_hit_no_hit_prefix.withSiRNA_and_PiRNA.fasta"; # $step9/seq_ViralHits_and_NoHits.withSiRNA_and_PiRNA.fasta
+my $path_09_viral_no_hit_seq_prefix = "$step9/seq_ViralHits_and_NoHits";
+my $path_09_viral_no_hit_fa = "$path_09_viral_no_hit_seq_prefix.fasta"; # $step9/seq_ViralHits_and_NoHits.fasta
+my $path_09_viral_no_hit_pirna_fa = "$path_09_viral_no_hit_seq_prefix.withPiRNA.fasta"; # step9/seq_ViralHits_and_NoHits.withPiRNA.fasta
+my $path_09_viral_no_hit_sirna_fa = "$path_09_viral_no_hit_seq_prefix.withSiRNA.fasta"; # $step9/seq_ViralHits_and_NoHits.withSiRNA.fasta
+my $path_09_viral_no_hit_sirna_pirna_fa = "$path_09_viral_no_hit_seq_prefix.withSiRNA_and_PiRNA.fasta"; # $step9/seq_ViralHits_and_NoHits.withSiRNA_and_PiRNA.fasta
 
-`cat $path_07_blastn_virus_header $path_07_dmnd_viral_header $path_07_dmnd_no_hits_header > $path_09_seq_viral_hit_no_hit`;
+my $path_09_viral_no_hit_prefix = "$step9/reads_vs_contigsHitNoHit";
+my $path_09_viral_no_hit_sam = "$path_09_viral_no_hit_prefix.v1.sam"; # $step9/reads_vs_contigsHitNoHit.v1.sam
+my $path_09_viral_no_hit_z_score = "$path_09_viral_no_hit_prefix.zscore"; # $step9/reads_vs_contigsHitNoHit.zscore
 
-`bowtie-build $path_09_seq_viral_hit_no_hit $path_09_seq_viral_hit_no_hit`;
+`cat $path_07_blastn_virus_header_fa $path_07_dmnd_viral_header_fa $path_07_dmnd_no_hits_header_fa > $path_09_viral_no_hit_fa`;
 
-print "\t#Mapping reads against viral hits(blastn and diamond) and nohits\n";
-my $exec10_13 = "bowtie -f -S -p $process -v 1 $path_09_seq_viral_hit_no_hit $path_04_unmap_vector_bacters 2>>$path_warns | awk -F'\t' '{if( \$2 != 4) print \$0}' > $step9/reads_vs_contigsHitNoHit.v1.sam ";
+`bowtie-build $path_09_viral_no_hit_fa $path_09_viral_no_hit_fa`;
+
+print "\t# Mapping reads against viral hits(blastn and diamond) and nohits\n";
+my $exec10_13 = "bowtie -f -S -p $process -v 1 $path_09_viral_no_hit_fa $path_04_unmap_vector_bacters_fa 2>>$path_warns | awk -F'\t' '{if( \$2 != 4) print \$0}' > $path_09_viral_no_hit_sam";
 
 print"\nSTEP10_13\n\t $exec10_13\n";
 `$exec10_13`;
 
-`perl $path_sam_stats -sam $step9/reads_vs_contigsHitNoHit.v1.sam -fa $path_09_seq_viral_hit_no_hit -p $path_09_seq_viral_hit_no_hit_prefix --profile --counts`;
+`perl $path_sam_stats -sam $path_09_viral_no_hit_sam -fa $path_09_viral_no_hit_fa -p $path_09_viral_no_hit_seq_prefix --profile --counts`;
 
-`perl $path_z_score -sam $step9/reads_vs_contigsHitNoHit.v1.sam -p $step9/reads_vs_contigsHitNoHit`;
+`perl $path_z_score -sam $path_09_viral_no_hit_sam -p $path_09_viral_no_hit_prefix`;
 
-`R --no-save $step9/reads_vs_contigsHitNoHit.zscore.tab $step9/reads_vs_contigsHitNoHit.zscore  < $path_heatmap_corr 2>/dev/null`;
+`R --no-save $path_09_viral_no_hit_z_score.tab $path_09_viral_no_hit_z_score  < $path_heatmap_corr 2>/dev/null`;
 
 # Stats
-$hitsBlastn = `grep '>' $path_09_seq_viral_hit_no_hit_sirna | grep blastN | wc -l `;
+$hitsBlastn = `grep '>' $path_09_viral_no_hit_sirna_fa | grep blastN | wc -l `;
 chomp($hitsBlastn);
 
 # 
@@ -1165,49 +1199,49 @@ chomp($hitsBlastn);
 # print metrics "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
 # print interest "#contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
 print "# Contigs hit VIRUS blastN with siRNA\t".$hitsBlastn."\n";
-$hitsBlastn = `grep '>' $path_09_seq_viral_hit_no_hit_sirna_pirna | grep blastN | wc -l `;
+$hitsBlastn = `grep '>' $path_09_viral_no_hit_sirna_pirna_fa | grep blastN | wc -l `;
 chomp($hitsBlastn);
 
 # print metrics "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
 # print interest "#contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
 print "# Contigs hit VIRUS blastN with siRNA and piRNA\t".$hitsBlastn."\n";
-$hitsBlastn = `grep '>' $$path_09_seq_viral_hit_no_hit_pirna | grep blastN | wc -l `;
+$hitsBlastn = `grep '>' $path_09_viral_no_hit_pirna_fa | grep blastN | wc -l `;
 chomp($hitsBlastn);
 
 # print metrics "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn."\n";
 # print interest "#contigs hit VIRUS blastN with piRNA\t".$hitsBlastn. "\n";
 print "# Contigs hit VIRUS blastN with piRNA\t".$hitsBlastn."\n";
-$hitsVirusBlastn = `grep  '>' $path_09_seq_viral_hit_no_hit_sirna | grep blastX | wc -l `;
+$hitsVirusBlastn = `grep  '>' $path_09_viral_no_hit_sirna_fa | grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
 
 # print metrics "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
 print "# Contigs hit VIRUS BlastX with siRNA \t".$hitsVirusBlastn."\n";
-$hitsVirusBlastn = `grep  '>' $path_09_seq_viral_hit_no_hit_sirna_pirna| grep blastX | wc -l `;
+$hitsVirusBlastn = `grep  '>' $path_09_viral_no_hit_sirna_pirna_fa| grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
 
 # print metrics "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 print "# Contigs hit VIRUS BlastX with siRNA and piRNA \t".$hitsVirusBlastn."\n";
-$hitsVirusBlastn = `grep  '>' $$path_09_seq_viral_hit_no_hit_pirna | grep blastX | wc -l `;
+$hitsVirusBlastn = `grep  '>' $path_09_viral_no_hit_pirna_fa | grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
 
 # print metrics "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
 print "# Contigs hit VIRUS BlastX with piRNA \t".$hitsVirusBlastn."\n";
-$hitsVirusBlastn = `grep  '>' $path_09_seq_viral_hit_no_hit_sirna | grep -v blastX | grep -v blastN | wc -l `;
+$hitsVirusBlastn = `grep  '>' $path_09_viral_no_hit_sirna_fa | grep -v blastX | grep -v blastN | wc -l `;
 chomp($hitsVirusBlastn);
 
 # print metrics "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
 print "# Contigs NOHIT blast with siRNA \t".$hitsVirusBlastn."\n";
-$hitsVirusBlastn = `grep  '>' $path_09_seq_viral_hit_no_hit_sirna_pirna | grep -v blastN | -v grep blastX | wc -l `;
+$hitsVirusBlastn = `grep  '>' $path_09_viral_no_hit_sirna_pirna_fa | grep -v blastN | -v grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
 
 # print metrics "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 # print interest "#contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
 print "# Contigs NOHIT blast with siRNA and piRNA \t".$hitsVirusBlastn."\n";
-$hitsVirusBlastn = `grep  '>' $$path_09_seq_viral_hit_no_hit_pirna | grep -v blastN | -v grep blastX | wc -l `;
+$hitsVirusBlastn = `grep  '>' $path_09_viral_no_hit_pirna_fa | grep -v blastN | -v grep blastX | wc -l `;
 chomp($hitsVirusBlastn);
 
 # print metrics "#contigs NOHIT blast with piRNA \t".$hitsVirusBlastn."\n";
@@ -1237,48 +1271,69 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_contig_viral_hits_all = "$step10/all_contigs_hit_virus.fasta";
+my $path_10_viral_no_hit_plot_prefix = "$step10/plots/reads.VS.contigs_virus_and_nohit";
+
+my $path_10_viral_prefix = "$step10/reads.VS.contigs_hit_virus_blast";
+my $path_10_viral_sam = "$path_10_viral_prefix.sam"; # $step10/reads.VS.contigs_hit_virus_blast.sam
+my $path_10_viral_fa = "$step10/all_contigs_hit_virus.fasta";
+
+my $path_10_viral_no_hit_prefix = "$step10/reads.VS.contigs_virus_and_nohit";
+my $path_10_viral_no_hit_sam = "$path_10_viral_no_hit_prefix.sam"; # $step10/reads.VS.contigs_virus_and_nohit.sam
+
+my $path_10_viral_no_hit_sirna_fa = "$path_10_viral_no_hit_prefix.withSiRNA.fasta"; # $step10/reads.VS.contigs_virus_and_nohit.withSiRNA.fasta
+my $path_10_viral_no_hit_sirna_plot_prefix = "$path_10_viral_no_hit_plot_prefix.siRNAs"; # $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs
+
+my $path_10_viral_no_hit_sirna_prefix = "$path_10_viral_no_hit_prefix.siRNAs"; # $step10/reads.VS.contigs_virus_and_nohit.siRNAs
+my $path_10_viral_no_hit_sirna_sam = "$path_10_viral_no_hit_sirna_prefix.sam"; # $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam
+
+my $path_10_viral_no_hit_sirna_pirna_fa = "$path_10_viral_no_hit_prefix.withSiRNA_and_PiRNA.fasta"; # $step10/reads.VS.contigs_virus_and_nohit.withSiRNA_and_PiRNA.fasta
+
+my $path_10_viral_no_hit_sirna_pirna_prefix = "$path_10_viral_no_hit_prefix.siRNAs_and_piRNAs"; # $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs
+my $path_10_viral_no_hit_sirna_pirna_sam = "$path_10_viral_no_hit_sirna_pirna_prefix.sam"; # $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam
+my $path_10_viral_no_hit_sirna_pirna_plot_prefix = "$path_10_viral_no_hit_plot_prefix.siRNAs_and_piRNAs"; # $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs
 
 # Merge 02 files with contigs hit virus
-`cat $path_07_blastn_virus_header $path_07_dmnd_viral_header > $path_contig_viral_hits_all`;
+`cat $path_07_blastn_virus_header_fa $path_07_dmnd_viral_header_fa > $path_10_viral_fa`;
 
-my $count_hit_lines = `cat $path_contig_viral_hits_all | wc -l`;
+my $count_hit_lines = `cat $path_10_viral_fa | wc -l`;
 chomp($count_hit_lines);
 
 if ($count_hit_lines > 0) {
-    `bowtie-build $path_contig_viral_hits_all $path_contig_viral_hits_all`;
+    `bowtie-build $path_10_viral_fa $path_10_viral_fa`;
 
 } else {
     print "\nNo contig viral hits found...\n";
 }
 
-`bowtie -f -S -k 1 -p $process -v 1  $path_contig_viral_hits_all $step2/trimmed_filtered_gt15.fasta | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $step10/reads.VS.contigs_hit_virus_blast.sam`;
+# 
+# TODO: 2023-05-30 - Check the deprecation warning for passing index via positional args
+# 
 
-`perl $path_sam_stats -sam $step10/reads.VS.contigs_hit_virus_blast.sam -fa $path_contig_viral_hits_all -p $step10/reads.VS.contigs_hit_virus_blast --profile`;
+`bowtie -f -S -k 1 -p $process -v 1  $path_10_viral_fa $path_02_trim_gt15_fa | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $path_10_viral_sam`;
+
+`perl $path_sam_stats -sam $path_10_viral_sam -fa $path_10_viral_fa -p $path_10_viral_prefix --profile`;
 
 # Creating reference table with identified contigs hit virus by sequence similarity
-`grep ">" $path_contig_viral_hits_all | cut -f 2 -d '>'  > $step10/all_contigs_hit_virus_sequence_similarity.tab`;
+`grep ">" $path_10_viral_fa | cut -f 2 -d '>'  > $step10/all_contigs_hit_virus_sequence_similarity.tab`;
 
 print "\n\n Calculating pattern viral contigs and candidates - HEATMAP \n\n";
 
-# Bowtie
-
 # 
 # TODO: 2023-05-30 - Check the deprecation warning for passing index via positional args
 # 
 
-`bowtie -f -S -k 1 -p $process -v 1  $step9/seq_ViralHits_and_NoHits.fasta $step2/trimmed_filtered_gt15.fasta | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $step10/reads.VS.contigs_virus_and_nohit.sam`;
+`bowtie -f -S -k 1 -p $process -v 1  $path_09_viral_no_hit_fa $path_02_trim_gt15_fa | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $path_10_viral_no_hit_sam`;
 
-`perl $path_z_score -sam $step10/reads.VS.contigs_virus_and_nohit.sam -p $step10/reads.VS.contigs_virus_and_nohit`;
+`perl $path_z_score -sam $path_10_viral_no_hit_sam -p $path_10_viral_no_hit_prefix`;
 
-`R --no-save $step10/reads.VS.contigs_virus_and_nohit.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.all < $path_heatmap_corr 2>/dev/null`;
+`R --no-save $step10/reads.VS.contigs_virus_and_nohit.zscore.tab $path_10_viral_no_hit_plot_prefix.all < $path_heatmap_corr 2>/dev/null`;
 
 # Identifying contigs with siRNA and piRNA signature
-`perl $path_sam_stats -sam $step10/reads.VS.contigs_virus_and_nohit.sam -fa $step9/seq_ViralHits_and_NoHits.fasta -p $step10/reads.VS.contigs_virus_and_nohit --profile`;
+`perl $path_sam_stats -sam $path_10_viral_no_hit_sam -fa $path_09_viral_no_hit_fa -p $path_10_viral_no_hit_prefix --profile`;
 
 # Formatting candidate contigs for bowtie
-`bowtie-build $step10/reads.VS.contigs_virus_and_nohit.withSiRNA_and_PiRNA.fasta $step10/reads.VS.contigs_virus_and_nohit.withSiRNA_and_PiRNA.fasta > /dev/null `;
-`bowtie-build $step10/reads.VS.contigs_virus_and_nohit.withSiRNA.fasta $step10/reads.VS.contigs_virus_and_nohit.withSiRNA.fasta > /dev/null `;
+`bowtie-build $path_10_viral_no_hit_sirna_pirna_fa $path_10_viral_no_hit_sirna_pirna_fa > /dev/null `;
+`bowtie-build $path_10_viral_no_hit_sirna_fa $path_10_viral_no_hit_sirna_fa > /dev/null `;
 
 # Bowtie
 
@@ -1286,31 +1341,29 @@ print "\n\n Calculating pattern viral contigs and candidates - HEATMAP \n\n";
 # TODO: 2023-05-30 - Check the deprecation warning for passing index via positional args
 # 
 
-`bowtie -f -S -k 1 -p $process -v 1 $step10/reads.VS.contigs_virus_and_nohit.withSiRNA.fasta $step2/trimmed_filtered_gt15.fasta | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam`;
-`bowtie -f -S -k 1 -p $process -v 1  $step10/reads.VS.contigs_virus_and_nohit.withSiRNA_and_PiRNA.fasta $step2/trimmed_filtered_gt15.fasta | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam`;
+`bowtie -f -S -k 1 -p $process -v 1 $path_10_viral_no_hit_sirna_fa $path_02_trim_gt15_fa | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $path_10_viral_no_hit_sirna_sam`;
+`bowtie -f -S -k 1 -p $process -v 1  $path_10_viral_no_hit_sirna_pirna_fa $path_02_trim_gt15_fa | awk -F '\t' '{if( \$2 != 4) print \$0}'  > $path_10_viral_no_hit_sirna_pirna_sam`;
 
 print "\n\n Creating plots \n\n";
 
 # Plotting distribution and density plots
-`perl $path_plot_map_data_base_preference -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam -s $si -e $se -fa $step10/reads.VS.contigs_virus_and_nohit.withSiRNA.fasta -pace 1 -p $step10/plots/reads.VS.contigs_virus_and_nohit.withSiRNA --profile --pattern`;
-`perl $path_plot_map_data_base_preference -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam -s $si -e $se -fa $step10/reads.VS.contigs_virus_and_nohit.withSiRNA_and_PiRNA.fasta -pace 1 -p $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs --profile --pattern`;
+`perl $path_plot_map_data_base_preference -sam $path_10_viral_no_hit_sirna_sam -s $si -e $se -fa $path_10_viral_no_hit_sirna_fa -pace 1 -p $path_10_viral_no_hit_plot_prefix.withSiRNA --profile --pattern`;
+`perl $path_plot_map_data_base_preference -sam $path_10_viral_no_hit_sirna_pirna_sam -s $si -e $se -fa $path_10_viral_no_hit_sirna_pirna_fa -pace 1 -p $path_10_viral_no_hit_sirna_pirna_plot_prefix --profile --pattern`;
 
 # Calculating mean pattern
-`perl $path_calc_pattern_sam -s $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam -o $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs.pattern`;
-`perl $path_calc_pattern_sam -s $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam -o $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.pattern`;
+`perl $path_calc_pattern_sam -s $path_10_viral_no_hit_sirna_sam -o $path_10_viral_no_hit_sirna_plot_prefix.pattern`;
+`perl $path_calc_pattern_sam -s $path_10_viral_no_hit_sirna_pirna_sam -o $path_10_viral_no_hit_sirna_pirna_plot_prefix.pattern`;
 
 # Plot geral distribution of reads in contigs with siRNA and siRNA+piRNAs
-`perl $path_plot_dist_per_base_by_reads -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam -s $si -e $se -p $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs.geral_distribution --plot`;
-`perl $path_plot_dist_per_base_by_reads -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam -s $si -e $se -p $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.geral_distribution --plot`;
+`perl $path_plot_dist_per_base_by_reads -sam $path_10_viral_no_hit_sirna_sam -s $si -e $se -p $path_10_viral_no_hit_sirna_plot_prefix.geral_distribution --plot`;
+`perl $path_plot_dist_per_base_by_reads -sam $path_10_viral_no_hit_sirna_pirna_sam -s $si -e $se -p $path_10_viral_no_hit_sirna_pirna_plot_prefix.geral_distribution --plot`;
 
 # Generating clusterized heatmaps
-`perl $path_z_score -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs.sam -p $step10/reads.VS.contigs_virus_and_nohit.siRNAs`;
+`perl $path_z_score -sam $path_10_viral_no_hit_sirna_sam -p $path_10_viral_no_hit_sirna_prefix`;
+`perl $path_z_score -sam $path_10_viral_no_hit_sirna_pirna_sam -p $path_10_viral_no_hit_sirna_pirna_prefix`;
 
-`perl $path_z_score -sam $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.sam -p $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs`;
-
-`R --no-save $step10/reads.VS.contigs_virus_and_nohit.siRNAs.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs < $path_heatmap_corr 2>/dev/null`;
-
-`R --no-save $step10/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs.zscore.tab $step10/plots/reads.VS.contigs_virus_and_nohit.siRNAs_and_piRNAs < $path_heatmap_corr 2>/dev/null`;
+`R --no-save $path_10_viral_no_hit_sirna_prefix.zscore.tab $path_10_viral_no_hit_sirna_plot_prefix < $path_heatmap_corr 2>/dev/null`;
+`R --no-save $path_10_viral_no_hit_sirna_pirna_prefix.zscore.tab $path_10_viral_no_hit_sirna_pirna_plot_prefix < $path_heatmap_corr 2>/dev/null`;
 
 # -----------------------------------------------------------------------
 
