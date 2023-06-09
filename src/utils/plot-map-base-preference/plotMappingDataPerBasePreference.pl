@@ -85,7 +85,7 @@ if (not defined($start) or $start < 0) {
     $start = 15;
 }
 
-if (not defined($end) or($end < 0) or($end < $start)) {
+if (not defined($end) or ($end < 0) or ($end < $start)) {
     warn("\n\t\t[Bad value for end (".($end // "undef")."), end setted to 30]\n");
     $end = 30;
 }
@@ -239,15 +239,14 @@ while (<IN>) {
         if ($campos[1] eq 16) {
             
             my $seq = uc($campos[9]);
-            $seq = ~tr / ATCG / TAGC / ;
+            $seq =~ tr /ATCG/TAGC/;
 
             my $revseq = reverse $seq;
             $first = uc(substr($revseq, 0, 1));
         }
 
-
         # Count miRNA preference
-        if ($size>=20 && $size <=24) {
+        if ($size >= 20 && $size <= 24) {
             $base_total{$c}{$first} = ($base_total{$c}{$first} // 0) + 1;
         }
         
@@ -281,9 +280,9 @@ while (<IN>) {
 our %contig;
 
 print $LOG_FH "[plot mapping data per base preference] Loading FASTA file...\n";
-my $in = Bio::SeqIO -> new(-format => 'fasta', -file => $fasta);
+my $in = Bio::SeqIO->new(-format => 'fasta', -file => $fasta);
 
-while (my $data = $in -> next_seq) {
+while (my $data = $in->next_seq) {
     my $size = $data->length;
 	$contig{$data->primary_id} = $size;
 }
@@ -293,7 +292,7 @@ if (not defined($profile)) {
     
     print $LOG_FH "\n\n[Total read distribution]\n";
     
-    for (my $i = $start; $i<=$end; $i++) {
+    for (my $i = $start; $i <= $end; $i++) {
         
         my $p = 0;
         my $n = 0; 
@@ -381,7 +380,8 @@ if (defined($profile)) {
 
         }
         close(O);
-        # drawing distribution plot# `R --no-save --args $prefix.$c.distribution < file.R`;
+        # drawing distribution plot
+        #`R --no-save --args $prefix.$c.distribution < file.R`;
     }
 
     # Creating sam files
@@ -465,7 +465,7 @@ if (defined($profile)) {
         # print $LOG_FH "$comm \n";
     }
     
-    # calcDensityPerBase.pl - sam - pace - ref ";
+    # calcDensityPerBase.pl -sam -pace -ref ";
 }
 
 # miRNA preference print
@@ -473,11 +473,14 @@ open(O3, ">$prefix.miRNA_total_base_distribution");
 
 print O3 "\tA\tC\tG\tT\n";
 
+# ^[[CUse of uninitialized value $tc in concatenation (.) or string at /srna_metavir/src/utils/plot-map-base-preference/plotMappingDataPerBasePreference.pl line 481, <GEN0> line 25.
+
+
 foreach my $c (keys %ch2) {
-    my $ta = $base_total{$c}{"A"};
-	my $tc = $base_total{$c}{"C"};
-	my $tg = $base_total{$c}{"G"};
-	my $tt = $base_total{$c}{"T"};
+    my $ta = $base_total{$c}{"A"} // 0;
+	my $tc = $base_total{$c}{"C"} // 0;
+	my $tg = $base_total{$c}{"G"} // 0;
+	my $tt = $base_total{$c}{"T"} // 0;
     print O3 $c."\t$ta\t$tc\t$tg\t$tt\n";
 }
 close(O3);
