@@ -45,12 +45,20 @@ $0 -h
 
 $| = 1;     # forces immediate prints into files rather than the buffer.
 
+# 
+# TODO: 2023-06-08 - Reenable this option
+# 
+# my $image;
+
+# 
+# REVIEW: 2023-06-08 - This parameter isn't being used
+# 
+# my $create;
+
 my $inputFile;
 my $query;
 my $fasta;
 my $prefix;
-# my $image;
-my $create;
 my $debug;
 my $help;
 
@@ -62,7 +70,7 @@ GetOptions (
     # "image!" => \$image,
     "debug!" => \$debug,
     "h!" => \$help,
-    "fasta!" => \$create
+    # "fasta!" => \$create
 );
 
 if ($help) {
@@ -142,9 +150,6 @@ while(<I>) {
 		$org =~ s/Desc=//g;
 		
 		if (not exists $hit{$contig}) {
-            # 
-            # TODO: 2023-05-23 - Check what to do with these 'parallel' logging files
-            # 
 			print FA ">$contig ".$f{$contig}{"size"}." ".$org."\n".$f{$contig}."\n";
 		}
 		
@@ -306,9 +311,6 @@ foreach my $c (keys %f) {
 #         # print "Organism: $c\t"."Hits:".$orgs{$c}{"count"} ."\tDescription: ".$orgs{$c}{"desc"}."\n";
 #     }
 
-#     # 
-#     # TODO: 2023-05-23 - Check what to do with these 'parallel' logging files
-#     # 
 #     open(CON,">$prefix.contigs");
 
 #     foreach $id (keys %hit) {

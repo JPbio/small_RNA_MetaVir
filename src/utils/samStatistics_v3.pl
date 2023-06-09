@@ -349,10 +349,7 @@ close(SIG);
 
 if (defined($profile)) {
 
-	# 
-	# TODO: 2023-05-26 - Check what to do whith these 'parallel' logging files
-	# 
-    open(S, ">$prefix.profile");
+	open(S, ">$prefix.profile");
     open(SI, ">$prefix.withSiRNA.fasta");
     open(PI, ">$prefix.withPiRNA.fasta");
     open(primaryPI, ">$prefix.with_primaryPiRNA.fasta");

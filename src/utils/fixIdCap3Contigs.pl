@@ -101,38 +101,24 @@ if (not(defined($size))) {
 
 #print scalar keys % hash;
 
-# 
-# TODO: 2023-05-22 - Handle these 'parallel' logging properly
-# 
 open(C, ">$prefix.contigs");
 open(C2, ">$prefix.gt".$size.".fasta");
 
-my $count = 0;
-#print "\nLoading Contigs... \n";
-my $seqio_object = Bio::SeqIO -> new(-file => $inputFile);
-while (my $seq_object = $seqio_object -> next_seq) {
-    
-    my $id = $seq_object -> id."_$count";
-    my $s = length($seq_object -> seq);
-    my $seq = $seq_object -> seq;
+print "\nLoading Contigs... \n";
 
-    if (length($seq_object -> seq) > $size) {
-        
-		# print $LOG_FH ">$id\t$s\n$seq\n";
-        
-		# 
-		# @deprecated
-		# 2023-05-22
-		# 
+my $count = 0;
+my $seqio_object = Bio::SeqIO->new(-file => $inputFile);
+
+while (my $seq_object = $seqio_object->next_seq) {
+    
+    my $id = $seq_object->id."_$count";
+    my $s = length($seq_object->seq);
+    my $seq = $seq_object->seq;
+
+    if (length($seq_object->seq) > $size) {
 		print C2 ">$id\t$s\n$seq\n";
 
     } else {
-        # print $LOG_FH ">$id\t$s\n$seq\n";
-		
-		# 
-		# @deprecated
-		# 2023-05-22
-		# 
         print C ">$id\t$s\n$seq\n";
     }
     $count++;
