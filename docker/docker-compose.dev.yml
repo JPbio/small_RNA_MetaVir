@@ -15,3 +15,5 @@ services:
       - /home/hebert/srna-meta-vir/asset/refs/:/srna_metavir/asset/refs
       - /raid5/r2d2_share/nt:/srna_metavir/asset/blastdb/nt
       - /home/hebert/srna-meta-vir/asset/diamond:/srna_metavir/asset/diamond
+
+      - /home/hebert/bowtie-1.1.1:/srna_metavir/asset/bowtie
