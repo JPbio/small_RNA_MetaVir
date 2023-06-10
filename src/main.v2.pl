@@ -289,6 +289,7 @@ my $step8		="$prefix/08_completeReport";
 my $step9		="$prefix/09_contigs_no_hit";
 my $step10		="$prefix/10_pattern";
 my $step11		="$prefix/11_profiles";
+my $step12		="$prefix/12_z_score_small_rna_features";
 
 # 
 # REVIEW: 2023-06-07 - Is this folder really being used?
@@ -309,11 +310,11 @@ my $path_filter_blast = "$path_utils/filterblast.pl";
 my $path_analyse_contigs_blastn = "$path_utils/analyse-contigs-blastn/analyzeContigsFilterBlastn.pl";
 my $path_extract_seqs_no_hit_blast = "$path_utils/extract-seqs/extractSequencesNoHitBlast.pl";
 
-my $path_sam_stats = "$path_utils/samStatistics_v3.pl";
-my $path_z_score = "$path_utils/Z-score.bothstrands.pl";
-my $path_heatmap_corr = "$path_utils/heatmap_correlation_VISA.R";
+my $path_sam_2_sam_stranded = "$path_utils/sam-sam-stranded-counts/samToSamStrandedByCounts.pl";
+my $path_z_score_both_strands = "$path_utils/z-score/virome_zscore.bothstrands.pl";
+my $path_z_score_feature = "$path_utils/z-score/set_Zscore_features_matrix.R";
+
 my $path_plot_map_data_base_preference = "$path_utils/plot-map-base-preference/plotMappingDataPerBasePreference.pl";
-my $path_calc_pattern_sam = "$path_utils/pattern-sam/calcPatternInSamFile.pl";
 
 #######################################################################
 ### Create step folders -----------------------------------------------
@@ -381,6 +382,9 @@ if (not -e $step10) {
 }
 if (not -e $step11) {
     `mkdir $step11`;
+}
+if (not -e $step12) {
+    `mkdir $step12`;
 }
 if (not -e $step_virus) {
     `mkdir $step_virus`;
@@ -457,7 +461,7 @@ print $runningDetails;
 my $path_03_map_host_sam = "$step3/mapped_host.v1.sam";
 
 my $path_04_unmap_vector_reads = "$step4/unmappedVectorReads.fasta";
-my $path_04_unmap_vector_bacters = "$step4/unmappedVectorBacters.fasta";
+my $path_04_unmap_vector_bacters_fa = "$step4/unmappedVectorBacters.fasta";
 my $path_04_unmap_trim_filter = "$step4/unmapped_trimmed_filtered.fasta";
 my $path_04_unmap_trim_filter_20_23 = "$step4/unmapped_trimmed_filtered.20-23.fasta";
 my $path_04_unmap_trim_filter_24_30 = "$step4/unmapped_trimmed_filtered.24-30.fasta";
@@ -492,12 +496,12 @@ my $path_04_reads_map_bacteria_log = "$step4/reads_mapped_to_bacteria.log";
 # #     # Mapping Host - unfiltered reads against bacters reference
 # #     print "[MAPPING HOST-UNFILTERED READS AGAINST BACTERIAL GENOMES]... \n";
 
-# #     my $exec5_1 = "$cmd_bowtie -f -S -v 1 --un $path_04_unmap_vector_bacters -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $fasta > /dev/null 2>> $path_04_reads_map_bacteria_log";
+# #     my $exec5_1 = "$cmd_bowtie -f -S -v 1 --un $path_04_unmap_vector_bacters_fa -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $fasta > /dev/null 2>> $path_04_reads_map_bacteria_log";
     
 # #     print "\n[STEP 05.1]\n\t $exec5_1\n";
 # #     `$exec5_1`;
 
-# #     $nReadsUnmapHostBac = `grep -c '>' $path_04_unmap_vector_bacters`;
+# #     $nReadsUnmapHostBac = `grep -c '>' $path_04_unmap_vector_bacters_fa`;
 # #     chomp($nReadsUnmapHostBac);
 
 # #     # Mapped reads Bacterial genomes
@@ -576,12 +580,12 @@ my $path_04_reads_map_bacteria_log = "$step4/reads_mapped_to_bacteria.log";
 
 #     # Mapping Host - filtered reads against bacters reference
 #     print "[MAPPING HOST-FILTERED READS AGAINST BACTERIAL GENOMES]... \n";
-#     my $exec5_1 = "$cmd_bowtie -f -S -v 1 --un $path_04_unmap_vector_bacters -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $path_04_unmap_vector_reads > /dev/null 2>>$path_warns ";
+#     my $exec5_1 = "$cmd_bowtie -f -S -v 1 --un $path_04_unmap_vector_bacters_fa -k 1 -p $process --large-index ".REF_BACTERIA_GENOMES." $path_04_unmap_vector_reads > /dev/null 2>>$path_warns ";
     
 #     print "\n[STEP 05.1]\n\t $exec5_1\n";
 #     `$exec5_1`;
 
-#     $nReadsUnmapHostBac = `grep -c '>' $path_04_unmap_vector_bacters`;
+#     $nReadsUnmapHostBac = `grep -c '>' $path_04_unmap_vector_bacters_fa`;
 #     chomp($nReadsUnmapHostBac);
 #     $mappedbac = $nReadsUnmapHost - $nReadsUnmapHostBac;
 
@@ -623,18 +627,18 @@ my $path_04_reads_map_bacteria_log = "$step4/reads_mapped_to_bacteria.log";
 
 # print "[FILTER UNMAPPED SEQUENCES BY SIZE (variable size $si to $se)]\n";
 
-# my $exec5 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters $si $se $path_04_unmap_trim_filter -t F ";
+# my $exec5 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters_fa $si $se $path_04_unmap_trim_filter -t F ";
 
 # print "\n[STEP 05]\n\t $exec5\n";
 # `$exec5`;
 
 # print "[FILTER UNMAPPED SEQUENCES BY SIZE (20-23NT)]\n";
-# my $exec5_1 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters 20 23 $path_04_unmap_trim_filter_20_23";
+# my $exec5_1 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters_fa 20 23 $path_04_unmap_trim_filter_20_23";
 # print "\n[STEP 05.1]\n\t $exec5_1\n";
 # `$exec5_1`;
 
 # print "[FILTER UNMAPPED SEQUENCES BY SIZE (24-30NT)]\n";
-# my $exec5_2 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters 24 30 $path_04_unmap_trim_filter_24_30";
+# my $exec5_2 = "python3 $path_filter_fasta_by_size $path_04_unmap_vector_bacters_fa 24 30 $path_04_unmap_trim_filter_24_30";
 # print "\n[STEP 05.2]\n\t $exec5_2\n";
 # `$exec5_2`;
 
@@ -1003,11 +1007,11 @@ my $path_07_dmnd_non_viral_header = "$step7/diamond_blastx_NonViral.header.fasta
 my $path_07_dmnd_no_hits_prefix = "$step7/diamond_blastx_NoHits";
 my $path_07_dmnd_no_hits = "$path_07_dmnd_no_hits_prefix.fasta";
 my $path_07_dmnd_no_hits_linear = "${path_07_dmnd_no_hits_prefix}_linear.fasta";
-my $path_07_dmnd_no_hits_header = "${path_07_dmnd_no_hits_prefix}_linear.header.fasta";
+my $path_07_dmnd_no_hits_header_fa = "${path_07_dmnd_no_hits_prefix}_linear.header.fasta";
 my $path_07_dmnd_no_hits_log = "${path_07_dmnd_no_hits_prefix}_bowtie.log";
 my $path_07_dmnd_no_hits_sam = "$path_07_dmnd_no_hits_prefix.sam";
 my $path_07_dmnd_no_hits_sam_mapped = "$path_07_dmnd_no_hits_prefix.mapped.sam";
-my $path_07_dmnd_no_hits_sam_sort = "$path_07_dmnd_no_hits_prefix.mapped.sort.sam";
+my $path_07_dmnd_no_hits_sort_sam = "$path_07_dmnd_no_hits_prefix.mapped.sort.sam";
 
 my $path_07_all_viral_prefix = "$step7/all_viral_hits";
 my $path_07_all_viral_fa = "$path_07_all_viral_prefix.fasta";
@@ -1167,23 +1171,22 @@ my $path_07_aux_non_viral = "$step7/aux_nonviral";
 
 # # -----------------------------------------------------------------------
 
-# Flagging sequence similarity types
+# # Flagging sequence similarity types
 # `sed -i "s/>/>bN_/" $path_07_bN_analize_viral_header`;
 # `sed -i "s/>/>bN_/" $path_07_bN_analize_non_viral_header`;
 # `sed -i "s/>/>bX_/" $path_07_dmnd_viral_header`;
 # `sed -i "s/>/>bX_/" $path_07_dmnd_non_viral_header`;
 
-# Merge viral and non viral stuff
+# # Merge viral and non viral stuff
 # `cat $path_07_bN_analize_viral_header $path_07_dmnd_viral_header > $path_07_all_viral_fa`;
 # `cat $path_07_bN_analize_non_viral_header $path_07_dmnd_non_viral_header > $path_07_all_non_viral_fa`;
 
-# Generate indexes for profiling
-
+# # Generate indexes for profiling
 # print STDOUT "\n$cmd_bowtie_build $path_07_all_viral_fa $path_07_all_viral_fa\n";
 
 # `$cmd_bowtie_build $path_07_all_viral_fa $path_07_all_viral_fa`;
 # `$cmd_bowtie_build $path_07_all_non_viral_fa $path_07_all_non_viral_fa`;
-# `$cmd_bowtie_build $path_07_dmnd_no_hits_header $path_07_dmnd_no_hits_header`;
+# `$cmd_bowtie_build $path_07_dmnd_no_hits_header_fa $path_07_dmnd_no_hits_header_fa`;
 
 # # -----------------------------------------------------------------------
 
@@ -1206,9 +1209,9 @@ my $path_07_aux_non_viral = "$step7/aux_nonviral";
 
 # # -----------------------------------------------------------------------
 
-# `$cmd_bowtie -f -S -k 1 -p $process -v 1 $path_07_all_viral_fa $path_04_unmap_vector_bacters > $path_07_all_viral_sam 2> $path_07_all_viral_log`;
-# `$cmd_bowtie -f -S -k 1 -p $process -v 1 $path_07_all_non_viral_fa $path_04_unmap_vector_bacters > $path_07_all_non_viral_sam 2> $path_07_all_non_viral_log`;
-# `$cmd_bowtie -f -S -k 1 -p $process -v 1 $path_07_dmnd_no_hits_header $path_04_unmap_vector_bacters > $path_07_dmnd_no_hits_sam 2> $path_07_dmnd_no_hits_log`;
+# `$cmd_bowtie -f -S -k 1 -p $process -v 1 $path_07_all_viral_fa $path_04_unmap_vector_bacters_fa > $path_07_all_viral_sam 2> $path_07_all_viral_log`;
+# `$cmd_bowtie -f -S -k 1 -p $process -v 1 $path_07_all_non_viral_fa $path_04_unmap_vector_bacters_fa > $path_07_all_non_viral_sam 2> $path_07_all_non_viral_log`;
+# `$cmd_bowtie -f -S -k 1 -p $process -v 1 $path_07_dmnd_no_hits_header_fa $path_04_unmap_vector_bacters_fa > $path_07_dmnd_no_hits_sam 2> $path_07_dmnd_no_hits_log`;
 
 # # -----------------------------------------------------------------------
 
@@ -1231,6 +1234,9 @@ my $path_07_aux_non_viral = "$step7/aux_nonviral";
 
 # # -----------------------------------------------------------------------
 
+# # Pegando dentro do sam que não tem a flag 4 (quem mapeou)
+# # Ordenado reads mapeados (sort)
+
 # `samtools view -S -h -F 4 $path_07_all_viral_sam > $path_07_all_viral_sam_mapped`;
 # `samtools sort -O SAM -o $path_07_all_viral_sam_sort $path_07_all_viral_sam_mapped`;
 # # samtools view -Sb $i > ${i}.bam
@@ -1240,7 +1246,7 @@ my $path_07_aux_non_viral = "$step7/aux_nonviral";
 # # samtools view -Sb $i > ${i}.bam
 
 # `samtools view -S -h -F 4 $path_07_dmnd_no_hits_sam > $path_07_dmnd_no_hits_sam_mapped`;
-# `samtools sort -O SAM -o $path_07_dmnd_no_hits_sam_sort $path_07_dmnd_no_hits_sam_mapped`;
+# `samtools sort -O SAM -o $path_07_dmnd_no_hits_sort_sam $path_07_dmnd_no_hits_sam_mapped`;
 # # samtools view -Sb $i > ${i}.bam
 
 # # -----------------------------------------------------------------------
@@ -1282,7 +1288,68 @@ if (not -e $path_11_smallrna_profiles_no_hits) {
 
 `perl $path_plot_map_data_base_preference -sam $path_07_all_viral_sam_sort -s 18 -e 35 -fa $path_07_all_viral_fa -pace 1 -p $path_11_smallrna_profiles_viral/profile --profile --pattern -m 1 --keep`;
 `perl $path_plot_map_data_base_preference -sam $path_07_all_non_viral_sam_sort -s 18 -e 35 -fa $path_07_all_non_viral_fa -pace 1 -p $path_11_smallrna_profiles_non_viral/profile --profile --pattern -m 1 --keep`;
-`perl $path_plot_map_data_base_preference -sam $path_07_dmnd_no_hits_sam_sort -s 18 -e 35 -fa $path_07_dmnd_no_hits_header -pace 1 -p $path_11_smallrna_profiles_no_hits/profile --profile --pattern -m 1 --keep`;
+`perl $path_plot_map_data_base_preference -sam $path_07_dmnd_no_hits_sort_sam -s 18 -e 35 -fa $path_07_dmnd_no_hits_header_fa -pace 1 -p $path_11_smallrna_profiles_no_hits/profile --profile --pattern -m 1 --keep`;
+
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
+
+#######################################################################
+### Generating Z-Scores & features matrices ---------------------------
+#######################################################################
+
+$step_name = "Generating Z-Scores & features matrices";
+
+$time_msg = getStepTimebBeginMsg($step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
+
+my $path_12_z_out_tab_log = "$step12/formatting.log";
+
+my $path_12_viral_prefix = "$step12/viral";
+my $path_12_viral_k10_sam = "$path_12_viral_prefix.v1.k10.sam"; # viral.v1.k10.sam
+my $path_12_viral_strand_fa = "$path_12_viral_prefix.stranded.fasta"; # viral.stranded.fasta
+my $path_12_viral_z_out_prefix = "$path_12_viral_prefix.stranded.out"; # saida.stranded
+my $path_12_viral_z_out_tab = "$path_12_viral_z_out_prefix.zscore.tab"; # viral.stranded.out.zscore.tab
+
+my $path_12_non_viral_prefix = "$step12/non_viral";
+my $path_12_non_viral_k10_sam = "$path_12_non_viral_prefix.v1.k10.sam"; # non_viral.v1.k10.sam
+my $path_12_non_viral_strand_fa = "$path_12_non_viral_prefix.stranded.fasta"; # non_viral.stranded.fasta
+my $path_12_non_viral_out_prefix = "$path_12_non_viral_prefix.stranded.out"; # saida.stranded
+my $path_12_non_viral_z_out_tab = "$path_12_non_viral_out_prefix.zscore.tab"; # non_viral.stranded.out.zscore.tab
+
+my $path_12_no_hit_prefix = "$step12/no_hit";
+my $path_12_no_hit_k10_sam = "$path_12_no_hit_prefix.v1.k10.sam"; # no_hit.v1.k10.sam
+my $path_12_no_hit_strand_fa = "$path_12_no_hit_prefix.stranded.fasta"; # no_hit.stranded.fasta
+my $path_12_no_hit_out_prefix = "$path_12_no_hit_prefix.stranded.out"; # saida.stranded
+my $path_12_no_hit_z_out_tab = "$path_12_no_hit_out_prefix.zscore.tab"; # no_hit.stranded.out.zscore.tab
+
+# 
+# TODO: 2023-06-10 - Print some description for this...
+# 
+# /home/ericgdp/bin/samToSamStrandedByCounts.pl -sam all_viral_mapped_sort.sam -r unmappedVectorBacters.fasta -fa all_viral_hits.fasta -p teste_z-score_virome/viral
+`perl $path_sam_2_sam_stranded -sam $path_07_all_viral_sam_sort -r $path_04_unmap_vector_bacters_fa -fa $path_07_all_viral_fa -p $path_12_viral_prefix`;
+`perl $path_sam_2_sam_stranded -sam $path_07_all_non_viral_sam_sort -r $path_04_unmap_vector_bacters_fa -fa $path_07_all_non_viral_fa -p $path_12_non_viral_prefix`;
+`perl $path_sam_2_sam_stranded -sam $path_07_dmnd_no_hits_sort_sam -r $path_04_unmap_vector_bacters_fa -fa $path_07_dmnd_no_hits_header_fa -p $path_12_no_hit_prefix`;
+
+# 
+# TODO: 2023-06-10 - Print some description for this...
+# 
+# /home/ericgdp/bin/virome_zscore.bothstrands.pl -sam viral.v1.k10.sam -fa viral.stranded.fasta -p saida.stranded
+`perl $path_z_score_both_strands -sam $path_12_viral_k10_sam -fa $path_12_viral_strand_fa -p $path_12_viral_z_out_prefix`;
+`perl $path_z_score_both_strands -sam $path_12_non_viral_k10_sam -fa $path_12_non_viral_strand_fa -p $path_12_non_viral_out_prefix`;
+`perl $path_z_score_both_strands -sam $path_12_no_hit_k10_sam -fa $path_12_no_hit_strand_fa -p $path_12_no_hit_out_prefix`;
+
+print "Generating .tab feature matrices...";
+# R --no-save viral.stranded.out.zscore.tab non_viral.stranded.out.zscore.tab no_hit.stranded.out.zscore.tab < set_Zscore_features_matrix.R > formatiing_log
+`R --no-save $path_12_viral_z_out_tab $path_12_non_viral_z_out_tab $path_12_no_hit_z_out_tab < $path_z_score_feature > $path_12_z_out_tab_log`;
 
 # -----------------------------------------------------------------------
 
