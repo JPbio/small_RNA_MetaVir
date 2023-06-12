@@ -1,7 +1,7 @@
 ## jpbio jun-2023
 
 args <- commandArgs()
-
+prefix = args[6]
 
 viral <- read.delim(args[3],sep="#",header=F,row.names=NULL,quote = NULL)
 viral = t(as.matrix(viral))
@@ -11,7 +11,6 @@ nonviral = t(as.matrix(nonviral))
 
 nohit  <- read.delim(args[5],sep="#",header=F,row.names=NULL,quote = NULL)
 nohit = t(as.matrix(nohit))
-
 
 viral = as.data.frame(viral[-1,])
 nonviral = as.data.frame(nonviral[-1,])
@@ -53,4 +52,4 @@ matrix[,44:49] = log2(matrix[,44:49])
 
 matrix = matrix[,c(1,ncol(matrix),2:(ncol(matrix)-1))]
 
-write.table(matrix,"Zscore_and_features_matrix.tab",sep="\t",col.names = TRUE, row.names = F, quote = F)
+write.table(matrix, paste0(prefix, "/Zscore_and_features_matrix.tab"), sep="\t", col.names=TRUE, row.names=F, quote=F)

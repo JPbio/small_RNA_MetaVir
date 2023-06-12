@@ -4,6 +4,11 @@ use warnings;
 use Getopt::Long;
 use Bio::SeqIO;
 
+#
+# TODO: 2023-05-15 - Use a decent logger
+# 
+use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+
 #######################################################################
 ### PARSE INPUTS ------------------------------------------------------
 #######################################################################
@@ -50,7 +55,30 @@ if ((not(defined($sizeE)) or not(defined($sizeI))) and ($sizeI > $sizeE) and ($s
 }
 
 #######################################################################
-### Main... -----------------------------------------------------------
+### Configure logging -------------------------------------------------
+#######################################################################
+
+# 
+# TODO: 2023-02-27 - Find a better way to do this...
+# TODO: 2023-02-27 - Restablish the custom log file(s) option
+# 
+
+# open(metrics, ">$step8/full_metrics.txt");
+# open(interest, ">$step8/metrics_of_interest.txt");
+# open(LOG, ">$log");
+
+# 
+# NOTE: From here on all printed stuff will be sent to the log file
+# 
+
+# open filehandle log.txt
+my $LOG_FH;
+open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
+*STDERR = $LOG_FH;
+# select $LOG_FH;
+
+#######################################################################
+### Main --------------------------------------------------------------
 #######################################################################
 
 open(S, "<$input") or die "Failure as trying to open '$input' INPUT file";

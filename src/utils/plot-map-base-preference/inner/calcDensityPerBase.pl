@@ -101,6 +101,7 @@ if (not(defined($pace)) or ($pace < 0 or $pace > $length)) {
 # open filehandle log.txt
 my $LOG_FH;
 open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
+*STDERR = $LOG_FH;
 select $LOG_FH;
 
 #######################################################################

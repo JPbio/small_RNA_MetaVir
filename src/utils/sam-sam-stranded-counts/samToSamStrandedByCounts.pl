@@ -2,6 +2,11 @@ use Bio::SeqIO;
 use Bio::Seq::Quality;
 use Getopt::Long;
 
+#
+# TODO: 2023-05-15 - Use a decent logger
+# 
+use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+
 #######################################################################
 ### Parse inputs ------------------------------------------------------
 #######################################################################
@@ -53,12 +58,37 @@ if (not(defined($reads))) {
     die "\nGive a reads input file ", $usage;
 }
 
+
+
+#######################################################################
+### Configure logging -------------------------------------------------
+#######################################################################
+
+# 
+# TODO: 2023-02-27 - Find a better way to do this...
+# TODO: 2023-02-27 - Restablish the custom log file(s) option
+# 
+
+# open(metrics, ">$step8/full_metrics.txt");
+# open(interest, ">$step8/metrics_of_interest.txt");
+# open(LOG, ">$log");
+
+# 
+# NOTE: From here on all printed stuff will be sent to the log file
+# 
+
+# open filehandle log.txt
+my $LOG_FH;
+open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
+*STDERR = $LOG_FH;
+# select $LOG_FH;
+
 #######################################################################
 ### Main --------------------------------------------------------------
 #######################################################################
 
 my $path_utils = "/srna_metavir/src/utils";
-my $path_inner = "$path_utils/sam-sam-stranded-counts";
+my $path_inner = "$path_utils/sam-sam-stranded-counts/inner";
 
 my $path_sam_stats = "$path_inner/samStatistics_v2.pl";
 my $path_define_strands = "$path_inner/defineStrandBasedOnCounts.pl";

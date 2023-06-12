@@ -304,7 +304,7 @@ my $path_analyse_contigs_blastn = "$path_utils/analyse-contigs-blastn/analyzeCon
 my $path_extract_seqs_no_hit_blast = "$path_utils/extract-seqs/extractSequencesNoHitBlast.pl";
 
 my $path_sam_stats = "$path_utils/samStatistics_v3.pl";
-my $path_z_score = "$path_utils/Z-score.bothstrands.pl";
+my $path_z_score = "$path_utils/z-score/Z-score.bothstrands.pl";
 my $path_heatmap_corr = "$path_utils/heatmap_correlation_VISA.R";
 my $path_plot_map_data_base_preference = "$path_utils/plot-map-base-preference/plotMappingDataPerBasePreference.pl";
 my $path_calc_pattern_sam = "$path_utils/pattern-sam/calcPatternInSamFile.pl";

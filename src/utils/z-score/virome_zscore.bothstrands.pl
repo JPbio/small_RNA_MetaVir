@@ -6,6 +6,14 @@ use Getopt::Long;
 use Statistics::Basic qw(:all);
 use Statistics::RankCorrelation;
 
+#
+# TODO: 2023-05-15 - Use a decent logger
+# 
+use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+
+#######################################################################
+### Parse inputs ------------------------------------------------------
+#######################################################################
 
 my $usage = "
 
@@ -55,6 +63,32 @@ if (not(defined($prefix))) {
         die "\nGive an prefix file name",$usage;
 }
 
+#######################################################################
+### Configure logging -------------------------------------------------
+#######################################################################
+
+# 
+# TODO: 2023-02-27 - Find a better way to do this...
+# TODO: 2023-02-27 - Restablish the custom log file(s) option
+# 
+
+# open(metrics, ">$step8/full_metrics.txt");
+# open(interest, ">$step8/metrics_of_interest.txt");
+# open(LOG, ">$log");
+
+# 
+# NOTE: From here on all printed stuff will be sent to the log file
+# 
+
+# open filehandle log.txt
+my $LOG_FH;
+open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
+*STDERR = $LOG_FH;
+# select $LOG_FH;
+
+#######################################################################
+### Main --------------------------------------------------------------
+#######################################################################
 
 #Loading fasta files
 if(defined($fasta)){
@@ -96,7 +130,7 @@ sub analyzeProfile{
 	my %ch2;
 	my %countings;
 
-	print "Analyzing $file...\n";
+	print $LOG_FH "Analyzing $file...\n";
 	open(IN,"<$file");
 	while (<IN>){
 #		print "entrou.... ($_)\n";
@@ -208,7 +242,7 @@ sub analyzeProfile{
 
 	
 	
-	print "Calculating Z-score...\n";
+	print $LOG_FH "Calculating Z-score...\n";
 
 
     foreach $chr (keys %ch2){   #for each sequence
@@ -296,7 +330,7 @@ sub analyzeProfile{
 		 
 		
 		
-		print "printing counts ($chr)  \n";
+		print $LOG_FH "printing counts ($chr)  \n";
 #		print O $countings{$chr}{"21"}."\n";
 		print O $countings{$chr}{"15to18"}."\n";
 		print O $countings{$chr}{"20to22"}."\n";

@@ -2,6 +2,15 @@ use Bio::SeqIO;
 use Bio::Seq::Quality;
 use Getopt::Long;
 
+#
+# TODO: 2023-05-15 - Use a decent logger
+# 
+use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+
+#######################################################################
+### Parse inputs ------------------------------------------------------
+#######################################################################
+
 my $usage = "
 
 $0 -c <counts file> -f <fasta> -p <prefix> 
@@ -35,10 +44,35 @@ if (not(defined($prefix))) {
         die "\nGive an input prefix name",$usage;
 }
 
+#######################################################################
+### Configure logging -------------------------------------------------
+#######################################################################
+
+# 
+# TODO: 2023-02-27 - Find a better way to do this...
+# TODO: 2023-02-27 - Restablish the custom log file(s) option
+# 
+
+# open(metrics, ">$step8/full_metrics.txt");
+# open(interest, ">$step8/metrics_of_interest.txt");
+# open(LOG, ">$log");
+
+# 
+# NOTE: From here on all printed stuff will be sent to the log file
+# 
+
+# open filehandle log.txt
+my $LOG_FH;
+open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
+*STDERR = $LOG_FH;
+# select $LOG_FH;
+
+#######################################################################
+### Main --------------------------------------------------------------
+#######################################################################
+
 my @corr;
 my %l;
-
-
 
 ####Loading fasta file
 our %contig;
