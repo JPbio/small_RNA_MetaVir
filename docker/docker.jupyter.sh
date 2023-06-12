@@ -59,6 +59,12 @@ done
 
 user=$base_url
 
+# Stop docker jupyter service
+echo "Stoping Jupyter service..."
+$runner stop $container_name && $runner rm $container_name
+echo "Success!"
+echo "Container ${container_name} stopped..."
+
 # Start docker jupyter service
 if [ $mode == "start" ]; then
 
@@ -71,19 +77,13 @@ if [ $mode == "start" ]; then
             -e NB_USER="$user" \
             -e CHOWN_HOME=yes \
             -w "/home/${NB_USER}" \
+            -v /home/hebert/srna-meta-vir/src/ml:/home/$user/src \
         ${docker_img}:${tag} \
             start-notebook.sh \
                 --NotebookApp.base_url=/$base_url \
-                --NotebookApp.password=\'$key\'
+                --NotebookApp.password=\'$key\' \
 
     echo "Success!"
     echo "Container ${container_name} started..."
     echo "Server running at http://localhost:${port}/${base_url}"
-
-# Stop docker jupyter service
-else
-    echo "Stoping Jupyter service..."
-    $runner stop $container_name
-    echo "Success!"
-    echo "Container ${container_name} stopped..."
 fi
