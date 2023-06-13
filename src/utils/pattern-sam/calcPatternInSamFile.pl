@@ -10,7 +10,7 @@ use Statistics::RankCorrelation;
 #
 # TODO: 2023-05-15 - Use a decent logger
 # 
-use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+use constant PATH_LOG_MAIN => "small_rna_metavir.main.log";
 
 #######################################################################
 ### PARSE INPUTS ------------------------------------------------------
@@ -81,7 +81,7 @@ open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special
 ### Main... -----------------------------------------------------------
 #######################################################################
 
-my $path_utils = "/srna_metavir/src/utils";
+my $path_utils = "/small_rna_metavir/src/utils";
 my $path_inner = "$path_utils/pattern-sam/inner";
 
 my $path_plot_pattern = "$path_inner/plotPattern_publication.R";

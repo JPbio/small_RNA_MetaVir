@@ -5,7 +5,7 @@ use Getopt::Long;
 #
 # TODO: 2023-05-15 - Use a decent logger
 # 
-use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+use constant PATH_LOG_MAIN => "small_rna_metavir.main.log";
 
 #######################################################################
 ### Parse inputs ------------------------------------------------------
@@ -87,7 +87,7 @@ open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special
 ### Main --------------------------------------------------------------
 #######################################################################
 
-my $path_utils = "/srna_metavir/src/utils";
+my $path_utils = "/small_rna_metavir/src/utils";
 my $path_inner = "$path_utils/sam-sam-stranded-counts/inner";
 
 my $path_sam_stats = "$path_inner/samStatistics_v2.pl";
