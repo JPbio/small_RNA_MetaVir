@@ -104,19 +104,19 @@ RUN wget http://github.com/bbuchfink/diamond/releases/download/v2.1.6/diamond-li
 
 FROM stage_dependencies AS stage_main
 
-RUN mkdir /srna_metavir \
-    && mkdir /srna_metavir/src \
-    && mkdir /srna_metavir/asset \
-    && mkdir /srna_metavir/runs \
-    && chmod -R +x /srna_metavir/src
+RUN mkdir /small_rna_metavir \
+    && mkdir /small_rna_metavir/src \
+    && mkdir /small_rna_metavir/asset \
+    && mkdir /small_rna_metavir/runs \
+    && chmod -R +x /small_rna_metavir/src
 
-WORKDIR /srna_metavir
+WORKDIR /small_rna_metavir
 
 # ====================================
 # -- Stage: Final --
 # ====================================
 
-FROM stage_main AS srna_metavir
+FROM stage_main AS small_rna_metavir
 
 RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -125,6 +125,6 @@ RUN apt-get clean && \
 # -- Stage: Final [dev] --
 # ====================================
 
-FROM stage_main AS srna_metavir_dev
+FROM stage_main AS small_rna_metavir_dev
 
 RUN apt-get install -y nano
