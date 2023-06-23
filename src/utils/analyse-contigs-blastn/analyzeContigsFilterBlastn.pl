@@ -92,7 +92,7 @@ if (not(defined($prefix))) {
 ### Main... -----------------------------------------------------------
 #######################################################################
 
-my $path_utils = "/small_rna_metavir/src/utils";
+my $path_utils = "/small-rna-metavir/src/utils";
 my $path_analyse_contigs_blastn_r = "$path_utils/analyse-contigs-blastn/analyzeContigsFilterBlastn.R";
 
 open(F, "<$fasta");

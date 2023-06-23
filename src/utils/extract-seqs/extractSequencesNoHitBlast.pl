@@ -41,7 +41,7 @@ if (not(defined($seq))) {
 ### Main... -----------------------------------------------------------
 #######################################################################
 
-my $path_utils = "/small_rna_metavir/src/utils";
+my $path_utils = "/small-rna-metavir/src/utils";
 my $path_extract_seqs_fasta = "$path_utils/extract-seqs/inner/extract_seqs_from_fasta_file.pl";
 
 #getIdsWithHit

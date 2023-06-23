@@ -121,7 +121,7 @@ open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special
 ### Main... -----------------------------------------------------------
 #######################################################################
 
-my $path_utils = "/small_rna_metavir/src/utils";
+my $path_utils = "/small-rna-metavir/src/utils";
 my $path_inner = "$path_utils/plot-map-base-preference/inner";
 
 my $path_filter_sam_bowtie = "$path_inner/filterSamBowtieBySize.pl";

@@ -123,7 +123,7 @@ open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special
 ### Main... -----------------------------------------------------------
 #######################################################################
 
-my $path_utils = "/small_rna_metavir/src/utils";
+my $path_utils = "/small-rna-metavir/src/utils";
 my $path_inner = "$path_utils/plot-map-base-preference/inner";
 
 my $path_filter_sam_bowtie = "$path_inner/filterSamBowtieBySize.pl";
@@ -475,7 +475,7 @@ open(O3, ">$prefix.miRNA_total_base_distribution");
 
 print O3 "\tA\tC\tG\tT\n";
 
-# ^[[CUse of uninitialized value $tc in concatenation (.) or string at /small_rna_metavir/src/utils/plot-map-base-preference/plotMappingDataPerBasePreference.pl line 481, <GEN0> line 25.
+# ^[[CUse of uninitialized value $tc in concatenation (.) or string at /small-rna-metavir/src/utils/plot-map-base-preference/plotMappingDataPerBasePreference.pl line 481, <GEN0> line 25.
 
 
 foreach my $c (keys %ch2) {

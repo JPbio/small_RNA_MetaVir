@@ -87,7 +87,7 @@ open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special
 ### Main --------------------------------------------------------------
 #######################################################################
 
-my $path_utils = "/small_rna_metavir/src/utils";
+my $path_utils = "/small-rna-metavir/src/utils";
 my $path_inner = "$path_utils/sam-sam-stranded-counts/inner";
 
 my $path_sam_stats = "$path_inner/samStatistics_v2.pl";
