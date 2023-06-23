@@ -8,6 +8,7 @@ asset
 # Generated files
 exec_*
 *Logfile.txt
+src/runs/*
 
 idsOriginalSequences
 idsSeqNoHit
