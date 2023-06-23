@@ -6,17 +6,18 @@ docker_img="docker.io/jupyter/datascience-notebook"
 usage="
 USAGE:
 
-${script_name} runner mode [-p port] [-k key] [-b base_url] [-t tag] [-c container]
+${script_name} runner mode src_dir [-p port] [-k key] [-b base_url] [-t tag] [-c container]
 
 Required argument:
 - runner: 'docker' | 'podman'
 - mode: 'start' or 'stop'
+- src_dir: Host path to container's src folder
 
 Optional arguments:
 - p:    Jupyter service port
 - k:    Jupyter service custom hashed password
 - b:    Base URL
-- t:    Docker ${docker_img} image tag
+- t:    ${docker_img} Docker image tag
 - c:    Container name
 
 "
@@ -37,6 +38,15 @@ if [ $# -eq 0 ] || { [ "$1" != "start" ] && [ "$1" != "stop" ]; }; then
 fi
 
 mode="$1"
+shift
+
+# Set host source path
+if [ $# -eq 0 ]; then
+    echo "$usage"
+    exit 1
+fi
+
+host_src="$1"
 shift
 
 # Set custom parameter values
@@ -75,13 +85,14 @@ if [ $mode == "start" ]; then
             -p ${port}:8888 \
             --user root \
             -e NB_USER="$user" \
+            -e NB_UID=1002 \
             -e CHOWN_HOME=yes \
             -w "/home/${NB_USER}" \
-            -v /home/hebert/srna-meta-vir/src/ml:/home/$user/src \
+            -v $host_src:/home/$user/src \
         ${docker_img}:${tag} \
             start-notebook.sh \
                 --NotebookApp.base_url=/$base_url \
-                --NotebookApp.password=\'$key\' \
+                --NotebookApp.password=\'$key\'
 
     echo "Success!"
     echo "Container ${container_name} started..."
