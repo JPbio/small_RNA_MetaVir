@@ -1,12 +1,18 @@
 version: "3.9"
 services:
-  small_rna_metavir:
+  srna_metavir:
     build:
       context: .
       dockerfile: Dockerfile
-      target: small_rna_metavir_dev
-    image: small_rna_metavir_dev
-    container_name: small_rna_metavir_dev
+      target: srna_metavir_dev
+    image: srna_metavir_dev
+    container_name: srna_metavir_dev
     environment:
       - ENV=ENV_DEV
     tty: true
+    volumes:
+      - /home/hebert/srna-meta-vir/src:/srna_metavir/src
+      - /home/hebert/srna-meta-vir/asset/libs/:/srna_metavir/asset/libs
+      - /home/hebert/srna-meta-vir/asset/refs/:/srna_metavir/asset/refs
+      - /raid5/r2d2_share/nt:/srna_metavir/asset/blastdb/nt
+      - /home/hebert/srna-meta-vir/asset/diamond:/srna_metavir/asset/diamond
