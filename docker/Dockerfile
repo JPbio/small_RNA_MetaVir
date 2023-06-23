@@ -20,7 +20,7 @@ FROM stage_perl AS stage_r
 RUN apt-get update && \
     apt-get install -y \
         r-base && \
-    Rscript -e "install.packages(c('ggplot2', 'reshape2', 'Rtsne', 'umap'm 'ComplexHeatmap'), repos='https://cloud.r-project.org/')"
+    Rscript -e "install.packages(c('ggplot2', 'reshape2', 'Rtsne', 'umap', 'ComplexHeatmap'), repos='https://cloud.r-project.org/')"
 
 # ====================================
 # -- Stage: Dependencies --
