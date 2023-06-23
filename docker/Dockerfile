@@ -12,28 +12,15 @@ RUN cpanm --notest --quiet \
     Statistics::RankCorrelation
 
 # ====================================
-# -- Stage: Python --
-# ====================================
-
-FROM stage_perl AS stage_python
-
-# RUN apt-get update && \
-#     apt-get install -y \
-#         python3-pip \
-#         && \
-#     pip3 install \
-#         numpy pandas biopython
-
-# ====================================
 # -- Stage: R --
 # ====================================
 
-FROM stage_python AS stage_r
+FROM stage_perl AS stage_r
 
 RUN apt-get update && \
     apt-get install -y \
         r-base && \
-    Rscript -e "install.packages(c('ggplot2', 'reshape2'), repos='https://cloud.r-project.org/')"
+    Rscript -e "install.packages(c('ggplot2', 'reshape2', 'Rtsne', 'umap'm 'ComplexHeatmap'), repos='https://cloud.r-project.org/')"
 
 # ====================================
 # -- Stage: Dependencies --
@@ -42,7 +29,6 @@ RUN apt-get update && \
 FROM stage_r AS stage_dependencies
 
 # Add Blast
-
 RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.14.0/ncbi-blast-2.14.0+-x64-linux.tar.gz && \
         tar xvpf ncbi-blast-2.14.0+-x64-linux.tar.gz && \
         mv ncbi-blast-2.14.0+/bin/* /usr/bin/ && \
@@ -104,13 +90,13 @@ RUN wget http://github.com/bbuchfink/diamond/releases/download/v2.1.6/diamond-li
 
 FROM stage_dependencies AS stage_main
 
-RUN mkdir /small_rna_metavir \
-    && mkdir /small_rna_metavir/src \
-    && mkdir /small_rna_metavir/asset \
-    && mkdir /small_rna_metavir/runs \
-    && chmod -R +x /small_rna_metavir/src
+RUN mkdir /small-rna-metavir \
+    && mkdir /small-rna-metavir/src \
+    && mkdir /small-rna-metavir/asset \
+    && mkdir /small-rna-metavir/runs \
+    && chmod -R +x /small-rna-metavir/src
 
-WORKDIR /small_rna_metavir
+WORKDIR /small-rna-metavir
 
 # ====================================
 # -- Stage: Final --
