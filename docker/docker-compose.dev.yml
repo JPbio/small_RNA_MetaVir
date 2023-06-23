@@ -10,9 +10,3 @@ services:
     environment:
       - ENV=ENV_DEV
     tty: true
-    volumes:
-      - /home/hebert/srna-meta-vir/src:/srna_metavir/src
-      - /home/hebert/srna-meta-vir/asset/libs/:/srna_metavir/asset/libs
-      - /home/hebert/srna-meta-vir/asset/refs/:/srna_metavir/asset/refs
-      - /raid5/r2d2_share/nt:/srna_metavir/asset/blastdb/nt
-      - /home/hebert/srna-meta-vir/asset/diamond:/srna_metavir/asset/diamond
