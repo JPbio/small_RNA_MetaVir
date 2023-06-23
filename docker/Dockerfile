@@ -42,7 +42,6 @@ RUN apt-get update && \
 FROM stage_r AS stage_dependencies
 
 # Add Blast
-
 RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.14.0/ncbi-blast-2.14.0+-x64-linux.tar.gz && \
         tar xvpf ncbi-blast-2.14.0+-x64-linux.tar.gz && \
         mv ncbi-blast-2.14.0+/bin/* /usr/bin/ && \
@@ -104,13 +103,12 @@ RUN wget http://github.com/bbuchfink/diamond/releases/download/v2.1.6/diamond-li
 
 FROM stage_dependencies AS stage_main
 
-RUN mkdir /srna_metavir \
-    && mkdir /srna_metavir/src \
-    && mkdir /srna_metavir/asset \
-    && mkdir /srna_metavir/runs \
-    && chmod -R +x /srna_metavir/src
+RUN mkdir /small-rna-metavir \
+    && mkdir /small-rna-metavir/src \
+    && mkdir /small-rna-metavir/asset \
+    && chmod -R +x /small-rna-metavir/src
 
-WORKDIR /srna_metavir
+WORKDIR /small-rna-metavir
 
 # ====================================
 # -- Stage: Final --
@@ -125,6 +123,6 @@ RUN apt-get clean && \
 # -- Stage: Final [dev] --
 # ====================================
 
-FROM stage_main AS srna_metavir_dev
+FROM stage_main AS small_rna_metavir_dev
 
 RUN apt-get install -y nano

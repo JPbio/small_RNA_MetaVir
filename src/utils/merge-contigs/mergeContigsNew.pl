@@ -52,7 +52,7 @@ if (not(defined($out))) {
 #######################################################################
 
 # Set file paths
-my $path_utils = "/srna_metavir/src/utils";
+my $path_utils = "/small-rna-metavir/src/utils";
 my $path_inner = "$path_utils/merge-contigs/inner";
 
 my $path_filter_blast = "$path_utils/filterblast.pl";

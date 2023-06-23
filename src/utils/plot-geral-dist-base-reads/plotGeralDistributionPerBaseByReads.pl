@@ -30,7 +30,7 @@ $| = 1;     # forces immediate prints into files rather than the buffer.
 # 
 # TODO: 2023-03-07 - Find a better way to do this
 # 
-my $path_inner = "/srna_metavir/src/utils/plot-geral-dist-base-reads/inner";
+my $path_inner = "/small-rna-metavir/src/utils/plot-geral-dist-base-reads/inner";
 
 my $sam;
 my $delimiter;
