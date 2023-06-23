@@ -362,31 +362,44 @@ print "#######################################################################\n
 print ">> New execution";
 print $runningDetails;
 
-# #######################################################################
-# ### Handle FASTQ sequences --------------------------------------------
-# #######################################################################
+#######################################################################
+### Handle FASTQ sequences --------------------------------------------
+#######################################################################
 
-# $step_name = "Handle FASTQ sequences";
+$step_name = "Handle FASTQ sequences";
 
-# $time_msg = getStepTimebBeginMsg($exec_id, $step_name);
-# print STDOUT $time_msg;
-# print $time_msg;
+$time_msg = getStepTimebBeginMsg($exec_id, $step_name);
+print STDOUT $time_msg;
+print $time_msg;
 
-# # -----------------------------------------------------------------------
+# -----------------------------------------------------------------------
 
+my $path_02_trim_quality_fq = "$step2/${fastq}_trimmed.fastq";
 my $path_02_trim_filtered_gt15_fa = "$step2/trimmed_filtered_gt15.fasta";
 
-# 
-# TODO: 2023-02-27 - Handle FastQ sequences
-# 
+if (defined($fastq)) {
 
-# # -----------------------------------------------------------------------
+	print "Processing fastq sequences...\n";
+	print "\n\nRunning step 0 [ quality filter - fastq_quality_filter ]\n";
+	my $exec_fq_0 = "trim_galore --fastqc --length 18 --trim-n --max_n 0 -o $step2 -j 4 --dont_gzip $fastq";
 
-# $current_time = Time::HiRes::gettimeofday();
-# $time_msg = getStepTimeEndMsg($exec_id, $step_name, $last_time, $current_time);
-# $last_time = $current_time;
-# print STDOUT $time_msg;
-# print $time_msg;
+	print "\nSTEP0\n\t $exec_fq_0\n";
+	`$exec_fq_0`;
+
+    # Converting fastq to fasta
+	 "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
+	my $exec_fq_2="fastq_to_fasta -Q 33 -i $path_02_trim_quality_fq -o $path_02_trim_filtered_gt15_fa";
+	print "\nSTEP2\n\t $exec_fq_2\n";
+	`$exec_fq_2`;
+}
+
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($exec_id, $step_name, $last_time, $current_time);
+$last_time = $current_time;
+print STDOUT $time_msg;
+print $time_msg;
 
 #######################################################################
 ### Handle FASTA sequences --------------------------------------------
@@ -422,12 +435,15 @@ print "# Loading FASTA file ... \n";
 
 if (not defined($nohostfilter)) {
 
-    my $cmd = "cp $fasta $path_02_trim_filtered_gt15_fa";
+    if (not defined($fastq)) {
 
-    print "[COPING $fasta TO $path_02_trim_filtered_gt15_fa]\n";
-    `$cmd`;
-    
-    print "\n[STEP 03]\n\t $cmd\n";
+        my $cmd = "cp $fasta $path_02_trim_filtered_gt15_fa";
+
+        print "[COPING $fasta TO $path_02_trim_filtered_gt15_fa]\n";
+        `$cmd`;
+        
+        print "\n[STEP 03]\n\t $cmd\n";
+    }
 
 # } else {
 
@@ -459,22 +475,6 @@ if (not defined($nohostfilter)) {
 }
 
 if (not defined($nohostfilter)) {
-    # if (defined($fastqgz)) {
-
-    #     # 
-    #     # TODO: 2023-03-06 - Test it
-    #     # 
-
-    #     # # # dealing with FASTQ TRIMMED files compacted with GZIP
-
-    #     print "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
-
-    #     #converting fastq to fasta
-    #     my $exec_fq_2 = "gunzip -dc $fastqgz | fastq_to_fasta -Q 33 -o $path_02_trim_filtered_gt15_fa";
-        
-    #     print "\n[STEP 02]\n\t $exec_fq_2\n";
-    #     `$exec_fq_2`;
-    # }
 
     print "[MAPPING SEQUENCE AGAINST VECTOR]\n";
     my $exec3 = "bowtie $large_index -f -S -k 1 -p $process -v 1 --un $path_04_unmap_vector_reads_fa $hostgenome $path_02_trim_filtered_gt15_fa | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $path_03_map_host_sam  2>$path_03_map_host_stats  ";
