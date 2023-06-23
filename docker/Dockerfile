@@ -4,6 +4,12 @@
 # -- Stage: Perl --
 # ====================================
 
+# 
+# TODO: 2023-06-15 - Lock versions!
+# 
+# Python 3.9.2
+# Perl 5.36.0
+# 
 FROM docker.io/library/perl:5.36.0-threaded AS stage_perl
 
 RUN cpanm --notest --quiet \
@@ -12,28 +18,23 @@ RUN cpanm --notest --quiet \
     Statistics::RankCorrelation
 
 # ====================================
-# -- Stage: Python --
-# ====================================
-
-FROM stage_perl AS stage_python
-
-# RUN apt-get update && \
-#     apt-get install -y \
-#         python3-pip \
-#         && \
-#     pip3 install \
-#         numpy pandas biopython
-
-# ====================================
 # -- Stage: R --
 # ====================================
 
-FROM stage_python AS stage_r
+# 
+# TODO: 2023-06-15 - Lock versions!
+# 
+# R 4.0.4
+# ggplot2 '3.4.2'
+# reshape2 '1.4.4'
+# 
+
+FROM stage_perl AS stage_r
 
 RUN apt-get update && \
     apt-get install -y \
         r-base && \
-    Rscript -e "install.packages(c('ggplot2', 'reshape2'), repos='https://cloud.r-project.org/')"
+    Rscript -e "install.packages(c('ggplot2', 'reshape2', 'Rtsne', 'umap', 'ComplexHeatmap'), repos='https://cloud.r-project.org/')"
 
 # ====================================
 # -- Stage: Dependencies --
@@ -52,7 +53,10 @@ RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.14.0/ncbi-blast
         mv blast-2.2.26/bin/blastall /usr/bin/ && \
         rm -rf blast-2.2.26*
 
+# 
 # Add the ones available trhough apt-get
+# TODO: 2023-06-23 - Lock versions
+# 
 RUN apt-get update && \
     apt-get install -y \
         bowtie=1.3.0+dfsg1-1 \
@@ -68,7 +72,11 @@ RUN cd /usr/bin/ && \
 
 ENV PATH="${PATH}:/usr/bin/CAP3"
 
+
+# 
 # Add FASTX-Toolkit
+# TODO: 2023-06-16 - Lock fastx version
+# 
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}/usr/local/lib"
 
 RUN git clone https://github.com/agordon/libgtextutils.git && \
@@ -96,6 +104,11 @@ RUN wget http://github.com/bbuchfink/diamond/releases/download/v2.1.6/diamond-li
     tar xzf diamond-linux64.tar.gz && \
     mv ./diamond /usr/bin && \
     rm diamond-linux64.tar.gz
+
+# Add fastqc
+RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip && \
+    unzip fastqc_v0.12.1.zip -d /usr/bin/fastqc && \
+    rm fastqc_v0.12.1.zip
 
 # ====================================
 # -- Stage: Main --
