@@ -8,12 +8,12 @@ use Getopt::Long;
 #
 # TODO: 2023-03-07 - Use a decent logger
 # 
-# use constant PATH_LOG_MAIN => "srna_metavir.main.log";
-# use constant EXEC_ROOT_DIR => "/srna_metavir/runs";
+# use constant PATH_LOG_MAIN => "small_rna_metavir.main.log";
+# use constant EXEC_ROOT_DIR => "/small_rna_metavir/runs";
 use constant EXEC_ROOT_DIR => "./runs";
-use constant REF_BACTERIA_GENOMES => "/srna_metavir/asset/refs/bacterial_genomes/all_bacters.fasta";
-use constant REF_BLAST_DB_NT => "/srna_metavir/asset/blastdb/nt";
-use constant REF_DIAMOND_NR => "/srna_metavir/asset/diamond/nr.dmnd";
+use constant REF_BACTERIA_GENOMES => "/small_rna_metavir/asset/refs/bacterial_genomes/all_bacters.fasta";
+use constant REF_BLAST_DB_NT => "/small_rna_metavir/asset/blastdb/nt";
+use constant REF_DIAMOND_NR => "/small_rna_metavir/asset/diamond/nr.dmnd";
 
 # $| = 1;     # forces immediate prints into files rather than the buffer.
 
@@ -290,7 +290,7 @@ my $step10		="$prefix/10_pattern";
 my $step_virus	="$prefix/virus";
 
 # Utils scripts
-my $path_utils = "/srna_metavir/src/utils";
+my $path_utils = "/small_rna_metavir/src/utils";
 
 my $path_warns = "$prefix/$exec_id.warn";
 

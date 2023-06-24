@@ -10,7 +10,7 @@ use Statistics::RankCorrelation;
 #
 # TODO: 2023-05-15 - Use a decent logger
 # 
-use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+use constant PATH_LOG_MAIN => "small_rna_metavir.main.log";
 
 #######################################################################
 ### PARSE INPUTS ------------------------------------------------------

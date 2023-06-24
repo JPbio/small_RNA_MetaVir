@@ -13,11 +13,10 @@ use constant REF_BACTERIA_GENOMES => "/small-rna-metavir/asset/refs/bacterial_ge
 use constant REF_BLAST_DB_NT => "/small-rna-metavir/asset/blastdb/nt";
 use constant REF_DIAMOND_NR => "/small-rna-metavir/asset/diamond/nr.dmnd";
 
-# $| = 1;     # forces immediate prints into files rather than the buffer.
-
 #######################################################################
 ### TIME HANDLERS -----------------------------------------------------
 #######################################################################
+my $exec_id;
 
 sub getTimeDiff {
     my $t0 = $_[0] or die "Must provide at least one date for calculation!";
@@ -121,15 +120,6 @@ my $hostgenome;
 my $process; # TODO: 2023-02-25 - Does 'proccess' stand for 'processors'?
 my $size;
 
-# 
-# TODO: 2023-02-25 - Should we call it simply 'output dir' (or something like it)?
-# TODO: 2023-03-06 - Reenable custom naming for this folder
-# 
-# my $prefix = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
-
-my $exec_id = "exec_RNPM162_02";
-my $prefix = EXEC_ROOT_DIR . "/$exec_id";
-
 my $se;
 my $si;
 
@@ -155,18 +145,16 @@ my $nohostfilter;
 my $large_index;
 my $deg; # TODO: 2023-02-25 - Can we please call it 'degradation'?
 my $help;
-my $temp_prefix;
+my $lib_prefix;
 
 GetOptions("qual=s" => \$qual,
     "hostgenome=s" => \$hostgenome,
     "fasta=s" => \$fasta,
     "fastqgz=s" => \$fastqgz,
     "fastq=s" => \$fastq,
-    # "prefix=s" => \$prefix, # TODO: 2023-03-06 - Reenable custom naming for this folder
-    "tempprefix=s" => \$temp_prefix, # TODO: 2023-03-06 - Reenable custom naming for this folder
+    "prefix=s" => \$lib_prefix,
     "size=s" => \$size,
     "hash=s" => \$hash,
-    # "log=s" => \$log,
     "si=s" => \$si,
     "se=s" => \$se,
     "process=s" => \$process,
@@ -174,7 +162,9 @@ GetOptions("qual=s" => \$qual,
     "nohostfilter!" => \$nohostfilter, # Options must be lowcase and without "_"
     "degradation!" => \$deg,
     "largeindex!" => \$large_index,
-    "h!" => \$help);
+    "h!" => \$help,
+    "exec-id=s" => \$exec_id
+);
 
 if ($help) {
     die $usage;
@@ -198,29 +188,28 @@ if (defined($large_index)) {
     $large_index = " ";
 }
 
+if (not(defined($exec_id))) {
+    die "\nYou must name an ID for this execution! \n", $usage;
+}
+
 if (not(defined($hostgenome))) {
     die "\nGive a valid input reference file! \n", $usage;
-}
-
-if (not(defined($process))) {
-    die "\nGive a number of process to use! \n", $usage;
-}
-
-if (not(defined($si)) or not defined($se)) {
-    die "\nGive a reads range size! e.g.: -si 21 -se 23 \n", $usage;
 }
 
 if (not(defined($size))) {
     die "\nGive the genome's expected size! \n", $usage;
 }
 
-if (not(defined($prefix))) {
-    die "\nGive an output folder prefix name! \n", $usage;
+if (not(defined($lib_prefix))) {
+    die "\nGive a lib prefix! \n", $usage;
 }
 
 if (not(defined($hash))) {
     $hash = 15;
 }
+
+# my $exec_dir = strftime("exec_%Y%m%d_%H%M%S", localtime($time_start));
+my $exec_dir = EXEC_ROOT_DIR . "/$exec_id";
 
 #######################################################################
 ### Set running details -----------------------------------------------
@@ -239,7 +228,9 @@ Start Time: $time_start_str
 > si: '$si';
 > se: '$se';
 > si: hash:'$hash';
-> prefix: '$prefix';
+> Execution ID: '$exec_id';
+> Execution Folder: '$exec_dir';
+> Lib Prefix: '$lib_prefix';
 ";
 
 if (defined($deg)) {
@@ -262,35 +253,24 @@ print STDOUT $runningDetails . "\n";
 # 
 
 # Step folders
-my $step0		="$prefix/00_saet";
-my $step1		="$prefix/01_trimming";
-my $step2		="$prefix/02_filter_size_gaps_convertion";
-my $step3		="$prefix/03_mapping_vector";
-my $step4		="$prefix/04_getUnmapped";
-my $step5_fix	="$prefix/05_assembleUnmapped_fix";
-my $step5_opt	="$prefix/05_assembleUnmapped_opt";
-my $step5_opt_fix="$prefix/05_assembleUnmapped_opt_fix";
-my $step5_opt_20to23="$prefix/05_assembleUnmapped_opt_20to23";
-my $step5_opt_24to30="$prefix/05_assembleUnmapped_opt_24to30";
-my $step5_contigs= "$prefix/05_assembleUnmapped_final";
-my $step5_cap3  = "$prefix/05_cap3";
-my $step6		="$prefix/06_blast";
-my $step7		="$prefix/07_reportBlast";
-my $step8		="$prefix/08_completeReport";
-my $step9		="$prefix/09_contigs_no_hit";
-my $step10		="$prefix/10_pattern";
-my $step11		="$prefix/11_profiles";
-my $step12		="$prefix/12_z_score_small_rna_features";
-
-# 
-# REVIEW: 2023-06-07 - Is this folder really being used?
-# 
-my $step_virus	="$prefix/virus";
+my $step2		="$exec_dir/02_filter_size_gaps_convertion";
+my $step3		="$exec_dir/03_mapping_vector";
+my $step4		="$exec_dir/04_getUnmapped";
+my $step5_fix	="$exec_dir/05_assembleUnmapped_fix";
+my $step5_opt	="$exec_dir/05_assembleUnmapped_opt";
+my $step5_opt_fix="$exec_dir/05_assembleUnmapped_opt_fix";
+my $step5_opt_20to23="$exec_dir/05_assembleUnmapped_opt_20to23";
+my $step5_opt_24to30="$exec_dir/05_assembleUnmapped_opt_24to30";
+my $step5_cap3  = "$exec_dir/05_cap3";
+my $step6		="$exec_dir/06_blast";
+my $step7		="$exec_dir/07_reportBlast";
+my $step11		="$exec_dir/11_profiles";
+my $step12		="$exec_dir/12_z_score_small_rna_features";
 
 # Utils scripts
 my $path_utils = "/small-rna-metavir/src/utils";
 
-my $path_warns = "$prefix/$exec_id.warn";
+my $path_warns = "$exec_dir/$exec_id.warn";
 
 my $path_filter_diamond = "$path_utils/filter_diamond.sh";
 my $path_filter_fasta_by_size = "$path_utils/filter_fasta_by_size.py";
@@ -312,16 +292,15 @@ my $path_plot_map_data_base_preference = "$path_utils/plot-map-base-preference/p
 #######################################################################
 
 print "Creating folders...\n\n";
-if (not -e $prefix) {
-    `mkdir $prefix`;
+
+if (not -e EXEC_ROOT_DIR) {
+    my $cmd = "mkdir ".EXEC_ROOT_DIR;
+    `$cmd`;
+}
+if (not -e $exec_dir) {
+    `mkdir $exec_dir`;
 }
 
-if (not -e $step0) {
-    `mkdir $step0`;
-}
-if (not -e $step1) {
-    `mkdir $step1`;
-}
 if (not -e $step2) {
     `mkdir $step2`;
 }
@@ -340,9 +319,6 @@ if (not -e $step5_opt) {
 if (not -e $step5_opt_fix) {
     `mkdir $step5_opt_fix`;
 }
-if (not -e $step5_contigs) {
-    `mkdir $step5_contigs`;
-}
 if (not -e $step5_cap3) {
     `mkdir $step5_cap3`;
 }
@@ -358,41 +334,16 @@ if (not -e $step6) {
 if (not -e $step7) {
     `mkdir $step7`;
 }
-if (not -e $step8) {
-    `mkdir $step8`;
-}
-if (not -e $step9) {
-    `mkdir $step9`;
-}
-if (not -e $step10) {
-    `mkdir $step10`;
-
-    if (not -e "$step10/plots") {
-        `mkdir $step10/plots`;
-    }
-}
 if (not -e $step11) {
     `mkdir $step11`;
 }
 if (not -e $step12) {
     `mkdir $step12`;
 }
-if (not -e $step_virus) {
-    `mkdir $step_virus`;
-}
 
 #######################################################################
 ### Configure logging -------------------------------------------------
 #######################################################################
-
-# 
-# TODO: 2023-02-27 - Find a better way to do this...
-# TODO: 2023-02-27 - Restablish the custom log file(s) option
-# 
-
-# open(metrics, ">$step8/full_metrics.txt");
-# open(interest, ">$step8/metrics_of_interest.txt");
-# open(LOG, ">$log");
 
 # 
 # NOTE: From here on all printed stuff will be sent to the log file
@@ -401,7 +352,7 @@ if (not -e $step_virus) {
 # open filehandle log.txt
 my $LOG_FH;
 # open($LOG_FH, ">>", PATH_LOG_MAIN) or die "Couldn't open: $!"; # $! is a special variable holding the error
-open($LOG_FH, ">>", "$prefix/$exec_id.log") or die "Couldn't open: $!"; # $! is a special variable holding the error
+open($LOG_FH, ">>", "$exec_dir/$exec_id.log") or die "Couldn't open: $!"; # $! is a special variable holding the error
 *STDERR = $LOG_FH;
 select $LOG_FH;
 
@@ -410,30 +361,44 @@ print "#######################################################################\n
 print ">> New execution";
 print $runningDetails;
 
-# #######################################################################
-# ### Handle FASTQ sequences --------------------------------------------
-# #######################################################################
+#######################################################################
+### Handle FASTQ sequences --------------------------------------------
+#######################################################################
 
-# $step_name = "Handle FASTQ sequences";
+$step_name = "Handle FASTQ sequences";
 
-# $time_msg = getStepTimebBeginMsg($exec_id, $step_name);
-# print STDOUT $time_msg;
-# print $time_msg;
+$time_msg = getStepTimebBeginMsg($exec_id, $step_name);
+print STDOUT $time_msg;
+print $time_msg;
 
-# # -----------------------------------------------------------------------
+# -----------------------------------------------------------------------
 
+my $path_02_trim_quality_fq = "$step2/${fastq}_trimmed.fastq";
 my $path_02_trim_filtered_gt15_fa = "$step2/trimmed_filtered_gt15.fasta";
 
-# 
-# TODO: 2023-02-27 - Handle FastQ sequences
-# 
+if (defined($fastq)) {
 
-# # -----------------------------------------------------------------------
+	print "Processing fastq sequences...\n";
+	print "\n\nRunning step 0 [ quality filter - fastq_quality_filter ]\n";
+	my $exec_fq_0 = "trim_galore --fastqc --length 18 --trim-n --max_n 0 -o $step2 -j 4 --dont_gzip $fastq";
 
-# $current_time = Time::HiRes::gettimeofday();
-# $time_msg = getStepTimeEndMsg($exec_id, $step_name, $last_time, $current_time);
-# $last_time = $current_time;
-# print STDOUT $time_msg;
+	print "\nSTEP0\n\t $exec_fq_0\n";
+	`$exec_fq_0`;
+
+    # Converting fastq to fasta
+	 "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
+	my $exec_fq_2="fastq_to_fasta -Q 33 -i $path_02_trim_quality_fq -o $path_02_trim_filtered_gt15_fa";
+	print "\nSTEP2\n\t $exec_fq_2\n";
+	`$exec_fq_2`;
+}
+
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($exec_id, $step_name, $last_time, $current_time);
+$last_time = $current_time;
+print STDOUT $time_msg;
+print $time_msg;
 
 #######################################################################
 ### Handle FASTA sequences --------------------------------------------
@@ -448,7 +413,7 @@ print $time_msg;
 # -----------------------------------------------------------------------
 
 my $path_03_map_host_sam = "$step3/mapped_host.v1.sam";
-my $path_04_map_host_stats = "$step4/mapping_host.stats";
+my $path_03_map_host_stats = "$step3/mapping_host.stats";
 
 my $path_04_unmap_vector_reads_fa = "$step4/unmappedVectorReads.fasta";
 my $path_04_unmap_vector_bacters_fa = "$step4/unmappedVectorBacters.fasta";
@@ -469,12 +434,15 @@ print "# Loading FASTA file ... \n";
 
 if (not defined($nohostfilter)) {
 
-    my $cmd = "cp $fasta $path_02_trim_filtered_gt15_fa";
+    if (not defined($fastq)) {
 
-    print "[COPING $fasta TO $path_02_trim_filtered_gt15_fa]\n";
-    `$cmd`;
-    
-    print "\n[STEP 03]\n\t $cmd\n";
+        my $cmd = "cp $fasta $path_02_trim_filtered_gt15_fa";
+
+        print "[COPING $fasta TO $path_02_trim_filtered_gt15_fa]\n";
+        `$cmd`;
+        
+        print "\n[STEP 03]\n\t $cmd\n";
+    }
 
 # } else {
 
@@ -506,25 +474,9 @@ if (not defined($nohostfilter)) {
 }
 
 if (not defined($nohostfilter)) {
-    # if (defined($fastqgz)) {
-
-    #     # 
-    #     # TODO: 2023-03-06 - Test it
-    #     # 
-
-    #     # # # dealing with FASTQ TRIMMED files compacted with GZIP
-
-    #     print "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
-
-    #     #converting fastq to fasta
-    #     my $exec_fq_2 = "gunzip -dc $fastqgz | fastq_to_fasta -Q 33 -o $path_02_trim_filtered_gt15_fa";
-        
-    #     print "\n[STEP 02]\n\t $exec_fq_2\n";
-    #     `$exec_fq_2`;
-    # }
 
     print "[MAPPING SEQUENCE AGAINST VECTOR]\n";
-    my $exec3 = "bowtie $large_index -f -S -k 1 -p $process -v 1 --un $path_04_unmap_vector_reads_fa $hostgenome $path_02_trim_filtered_gt15_fa | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $path_03_map_host_sam  2>$path_04_map_host_stats";
+    my $exec3 = "bowtie $large_index -f -S -k 1 -p $process -v 1 --un $path_04_unmap_vector_reads_fa $hostgenome $path_02_trim_filtered_gt15_fa | awk -F'\\t' '{if( \$2 != 4) print \$0}' > $path_03_map_host_sam  2>$path_03_map_host_stats  ";
     
     print "\n[STEP 03]\n\t $exec3\n";
     `$exec3`;
@@ -596,6 +548,7 @@ $current_time = Time::HiRes::gettimeofday();
 $time_msg = getStepTimeEndMsg($exec_id, $step_name, $last_time, $current_time);
 $last_time = $current_time;
 print STDOUT $time_msg;
+print $time_msg;
 
 #######################################################################
 ### Select filtered sequences by size ---------------------------------
@@ -636,6 +589,7 @@ $current_time = Time::HiRes::gettimeofday();
 $time_msg = getStepTimeEndMsg($exec_id, $step_name, $last_time, $current_time);
 $last_time = $current_time;
 print STDOUT $time_msg;
+print $time_msg;
 
 #######################################################################
 ### Run Velvet optmiser (automatically defined hash) ------------------
@@ -849,6 +803,9 @@ print $time_msg;
 
 # # -----------------------------------------------------------------------
 
+my $path_05_cap3_final_24_30_fa = "$step5_opt_24to30/contigs.final.fasta";
+my $path_05_cap3_gt200_fa = "$step5_cap3/contigs_merged.final.gt200.fasta";
+
 #
 # TODO: 2023-05-31 - Test this condition
 # 
@@ -872,7 +829,7 @@ print $time_msg;
 #     `$exec6_10_3`;
 
 #     print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
-#     my $exec62_13 = "perl $path_merge_contigs -contig1 $step5_opt_24to30/run1/contigs.fa -contig2 $step5_opt_24to30/run2/scaffolds.fasta -output $step5_opt_24to30/contigs.final.fasta ";
+#     my $exec62_13 = "perl $path_merge_contigs -contig1 $step5_opt_24to30/run1/contigs.fa -contig2 $step5_opt_24to30/run2/scaffolds.fasta -output $path_05_cap3_final_24_30_fa ";
 #     print "\nSTEP62_13\n\t $exec62_13\n";
 #     `$exec62_13`;
 # }
@@ -898,26 +855,26 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_05_cap3_gt200 = "$step5_cap3/contigs_merged.final.gt200.fasta";
+my $path_05_cap3_all_fa = "$step5_cap3/all_contigs.fasta";
 
 if (not defined($deg)) {
-    `touch $step5_opt_24to30/contigs.final.fasta`;
+    `touch $path_05_cap3_final_24_30_fa`;
 }
 
 print "\n[MERGING CONTIGS AND RUNNING CAP3]\n";
 print "\t#Running STEP [CAT] Concatenating contigs...\n";
-my $exec_cat = "cat $path_05_opt_20_23_contigs_final_fa $path_05_opt_fix_contigs_final_fa  $path_05_fix_contigs_final_fa $path_05_opt_contigs_final_fa $step5_opt_24to30/contigs.final.fasta > $step5_cap3/all_contigs.fasta";
+my $exec_cat = "cat $path_05_opt_20_23_contigs_final_fa $path_05_opt_fix_contigs_final_fa  $path_05_fix_contigs_final_fa $path_05_opt_contigs_final_fa $path_05_cap3_final_24_30_fa > $path_05_cap3_all_fa";
 
 print "\n[STEP 06.CAT] \n\t $exec_cat\n";
 `$exec_cat`;
 
 print "\t#Running step CAP3 [ assembly contigs from different assemblies ] \n";
-my $exec_cap3 = "cap3 $step5_cap3/all_contigs.fasta  > $step5_cap3/log.cap3";
+my $exec_cap3 = "cap3 $path_05_cap3_all_fa  > $step5_cap3/log.cap3";
 print "\nSTEP CAP3\n\t $exec_cap3\n";
 `$exec_cap3`;
 
 print "\t#Running [ Concatenning contigs and singlets from CAP3]\n";
-my $exec_cap3_1 = "cat $step5_cap3/all_contigs.fasta.cap.contigs $step5_cap3/all_contigs.fasta.cap.singlets > $step5_cap3/contigs_merged.final.fasta";
+my $exec_cap3_1 = "cat $path_05_cap3_all_fa.cap.contigs $path_05_cap3_all_fa.cap.singlets > $step5_cap3/contigs_merged.final.fasta";
 
 print "\n[STEP 06.CAT]\n\t $exec_cap3_1\n";
 `$exec_cap3_1`;
@@ -936,12 +893,12 @@ chomp($countAssembledContigs);
 print "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
 
 print "[FILTER CONTIGS gt 200 nt]\n";
-my $exec_FC2 = "python3 $path_filter_fasta_by_size $step5_cap3/contigs_merged.final.gt50.fasta 200 1000000 $path_05_cap3_gt200";
+my $exec_FC2 = "python3 $path_filter_fasta_by_size $step5_cap3/contigs_merged.final.gt50.fasta 200 1000000 $path_05_cap3_gt200_fa";
 
 print "\n[STEP 05.2]\n\t $exec_FC2\n";
 `$exec_FC2`;
 
-$countAssembledContigs = `grep -c '>' $path_05_cap3_gt200`;
+$countAssembledContigs = `grep -c '>' $path_05_cap3_gt200_fa`;
 chomp($countAssembledContigs);
 
 # print metrics "# Contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
@@ -984,11 +941,11 @@ my $path_07_bN_analize_non_viral_header_fa = "$path_07_bN_analyze_prefix.nonvira
 my $path_07_blastn_analyse = "$step7/contigs.blastN.analyze";
 my $path_07_blastn_analize_virus = "$step7/contigs.blastN.virus.analyze";
 my $path_07_blastn_1e5_report = "$step7/contigs.blastn.1e5.report";
-my $path_07_blastn_virus = "$step7/contigs.virus.blastN.formatted.fasta";
+my $path_07_blastn_virus_fa = "$step7/contigs.virus.blastN.formatted.fasta";
 my $path_07_blastn_virus_header_fa = "$step7/contigs.virus.blastN.formatted.header.fasta";
 
 my $path_07_dmnd_log = "$step7/diamond.log";
-my $path_07_dmnd_hits = "$step7/diamond_blastx_Hits.fasta";
+my $path_07_dmnd_hits_fa = "$step7/diamond_blastx_Hits.fasta";
 my $path_07_dmnd_out = "$step7/diamond_blastx.out";
 
 my $path_07_dmnd_viral_header_fa = "$step7/diamond_blastx_Viral.header.fasta";
@@ -1023,7 +980,7 @@ my $path_07_aux_non_viral = "$step7/aux_nonviral";
 
 print "\n[BlastN contigs gt 200]\n";
 print "\t#Running step 10_111 [ Blast against NT - blast+ blastn ]\n";
-my $exec10_111 = "blastn -query $path_05_cap3_gt200 -db ".REF_BLAST_DB_NT."/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $path_06_blastn_merge_gt200_1e5  -num_threads $process";
+my $exec10_111 = "blastn -query $path_05_cap3_gt200_fa -db ".REF_BLAST_DB_NT."/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $path_06_blastn_merge_gt200_1e5  -num_threads $process";
 
 print "\nSTEP10_111\n\t $exec10_111\n";
 `$exec10_111`;
@@ -1065,17 +1022,16 @@ $n_hits_blastn = int($n_hits_blastn);
 print "\n# Contigs hit blastN\t".$n_hits_blastn."\n";
 
 # Assembled Contigs
-my $n_viral_blastn = `grep -c '>' $path_07_bN_analize_viral_fa`;
-chomp($n_viral_blastn);
-$n_viral_blastn = int($n_viral_blastn);
+my $hitsVirusBlastn = `grep -c '>' $path_07_bN_analize_viral_fa`;
+chomp($hitsVirusBlastn);
 
 # print metrics "#contigs hit VIRUS blastN\t".$n_viral_blastn."\n";
 # print interest "#contigs hit VIRUS blastN\t".$n_viral_blastn."\n";
 print "\n# Contigs hit VIRUS blastN\t".$n_viral_blastn."\n";
 
 # Assembled Contigs
-print "\nExtracting contigs no hit blastn 1e-5...\n";
-my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $path_05_cap3_gt200 -blast $path_07_blastn_1e5_report -out $path_06_blastn_no_hit_1e5_fa";
+print "\n[Extracting contigs no hit blastn 1e-5]\n";
+my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $path_05_cap3_gt200_fa -blast $path_07_blastn_1e5_report -out $path_06_blastn_no_hit_1e5_fa";
 
 print "\nSTEP10_113\n\t $exec10_113\n";
 `$exec10_113`;
@@ -1090,7 +1046,7 @@ chomp($seqsNoHitBlastn);
 # print metrics "# Contigs not hit blastN\t".$seqsNoHitBlastn."\n";
 print "# Contigs not hit blastN\t".$seqsNoHitBlastn."\n";
 # Assembled Contigs
-`cat $path_07_bN_analize_viral_fa | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $path_07_blastn_virus`;
+`cat $path_07_bN_analize_viral_fa | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $path_07_blastn_virus_fa`;
 
 # -----------------------------------------------------------------------
 
@@ -1116,13 +1072,13 @@ print $time_msg;
 print "\n[Diamond (BlastX) contigs gt 200]\n";
 print "\t# Running step 9 [ Diamond-Blast against NR ]\n";
 
-my $exec9 = "diamond blastx -q $path_06_blastn_no_hit_1e5_fa -d ".REF_DIAMOND_NR." -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $path_07_dmnd_out --un $path_07_dmnd_no_hits_fa --unfmt fasta --al $path_07_dmnd_hits --alfmt fasta 2>  $path_07_dmnd_log";
+my $exec9 = "diamond blastx -q $path_06_blastn_no_hit_1e5_fa -d ".REF_DIAMOND_NR." -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $path_07_dmnd_out --un $path_07_dmnd_no_hits_fa --unfmt fasta --al $path_07_dmnd_hits_fa --alfmt fasta 2>  $path_07_dmnd_log";
 
 print "\nSTEP9\n\t $exec9\n";
 `$exec9`;
 
 print "\t# Filtering Diamond results... ]\n";   
-my $exec9_11 = "$path_filter_diamond -f $path_07_dmnd_hits -o $path_07_dmnd_out -d $step7";
+my $exec9_11 = "$path_filter_diamond -f $path_07_dmnd_hits_fa -o $path_07_dmnd_out -d $step7";
 
 print "\nSTEP9_11\n\t $exec9_11\n";
 `$exec9_11`;
@@ -1139,7 +1095,7 @@ print "\nSTEP9_11\n\t $exec9_11\n";
     if [ -f "\$file" ]; then
         filename=\$(basename "\$file")
         filename_without_ext="\${filename%.*}"
-        sed 's/^>/>${temp_prefix}_/' $step7/\$filename > $step7/\${filename_without_ext}.header.fasta
+        sed 's/^>/>${lib_prefix}_/' $step7/\$filename > $step7/\${filename_without_ext}.header.fasta
     fi
 done
 `;
@@ -1165,6 +1121,9 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
+# 
+# REVIEW: 2023-06-18 - Shouldn't this be in the previous 'block'?
+# 
 # Flagging sequence similarity types
 `sed -i "s/>/>bN_/" $path_07_bN_analize_viral_header_fa`;
 `sed -i "s/>/>bN_/" $path_07_bN_analize_non_viral_header_fa`;
@@ -1198,10 +1157,10 @@ print STDOUT $time_msg;
 print $time_msg;
 
 #######################################################################
-### Align viral, non viral and no hits against unmapped contigs -------
+### Align viral, non viral and no hits against unmapped reads ---------
 #######################################################################
 
-$step_name = "Align viral, non viral and no hits against unmapped contigs";
+$step_name = "Align viral, non viral and no hits against unmapped reads";
 
 $time_msg = getStepTimebBeginMsg($exec_id, $step_name);
 print STDOUT $time_msg;
@@ -1228,7 +1187,7 @@ print STDOUT $time_msg;
 print $time_msg;
 
 #######################################################################
-### Extracting & sorting mapped reads from alignment .sam file results 
+### Extract & sort mapped reads from alignment .sam file results ------
 #######################################################################
 
 $step_name = "1, 2, 3, testando...";
@@ -1241,17 +1200,17 @@ print $time_msg;
 
 # Extract & sort from .sam only the mapped reads (those without flag '4')
 
-print "Extracting & sorting viral reads .sam...";
+print "Extracting & sorting reads .sam [viral]...";
 `samtools view -S -h -F 4 $path_07_all_viral_sam > $path_07_all_viral_sam_mapped`;
 `samtools sort -O SAM -o $path_07_all_viral_sam_sort $path_07_all_viral_sam_mapped`;
 # samtools view -Sb $i > ${i}.bam
 
-print "Extracting & sorting non viral reads .sam...";
+print "Extracting & sorting reads .sam [non viral]...";
 `samtools view -S -h -F 4 $path_07_all_non_viral_sam > $path_07_all_non_viral_sam_mapped`;
 `samtools sort -O SAM -o $path_07_all_non_viral_sam_sort $path_07_all_non_viral_sam_mapped`;
 # samtools view -Sb $i > ${i}.bam
 
-print "Extracting & sorting no hit reads .sam...";
+print "Extracting & sorting reads .sam [no hit]...";
 `samtools view -S -h -F 4 $path_07_dmnd_no_hits_sam > $path_07_dmnd_no_hits_sam_mapped`;
 `samtools sort -O SAM -o $path_07_dmnd_no_hits_sam_sort $path_07_dmnd_no_hits_sam_mapped`;
 # samtools view -Sb $i > ${i}.bam
@@ -1266,14 +1225,10 @@ print STDOUT $time_msg;
 print $time_msg;
 
 #######################################################################
-## Pimba ------------
+## Build small RNA profiles (for each contig & each feature) ----------
 #######################################################################
 
-# 
-# TODO: 2023-06-12 - Name this step
-# 
-
-$step_name = "Pimba";
+$step_name = "Build small RNA profiles (for each contig & each feature)";
 
 $time_msg = getStepTimebBeginMsg($exec_id, $step_name);
 print STDOUT $time_msg;
@@ -1298,12 +1253,15 @@ if (not -e $path_11_profile_no_hits) {
 
 print "\n Running 'plot mapping' for small RNA viral profiles...\n";
 # `plotMappingDataPerBasePreference.pl -sam ${i}_mapped_sort.sam -s 15 -e 35 -fa ${i} -pace 1 -p ${i}_profile --profile --pattern -m 1 --keep`;
-`perl $path_plot_map_data_base_preference -sam $path_07_all_viral_sam_sort -s 18 -e 35 -fa $path_07_all_viral_fa -pace 1 -p $path_11_profile_viral/profile --profile --pattern -m 1 --keep`;
 
-print "\n Running 'plot mapping' for small RNA non viral profiles...\n";
+print("Plot mapping data per base preferences [viral]...");
+`perl $path_plot_map_data_base_preference -sam $path_07_all_viral_sam_sort -s 18 -e 35 -fa $path_07_all_viral_fa -pace 1 -p 
+
+print("Plot mapping data per base preferences [non viral]...");
+$path_11_profile_viral/profile --profile --pattern -m 1 --keep`;
 `perl $path_plot_map_data_base_preference -sam $path_07_all_non_viral_sam_sort -s 18 -e 35 -fa $path_07_all_non_viral_fa -pace 1 -p $path_11_profile_non_viral/profile --profile --pattern -m 1 --keep`;
 
-print "\n Running 'plot mapping' for small RNA non 'no hit' profiles...\n";
+print("Plot mapping data per base preferences [no hit]...");
 `perl $path_plot_map_data_base_preference -sam $path_07_dmnd_no_hits_sam_sort -s 18 -e 35 -fa $path_07_dmnd_no_hits_header_fa -pace 1 -p $path_11_profile_no_hits/profile --profile --pattern -m 1 --keep`;
 
 # -----------------------------------------------------------------------
@@ -1350,17 +1308,23 @@ my $path_12_no_hit_z_out_tab = "$path_12_no_hit_out_prefix.zscore.tab"; # no_hit
 # 
 # TODO: 2023-06-10 - Print some description for this...
 # 
-# /home/ericgdp/bin/samToSamStrandedByCounts.pl -sam all_viral_mapped_sort.sam -r unmappedVectorBacters.fasta -fa all_viral_hits.fasta -p teste_z-score_virome/viral
+
+print('Runnning sam 2 sam [viral]...');
 `perl $path_sam_2_sam_stranded -sam $path_07_all_viral_sam_sort -r $path_04_unmap_vector_bacters_fa -fa $path_07_all_viral_fa -p $path_12_viral_prefix`;
+
+print('Runnning sam 2 sam [nonviral]...');
 `perl $path_sam_2_sam_stranded -sam $path_07_all_non_viral_sam_sort -r $path_04_unmap_vector_bacters_fa -fa $path_07_all_non_viral_fa -p $path_12_non_viral_prefix`;
+
+print('Runnning sam 2 sam [nohit]...');
 `perl $path_sam_2_sam_stranded -sam $path_07_dmnd_no_hits_sam_sort -r $path_04_unmap_vector_bacters_fa -fa $path_07_dmnd_no_hits_header_fa -p $path_12_no_hit_prefix`;
 
-# 
-# TODO: 2023-06-10 - Print some description for this...
-# 
-# /home/ericgdp/bin/virome_zscore.bothstrands.pl -sam viral.v1.k10.sam -fa viral.stranded.fasta -p saida.stranded
+print('Runnning z-score [nohit]...');
 `perl $path_z_score_both_strands -sam $path_12_viral_k10_sam -fa $path_12_viral_strand_fa -p $path_12_viral_z_out_prefix`;
+
+print('Runnning z-score [nohit]...');
 `perl $path_z_score_both_strands -sam $path_12_non_viral_k10_sam -fa $path_12_non_viral_strand_fa -p $path_12_non_viral_out_prefix`;
+
+print('Runnning z-score [nohit]...');
 `perl $path_z_score_both_strands -sam $path_12_no_hit_k10_sam -fa $path_12_no_hit_strand_fa -p $path_12_no_hit_out_prefix`;
 
 print "Generating .tab feature matrices...";

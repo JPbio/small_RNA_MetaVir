@@ -8,7 +8,7 @@ use Getopt::Long;
 #
 # TODO: 2023-05-15 - Use a decent logger
 # 
-use constant PATH_LOG_MAIN => "srna_metavir.main.log";
+use constant PATH_LOG_MAIN => "small_rna_metavir.main.log";
 
 #######################################################################
 ### PARSE INPUTS ------------------------------------------------------
@@ -475,7 +475,7 @@ open(O3, ">$prefix.miRNA_total_base_distribution");
 
 print O3 "\tA\tC\tG\tT\n";
 
-# ^[[CUse of uninitialized value $tc in concatenation (.) or string at /srna_metavir/src/utils/plot-map-base-preference/plotMappingDataPerBasePreference.pl line 481, <GEN0> line 25.
+# ^[[CUse of uninitialized value $tc in concatenation (.) or string at /small-rna-metavir/src/utils/plot-map-base-preference/plotMappingDataPerBasePreference.pl line 481, <GEN0> line 25.
 
 
 foreach my $c (keys %ch2) {
