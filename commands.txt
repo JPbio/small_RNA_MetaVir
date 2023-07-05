@@ -12,7 +12,12 @@ docker compose up -d
 docker compose -f docker-compose.dev.yml up -d --remove-orphans
 podman-compose -f docker-compose.dev.yml up -d --remove-orphans
 
+podman-compose -f docker-compose.dev.yml up -d --build py_nb
+
 docker exec -it perl /bin/bash
+
+./docker.jupyter.sh start
+./docker.jupyter.sh stop
 
 docker run \
     -d -t \
@@ -32,23 +37,30 @@ docker run \
 
 podman build . --target=stage_perl -t srna/perl:v01
 
-podman build . --target=stage_r -t srna/r:v01 \
+podman build . --target=stage_python -t srna/python:v01 \
     --cache-from=localhost/srna/perl:v01
+
+podman build . --target=stage_r -t srna/r:v01 \
+    --cache-from=localhost/srna/perl:v01 \
+    --cache-from=localhost/srna/python:v01
 
 podman build . --target=stage_dependencies -t srna/deps:v01 \
     --cache-from=localhost/srna/perl:v01 \
+    --cache-from=localhost/srna/python:v01 \
     --cache-from=localhost/srna/r:v01
 
-podman build . --target=srna_metavir -t srna/srna_metavir:v01 \
+podman build . --target=srna_metavir -t srna/srna_metavir:v02 \
     --cache-from=localhost/srna/perl:v01 \
+    --cache-from=localhost/srna/python:v01 \
     --cache-from=localhost/srna/r:v01 \
-    --cache-from=localhost/srna/deps:v01
+    --cache-from=localhost/srna/deps:v02
 
 podman build . --target=srna_metavir_dev -t srna/dev:v01 \
     --cache-from=localhost/srna/perl:v01 \
+    --cache-from=localhost/srna/python:v01 \
     --cache-from=localhost/srna/r:v01 \
     --cache-from=localhost/srna/deps:v01 \
-    --cache-from=localhost/srna/srna_metavir:v01
+    --cache-from=localhost/srna/srna_metavir:v02
 
 
 ###################################################################################
@@ -97,3 +109,84 @@ perl main.pl \
     -se 35 \
     -size 20000 \
     -prefix RKPM44 \
+
+perl main.pl \
+    -fasta /srna_metavir/asset/libs/libs_caratinga/RKPM44_trim.fasta \
+    -hostgenome /srna_metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 15 \
+    -si 15 \
+    -se 35 \
+    -size 20000 \
+    -prefix RKPM44 \
+
+perl main.v2.pl \
+    -fasta /srna_metavir/asset/libs/libs_caratinga/RKPM44_trim.fasta \
+    -hostgenome /srna_metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 15 \
+    -si 15 \
+    -se 35 \
+    -size 20000 \
+    -tempprefix RKPM44 \
+    -prefix RKPM44 \
+
+perl main.v2.pl \
+    -fasta /srna_metavir/asset/libs/libs_caratinga/RKPM44_trim.fasta \
+    -hostgenome /srna_metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 20 \
+    -si 15 \
+    -se 35 \
+    -size 20000 \
+    -tempprefix RKPM44 \
+    -prefix RKPM44 \
+
+perl main.v2.pl \
+    -fasta /small_rna_metavir/asset/libs/RNPM2.trimClip.fasta_18to50.fasta \
+    -hostgenome /small_rna_metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 30 \
+    -si 15 \
+    -se 35 \
+    -size 20000
+
+perl main.v2.pl \
+    -fasta /small_rna_metavir/asset/libs/libs_18to50_JP/RNPM110_trim_noInternalAdap.fasta_18to50.fasta \
+    -hostgenome /small_rna_metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 30 \
+    -si 15 \
+    -se 35 \
+    -size 20000
+
+perl main.v2.pl \
+    -fasta /small_rna_metavir/asset/libs/New_libs_mosquito_2022/RNPM169.R1_trimmed.fasta \
+    -hostgenome /small_rna_metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 30 \
+    -si 15 \
+    -se 35 \
+    -size 20000
+
+perl main.v2.pl \
+    -fasta /small-rna-metavir/asset/libs/New_libs_mosquito_2022/RNPM169.R1_trimmed.fasta \
+    -hostgenome /small-rna-metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 30 \
+    -si 15 \
+    -se 35 \
+    -size 20000
+
+perl main.v2.pl \
+    -fastq /small-rna-metavir/asset/libs/New_libs_mosquito_2022/RNPM230.R1_trimmed.fq \
+    -hostgenome /small-rna-metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 60 \
+    -si 15 \
+    -se 35 \
+    -size 20000 \
+    -exec-id fastq_06 \
+    -prefix RNPM230
+
+perl main.v2.pl \
+    -fasta /small-rna-metavir/asset/libs/New_libs_mosquito_2022/RNPM169.R1_trimmed.fasta \
+    -hostgenome /small-rna-metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 60 \
+    -si 15 \
+    -se 35 \
+    -size 20000 \
+    -exec-id RNPM169_03 \
+    -prefix RNPM169
