@@ -53,16 +53,11 @@ RUN wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.14.0/ncbi-blast
         mv blast-2.2.26/bin/blastall /usr/bin/ && \
         rm -rf blast-2.2.26*
 
-# 
 # Add the ones available trhough apt-get
-# TODO: 2023-06-23 - Lock versions
-# 
 RUN apt-get update && \
     apt-get install -y \
-        python3-virtualenv \
-        isal \
-        pigz \
         default-jre=2:1.11-72 \
+        cutadapt=3.2-2 \
         bowtie=1.3.0+dfsg1-1 \
         velvetoptimiser=2.2.6-3 ncbi-blast+- \
         spades=3.13.1+dfsg-2+b2
@@ -75,7 +70,6 @@ RUN cd /usr/bin/ && \
     rm cap3.linux.opteron64.tar
 
 ENV PATH="${PATH}:/usr/bin/CAP3"
-
 
 # 
 # Add FASTX-Toolkit
@@ -112,18 +106,13 @@ RUN wget http://github.com/bbuchfink/diamond/releases/download/v2.1.6/diamond-li
 # Add fastqc
 RUN wget https://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.12.1.zip && \
     unzip fastqc_v0.12.1.zip && \
-    mv /FastQC /opt/FastQC
+    mv /FastQC /opt/FastQC && \
     ln -s /opt/FastQC/fastqc /usr/local/bin/fastqc && \
     rm fastqc_v0.12.1.zip
 
-# Add cutadapt
-RUN virtualenv cutadapt-venv && \
-    cutadapt-venv/bin/pip install cutadapt && \
-    source cutadapt-venv/bin/activate
-
 # Add trim galore
 RUN curl -fsSL https://github.com/FelixKrueger/TrimGalore/archive/0.6.10.tar.gz -o trim_galore.tar.gz && \
-    tar xvzf trim_galore.tar.gz
+    tar xvzf trim_galore.tar.gz && \
     mv TrimGalore-0.6.10/trim_galore /usr/local/bin/trim_galore && \
     rm trim_galore.tar.gz
 
