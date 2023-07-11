@@ -1,0 +1,8 @@
+input_size: 1225448
+n_reads: 15102630
+n_contigs: 19160
+n_contigs_gt_200: 1274
+output_size: 139764
+ 
+# TODO: 2023-06-17 - Add all times & calculate total
+time: "15:26:14:736"

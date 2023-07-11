@@ -1,0 +1,8 @@
+input_size: 1555264
+n_reads: 19663205
+n_contigs: 1716
+n_contigs_gt_200: 49
+output_size: 30184
+ 
+# TODO: 2023-06-17 - Add all times & calculate total
+time: "02:36:24:331" # REVIEW: 2023-06-17 - Shouldn't this be calculated?

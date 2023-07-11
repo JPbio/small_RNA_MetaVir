@@ -1,0 +1,32 @@
+summary:
+    # Input
+    input_size: 0
+    n_reads: 0
+
+    # Processing
+    n_contigs: 0
+    n_contigs_gt_200: 0
+
+    # Classification
+    classification:
+        pipe:
+            viral: 0
+            nonviral: 0
+            nohit: 0
+        classifier:
+            viral: 0
+            eve: 0
+        comparison:
+            viral_viral: 0
+            viral_eve: 0
+            nonviral_viral: 0
+            nonviral_eve: 0
+            nohit_viral: 0
+            nohit_eve: 0
+    
+    # Output
+    output_size: 0 # Tamanho da pasta de saída [GB]
+
+    # time
+    time:
+        total: 0 # REVIEW: 2023-06-17 - Shouldn't this be calculated?
