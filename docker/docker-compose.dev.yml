@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  small_rna_metavir:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: small_rna_metavir_dev
+    image: small_rna_metavir_dev
+    container_name: small_rna_metavir_dev
+    environment:
+      - ENV=ENV_DEV
+    tty: true
