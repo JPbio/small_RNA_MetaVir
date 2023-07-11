@@ -1,0 +1,18 @@
+.vscode
+*.log
+*.warn
+*.stats
+
+asset
+
+# Generated files
+exec_*
+*Logfile.txt
+src/runs/*
+
+idsOriginalSequences
+idsSeqNoHit
+idsWithHit
+step1.blastn
+step2.blastn.report
+difHitAndSeq.diff
