@@ -12,11 +12,11 @@ use constant EXEC_ROOT_DIR => "./runs";
 use constant REF_BACTERIA_GENOMES => "/small-rna-metavir/asset/refs/bacterial_genomes/all_bacters.fasta";
 use constant REF_BLAST_DB_NT => "/small-rna-metavir/asset/blastdb/nt";
 use constant REF_DIAMOND_NR => "/small-rna-metavir/asset/diamond/nr.dmnd";
+use constant PATH_CLASSIF_EVE => "/small-rna-metavir/asset/classifier/model_classif_virus_eve.pkl";
 
 #######################################################################
 ### TIME HANDLERS -----------------------------------------------------
 #######################################################################
-my $exec_id;
 
 sub getTimeDiff {
     my $t0 = $_[0] or die "Must provide at least one date for calculation!";
@@ -146,6 +146,7 @@ my $large_index;
 my $deg; # TODO: 2023-02-25 - Can we please call it 'degradation'?
 my $help;
 my $lib_prefix;
+my $exec_id;
 
 GetOptions("qual=s" => \$qual,
     "hostgenome=s" => \$hostgenome,
@@ -266,6 +267,7 @@ my $step6		="$exec_dir/06_blast";
 my $step7		="$exec_dir/07_reportBlast";
 my $step11		="$exec_dir/11_profiles";
 my $step12		="$exec_dir/12_z_score_small_rna_features";
+my $step13		="$exec_dir/13_virus_eve_classif";
 
 # Utils scripts
 my $path_utils = "/small-rna-metavir/src/utils";
@@ -284,6 +286,8 @@ my $path_extract_seqs_no_hit_blast = "$path_utils/extract-seqs/extractSequencesN
 my $path_sam_2_sam_stranded = "$path_utils/sam-sam-stranded-counts/samToSamStrandedByCounts.pl";
 my $path_z_score_both_strands = "$path_utils/z-score/virome_zscore.bothstrands.pl";
 my $path_z_score_feature = "$path_utils/z-score/set_Zscore_features_matrix.R";
+
+my $path_eve_classif = "$path_utils/viral_eve_classification.py";
 
 my $path_plot_map_data_base_preference = "$path_utils/plot-map-base-preference/plotMappingDataPerBasePreference.pl";
 
@@ -340,6 +344,9 @@ if (not -e $step11) {
 if (not -e $step12) {
     `mkdir $step12`;
 }
+if (not -e $step13) {
+    `mkdir $step13`;
+}
 
 #######################################################################
 ### Configure logging -------------------------------------------------
@@ -386,7 +393,7 @@ if (defined($fastq)) {
 	`$exec_fq_0`;
 
     # Converting fastq to fasta
-	 "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
+    print "\n\nRunning step 2 [ converting fastq to fasta - fastq_to_fasta ]\n";
 	my $exec_fq_2="fastq_to_fasta -Q 33 -i $path_02_trim_quality_fq -o $path_02_trim_filtered_gt15_fa";
 	print "\nSTEP2\n\t $exec_fq_2\n";
 	`$exec_fq_2`;
@@ -992,10 +999,10 @@ print "\nSTEP10_112\n\t $exec10_112\n";
 `$exec10_112`;
 
 print "\n Extracting contigs all Hits blastn 1e-5... \n";
-`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200 -q "" -p  $path_07_bN_analyze_prefix --fasta > $path_07_blastn_analyse`;
+`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200_fa -q "" -p  $path_07_bN_analyze_prefix --fasta > $path_07_blastn_analyse`;
 
 print "\n Extracting contigs viral blastn 1e-5...\n";
-`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200 -q "virus" -p  $path_07_bN_analyse_blastn_prefix --fasta > $path_07_blastn_analize_virus`;
+`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200_fa -q "virus" -p  $path_07_bN_analyse_blastn_prefix --fasta > $path_07_blastn_analize_virus`;
 
 print "\n Extracting contigs nonviral blastn 1e-5...\n";
 `grep -v -i "virus" $path_07_bN_analize_contigs_fa | grep '>' | cut -f1 -d " " >  $path_07_aux_non_viral`;
@@ -1027,7 +1034,7 @@ chomp($hitsVirusBlastn);
 
 # print metrics "#contigs hit VIRUS blastN\t".$n_viral_blastn."\n";
 # print interest "#contigs hit VIRUS blastN\t".$n_viral_blastn."\n";
-print "\n# Contigs hit VIRUS blastN\t".$n_viral_blastn."\n";
+print "\n# Contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
 
 # Assembled Contigs
 print "\n[Extracting contigs no hit blastn 1e-5]\n";
@@ -1305,6 +1312,8 @@ my $path_12_no_hit_strand_fa = "$path_12_no_hit_prefix.stranded.fasta"; # no_hit
 my $path_12_no_hit_out_prefix = "$path_12_no_hit_prefix.stranded.out"; # saida.stranded
 my $path_12_no_hit_z_out_tab = "$path_12_no_hit_out_prefix.zscore.tab"; # no_hit.stranded.out.zscore.tab
 
+my $path_12_feat_matrix = "$step12/Zscore_and_features_matrix.tab";
+
 # 
 # TODO: 2023-06-10 - Print some description for this...
 # 
@@ -1330,6 +1339,32 @@ print('Runnning z-score [nohit]...');
 print "Generating .tab feature matrices...";
 # R --no-save viral.stranded.out.zscore.tab non_viral.stranded.out.zscore.tab no_hit.stranded.out.zscore.tab < set_Zscore_features_matrix.R > formatiing_log
 `R --no-save $path_12_viral_z_out_tab $path_12_non_viral_z_out_tab $path_12_no_hit_z_out_tab $step12 < $path_z_score_feature > $path_12_z_out_tab_log`;
+
+# -----------------------------------------------------------------------
+
+$current_time = Time::HiRes::gettimeofday();
+$time_msg = getStepTimeEndMsg($exec_id, $step_name, $last_time, $current_time);
+$last_time = $current_time;
+
+print STDOUT $time_msg;
+print $time_msg;
+
+#######################################################################
+### Classifying virus × EVEs ------------------------------------------
+#######################################################################
+
+$step_name = "Classifying virus × EVEs";
+
+$time_msg = getStepTimebBeginMsg($exec_id, $step_name);
+print STDOUT $time_msg;
+print $time_msg;
+
+# -----------------------------------------------------------------------
+
+my $path_13_eve_classif = "$step13/$exec_id-viral-eve.csv";
+
+my $cmd_eve = "perl $path_eve_classif -i $$path_12_feat_matrix -o ".PATH_CLASSIF_EVE." -v";
+`$cmd_eve`;
 
 # -----------------------------------------------------------------------
 
