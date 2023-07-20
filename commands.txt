@@ -10,7 +10,7 @@ docker restart perl
 
 docker compose up -d
 docker compose -f docker-compose.dev.yml up -d --remove-orphans
-podman-compose -f docker-compose.dev.yml up -d --remove-orphans
+podman-compose -f docker-compose.dev.yml -f docker-compose.volumes.yml up -d --remove-orphans
 
 podman-compose -f docker-compose.dev.yml up -d --build py_nb
 
@@ -74,4 +74,16 @@ perl main.v2.pl \
     -si 15 \
     -se 35 \
     -size 20000 \
-    -tempprefix RNPM162
+    -exec-id RNPM162
+
+
+perl main.pl \
+    -fasta /srna_metavir/asset/libs/New_libs_mosquito_2022/RNPM170.R1_trimmed_trimmed.fq.fasta \
+    -hostgenome /srna_metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 60 \
+    -si 15 \
+    -se 35 \
+    -size 20000 \
+    -exec-id test_classif_RNPM170_01 \
+    -prefix RNPM170
+    

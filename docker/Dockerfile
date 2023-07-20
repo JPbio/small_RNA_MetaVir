@@ -5,21 +5,37 @@
 # ====================================
 
 # 
-# TODO: 2023-06-15 - Lock versions!
-# 
 # Python 3.9.2
 # Perl 5.36.0
 # 
 FROM docker.io/library/perl:5.36.0-threaded AS stage_perl
 
+# 
+# TODO: 2023-06-15 - Lock versions!
+# 
 RUN cpanm --notest --quiet \
     Bio::SeqIO \
     Statistics::Basic \
     Statistics::RankCorrelation
 
 # ====================================
+# -- Stage: Python --
+# ====================================
+
+FROM stage_perl AS stage_python
+
+CMD cp /usr/bin/python3 /usr/bin/python
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        python3-pandas=1.1.5+dfsg-2 \
+        python3-sklearn=0.23.2-5
+
+# ====================================
 # -- Stage: R --
 # ====================================
+
+FROM stage_python AS stage_r
 
 # 
 # TODO: 2023-06-15 - Lock versions!
@@ -28,9 +44,6 @@ RUN cpanm --notest --quiet \
 # ggplot2 '3.4.2'
 # reshape2 '1.4.4'
 # 
-
-FROM stage_perl AS stage_r
-
 RUN apt-get update && \
     apt-get install -y \
         r-base && \
