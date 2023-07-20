@@ -1,5 +1,5 @@
 import argparse
-import pickle
+import joblib
 
 import pandas as pd
 
@@ -27,13 +27,6 @@ feat_eves = [
     'dens25to29', 'ratiosi_pi', 'ratio_si', 'dens18to35'
 ]
 
-df_pipe: pd.DataFrame
-
-# Command line arguments
-path_input: str
-path_output: str
-path_classifier: str
-
 is_verbose = False
 
 ####################################################################
@@ -58,17 +51,10 @@ def parse_input():
     parser.add_argument('--classifier', help='Path to pickle classifier model')
     parser.add_argument('--verbose', action='store_true', help='Enable is_verbose mode')
 
-    # Set global values
     args = parser.parse_args()
+    return args
 
-    path_input = args.input
-    path_output = args.output
-    path_classifier = args.classifier
-    is_verbose = args.verbose
-    
-    df_pipe = pd.read_table(path_input)
-
-def get_classification_df() -> tuple:
+def get_classification_df(df_pipe: pd.DataFrame) -> tuple:
     ''' 
         Transform data to classify
 
@@ -125,13 +111,12 @@ def get_classification_df() -> tuple:
     feat_classif += feat_common.copy()
 
     if (is_verbose):
+        feat_match = [f for f in feat_classif if f in feat_eves]
+        
         print('-----------------------------------')
-        # df_classif = df_classif.copy()
-
-        n_match_feats = sum(feat_classif == feat_eves)
         print(f'feat_eves: {len(feat_eves)}') 
         print(f'feat_classif: {len(feat_classif)}')
-        print(f'n_match_feats: {n_match_feats}')
+        print(f'n_match_feats: {len(feat_match)}')
 
     return df_classif, feat_classif
 
@@ -140,20 +125,28 @@ def __main__() -> None:
         TODO: 2023-06-17 - ADD Description
     '''
 
-    parse_input()
+    global is_verbose
+    
+    # Parse input args
+    args = parse_input()
+
+    path_input = args.input
+    path_output = args.output
+    path_classifier = args.classifier
+    is_verbose = bool(args.verbose)
 
     # Transform data to classify
-    df_classif, feat_classif = get_classification_df()
+    df_pipe = pd.read_table(path_input)
+    df_classif, feat_classif = get_classification_df(df_pipe=df_pipe)
 
     # Run classification
     with open(path_classifier, 'rb') as file:
-        classifier = pickle.load(file)
+        classifier = joblib.load(file)
 
     y_hat = classifier.predict(df_classif[feat_classif])
     df_classif[col_class_eve] = y_hat.copy()
     
     # Export csv
     df_classif.to_csv(path_output)
-
 
 if __name__ == "__main__" : __main__()

@@ -1363,7 +1363,9 @@ print $time_msg;
 
 my $path_13_eve_classif = "$step13/$exec_id-viral-eve.csv";
 
-my $cmd_eve = "perl $path_eve_classif -i $$path_12_feat_matrix -o ".PATH_CLASSIF_EVE." -v";
+my $cmd_eve = "python3 $path_eve_classif --input $path_12_feat_matrix --output $path_13_eve_classif --classifier ".PATH_CLASSIF_EVE." --verbose";
+
+print "RUNING '$cmd_eve'...";
 `$cmd_eve`;
 
 # -----------------------------------------------------------------------
