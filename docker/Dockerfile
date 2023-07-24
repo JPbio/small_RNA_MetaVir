@@ -24,12 +24,17 @@ RUN cpanm --notest --quiet \
 
 FROM stage_perl AS stage_python
 
-CMD cp /usr/bin/python3 /usr/bin/python
+RUN cp /usr/bin/python3 /usr/bin/python
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        python3-pandas=1.1.5+dfsg-2 \
-        python3-sklearn=0.23.2-5
+        python3-pip=20.3.4-4+deb11u1 && \
+    pip install \
+        pandas==2.0.3 \
+        scikit-learn==1.1.3 \
+        joblib==1.3.1
+    apt-get remove -y python3-pip && \
+    apt-get autoremove -y
 
 # ====================================
 # -- Stage: R --
