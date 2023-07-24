@@ -127,26 +127,40 @@ def __main__() -> None:
 
     global is_verbose
     
-    # Parse input args
-    args = parse_input()
+    try:
 
-    path_input = args.input
-    path_output = args.output
-    path_classifier = args.classifier
-    is_verbose = bool(args.verbose)
+        # Parse input args
+        args = parse_input()
 
-    # Transform data to classify
-    df_pipe = pd.read_table(path_input)
-    df_classif, feat_classif = get_classification_df(df_pipe=df_pipe)
+        path_input = args.input
+        path_output = args.output
+        path_classifier = args.classifier
+        is_verbose = bool(args.verbose)
 
-    # Run classification
-    with open(path_classifier, 'rb') as file:
-        classifier = joblib.load(file)
+        if is_verbose:
+            print(f'path_input: "{path_input}"')
+            print(f'path_output: "{path_output}"')
+            print(f'path_classifier: "{path_classifier}"')
 
-    y_hat = classifier.predict(df_classif[feat_classif])
-    df_classif[col_class_eve] = y_hat.copy()
-    
-    # Export csv
-    df_classif.to_csv(path_output)
+        # Transform data to classify
+        df_pipe = pd.read_table(path_input)
+        df_classif, feat_classif = get_classification_df(df_pipe=df_pipe)
+
+        # Run classification
+        classifier = joblib.load(path_classifier)
+
+        y_hat = classifier.predict(df_classif[feat_classif])
+        df_classif[col_class_eve] = y_hat.copy()
+        
+        # Export csv
+        df_classif.to_csv(path_output)    
+        
+        
+    except Exception as err:
+        ''' 
+            TODO: 2023-07-24 - Handle it better
+        ''' 
+        print(f"Something wrong isn't right...")
+        raise err
 
 if __name__ == "__main__" : __main__()

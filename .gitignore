@@ -3,6 +3,8 @@
 *.warn
 *.stats
 
+asset
+
 # Generated files
 __pycache__
 
