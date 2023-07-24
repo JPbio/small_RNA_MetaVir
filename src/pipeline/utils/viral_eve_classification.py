@@ -82,8 +82,8 @@ def get_classification_df(df_pipe: pd.DataFrame) -> tuple:
         print('-----------------------------------')
         classes = list(y_dark.unique())
         class_counts = list(y_dark.value_counts())
-        # print(f'classes: {classes}')
-        # print(f'class_counts: {class_counts}')
+        print(f'classes: {classes}')
+        print(f'class_counts: {class_counts}')
         print(y_dark.value_counts())
 
     feat_dark = X_dark.columns
