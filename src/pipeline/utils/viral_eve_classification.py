@@ -148,13 +148,11 @@ def __main__() -> None:
 
         # Run classification
         classifier = joblib.load(path_classifier)
-
         y_hat = classifier.predict(df_classif[feat_classif])
         df_classif[col_class_eve] = y_hat.copy()
         
         # Export csv
-        df_classif.to_csv(path_output)    
-        
+        df_classif.to_csv(path_output)
         
     except Exception as err:
         ''' 
