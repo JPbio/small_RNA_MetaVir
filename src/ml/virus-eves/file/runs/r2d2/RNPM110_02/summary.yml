@@ -1,8 +1,0 @@
-input_size: 1623392
-n_reads: 20421283
-n_contigs: 5562
-n_contigs_gt_200: 271
-output_size: 90044
- 
-# TODO: 2023-06-17 - Add all times & calculate total
-time: "05:20:44:031"
