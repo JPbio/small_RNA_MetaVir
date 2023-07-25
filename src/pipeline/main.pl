@@ -380,10 +380,11 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_02_trim_quality_fq = "$step2/${fastq}_trimmed.fastq";
 my $path_02_trim_filtered_gt15_fa = "$step2/trimmed_filtered_gt15.fasta";
 
 if (defined($fastq)) {
+
+    my $path_02_trim_quality_fq = "$step2/${fastq}_trimmed.fastq";
 
 	print "Processing fastq sequences...\n";
 	print "\n\nRunning step 0 [ quality filter - fastq_quality_filter ]\n";
@@ -1363,6 +1364,7 @@ print $time_msg;
 
 my $path_13_eve_classif = "$step13/$exec_id-viral-eve.csv";
 
+# my $cmd_eve = "python3 $path_eve_classif --input $path_12_feat_matrix --output $path_13_eve_classif --classifier ".PATH_CLASSIF_EVE." --verbose > ___foo.txt";
 my $cmd_eve = "python3 $path_eve_classif --input $path_12_feat_matrix --output $path_13_eve_classif --classifier ".PATH_CLASSIF_EVE;
 
 print "RUNING '$cmd_eve'...";
