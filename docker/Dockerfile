@@ -32,7 +32,7 @@ RUN apt-get update && \
     pip install \
         pandas==2.0.3 \
         scikit-learn==1.1.3 \
-        joblib==1.3.1
+        joblib==1.3.1 && \
     apt-get remove -y python3-pip && \
     apt-get autoremove -y
 
