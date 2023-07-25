@@ -3,12 +3,16 @@
 *.warn
 *.stats
 
-asset
-
 # Generated files
+__pycache__
+
 exec_*
 *Logfile.txt
-src/runs/*
+src/pipeline/runs/*
+
+#
+# TODO 23-07-11 - Figure this files out
+#
 
 idsOriginalSequences
 idsSeqNoHit
