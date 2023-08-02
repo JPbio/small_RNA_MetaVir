@@ -1258,15 +1258,13 @@ if (not -e $path_11_profile_no_hits) {
     `mkdir $path_11_profile_no_hits`;
 }
 
-
 print "\n Running 'plot mapping' for small RNA viral profiles...\n";
 # `plotMappingDataPerBasePreference.pl -sam ${i}_mapped_sort.sam -s 15 -e 35 -fa ${i} -pace 1 -p ${i}_profile --profile --pattern -m 1 --keep`;
 
 print("Plot mapping data per base preferences [viral]...");
-`perl $path_plot_map_data_base_preference -sam $path_07_all_viral_sam_sort -s 18 -e 35 -fa $path_07_all_viral_fa -pace 1 -p 
+`perl $path_plot_map_data_base_preference -sam $path_07_all_viral_sam_sort -s 18 -e 35 -fa $path_07_all_viral_fa -pace 1 -p $path_11_profile_viral/profile --profile --pattern -m 1 --keep`;
 
 print("Plot mapping data per base preferences [non viral]...");
-$path_11_profile_viral/profile --profile --pattern -m 1 --keep`;
 `perl $path_plot_map_data_base_preference -sam $path_07_all_non_viral_sam_sort -s 18 -e 35 -fa $path_07_all_non_viral_fa -pace 1 -p $path_11_profile_non_viral/profile --profile --pattern -m 1 --keep`;
 
 print("Plot mapping data per base preferences [no hit]...");
