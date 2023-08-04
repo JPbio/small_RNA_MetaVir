@@ -12,7 +12,7 @@ use constant EXEC_ROOT_DIR => "./runs";
 use constant REF_BACTERIA_GENOMES => "/small-rna-metavir/asset/refs/bacterial_genomes/all_bacters.fasta";
 use constant REF_BLAST_DB_NT => "/small-rna-metavir/asset/blastdb/nt";
 use constant REF_DIAMOND_NR => "/small-rna-metavir/asset/diamond/nr.dmnd";
-use constant PATH_CLASSIF_EVE => "/small-rna-metavir/asset/classifier/model_classif_virus_eve.pkl";
+use constant PATH_CLASSIF_EVE => "/small-rna-metavir/asset/classifier/model_classif_virus_eve";
 
 #######################################################################
 ### TIME HANDLERS -----------------------------------------------------
