@@ -10,7 +10,7 @@ docker restart perl
 
 docker compose up -d
 docker compose -f docker-compose.dev.yml up -d --remove-orphans
-podman-compose -f docker-compose.dev.yml up -d --remove-orphans
+podman-compose -f docker-compose.dev.yml -f docker-compose.volumes.yml up -d --remove-orphans
 
 podman-compose -f docker-compose.dev.yml up -d --build py_nb
 
@@ -69,9 +69,20 @@ podman build . --target=srna_metavir_dev -t srna/dev:v01 \
 
 perl main.v2.pl \
     -fasta /srna_metavir/asset/libs/trimmed_libs_for_container_test/RNPM162.R1_trimmed.fq.fasta \
-    -hostgenome /srna_metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -hostgenome /small-rna-metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
     -process 20 \
     -si 15 \
     -se 35 \
     -size 20000 \
-    -tempprefix RNPM162
+    -exec-id RNPM162
+
+
+perl main.pl \
+    -fasta /small-rna-metavir/asset/libs/SRA_smallRNA/batch-01/SRR1652436_trimmed.fq.fasta \
+    -hostgenome /small-rna-metavir/asset/refs/ref_hosts/refs_Aae_Aalb_Agam_culex.fasta \
+    -process 40 \
+    -si 15 \
+    -se 35 \
+    -size 20000 \
+    -exec-id val-SRR1652436 \
+    -prefix SRR1652436
