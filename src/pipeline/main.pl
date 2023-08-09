@@ -1000,10 +1000,10 @@ print "\nSTEP10_112\n\t $exec10_112\n";
 `$exec10_112`;
 
 print "\n Extracting contigs all Hits blastn 1e-5... \n";
-`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200_fa -q "" -p  $path_07_bN_analyze_prefix --fasta > $path_07_blastn_analyse`;
+`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200_fa -q "" -p  $path_07_bN_analyze_prefix > $path_07_blastn_analyse`;
 
 print "\n Extracting contigs viral blastn 1e-5...\n";
-`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200_fa -q "virus" -p  $path_07_bN_analyse_blastn_prefix --fasta > $path_07_blastn_analize_virus`;
+`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200_fa -q "virus" -p  $path_07_bN_analyse_blastn_prefix > $path_07_blastn_analize_virus`;
 
 print "\n Extracting contigs nonviral blastn 1e-5...\n";
 `grep -v -i "virus" $path_07_bN_analize_contigs_fa | grep '>' | cut -f1 -d " " >  $path_07_aux_non_viral`;
@@ -1016,44 +1016,34 @@ print "\n Running fasta_formatter: \n\t $cmd_fa_format";
 `rm -f $path_07_aux_fa`;
 `rm -f $path_07_aux_non_viral`;
 
-my $n_hits_blastn = `grep -c '>' $path_07_bN_analize_contigs_fa`;
-chomp($n_hits_blastn);
-$n_hits_blastn = int($n_hits_blastn);
+if (not -e $path_07_bN_analize_non_viral_fa) {
+    `touch $path_07_bN_analize_non_viral_fa`;
+}
 
-# 
-# TODO: 2023-05-23 - Check what to do with these 'parallel' logging files
-#
+my $n_blastn_hits = `grep -c '>' $path_07_bN_analize_contigs_fa`;
+chomp($n_blastn_hits);
+$n_blastn_hits = int($n_blastn_hits);
+print "\n# Number of contigs (blastN) [hits]\t".$n_blastn_hits."\n";
 
-# Assembled Contigs
-# print metrics "#contigs hit blastN\t".$n_hits_blastn."\n";
-# print interest "#contigs hit blastN\t".$n_hits_blastn."\n";
-print "\n# Contigs hit blastN\t".$n_hits_blastn."\n";
+my $n_blastn_hits_virus = `grep -c '>' $path_07_bN_analize_viral_fa`;
+chomp($n_blastn_hits_virus);
+$n_blastn_hits_virus = int($n_blastn_hits_virus);
+print "\n# Number of contigs (blastN) [viral]\t".$n_blastn_hits_virus."\n";
 
-# Assembled Contigs
-my $hitsVirusBlastn = `grep -c '>' $path_07_bN_analize_viral_fa`;
-chomp($hitsVirusBlastn);
-
-# print metrics "#contigs hit VIRUS blastN\t".$n_viral_blastn."\n";
-# print interest "#contigs hit VIRUS blastN\t".$n_viral_blastn."\n";
-print "\n# Contigs hit VIRUS blastN\t".$hitsVirusBlastn."\n";
-
-# Assembled Contigs
+my $n_blastn_hits_non_viral = `grep -c '>' $path_07_bN_analize_non_viral_fa`;
+chomp($n_blastn_hits_non_viral);
+$n_blastn_hits_non_viral = int($n_blastn_hits_non_viral);
+print "\n# Number of contigs (blastN) [non viral]\t".$n_blastn_hits_non_viral."\n";
 print "\n[Extracting contigs no hit blastn 1e-5]\n";
 my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $path_05_cap3_gt200_fa -blast $path_07_blastn_1e5_report -out $path_06_blastn_no_hit_1e5_fa";
 
 print "\nSTEP10_113\n\t $exec10_113\n";
 `$exec10_113`;
 
-my $seqsNoHitBlastn = `grep -c '>' $path_06_blastn_no_hit_1e5_fa`;
-chomp($seqsNoHitBlastn);
-
-# 
-# TODO: 2023-05-23 - Check what to do with these 'parallel' logging files
-# 
-
-# print metrics "# Contigs not hit blastN\t".$seqsNoHitBlastn."\n";
-print "# Contigs not hit blastN\t".$seqsNoHitBlastn."\n";
-# Assembled Contigs
+my $n_blastn_no_hits = `grep -c '>' $path_06_blastn_no_hit_1e5_fa`;
+chomp($n_blastn_no_hits);
+$n_blastn_no_hits = int($n_blastn_no_hits);
+print "# Number of contigs (blastN) [no hits]\t".$n_blastn_no_hits."\n";
 `cat $path_07_bN_analize_viral_fa | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $path_07_blastn_virus_fa`;
 
 # -----------------------------------------------------------------------
@@ -1064,6 +1054,8 @@ $last_time = $current_time;
 
 print STDOUT $time_msg;
 print $time_msg;
+
+# die "\n\n -- END OF TEST -- \n\n";
 
 #######################################################################
 ### DIAMOND (Blastx) --------------------------------------------------
@@ -1108,6 +1100,30 @@ print "\nSTEP9_11\n\t $exec9_11\n";
 done
 `;
 
+# Compute number of contigs (diamond) [hits]
+my $n_dmnd_hits = `grep -c '>' $path_07_dmnd_hits_fa`;
+chomp($n_dmnd_hits);
+$n_dmnd_hits = int($n_dmnd_hits);
+print "# Number of contigs (diamond) [hits]\t".$n_dmnd_hits."\n";
+
+# Compute number of contigs (diamond) [viral]
+my $n_dmnd_hits_viral = `grep -c '>' $path_07_dmnd_viral_header_fa`;
+chomp($n_dmnd_hits_viral);
+$n_dmnd_hits_viral = int($n_dmnd_hits_viral);
+print "# Number of contigs (diamond) [viral]\t".$n_dmnd_hits_viral."\n";
+
+# Compute number of contigs (diamond) [non viral]
+my $n_dmnd_hits_non_viral = `grep -c '>' $path_07_dmnd_non_viral_header_fa`;
+chomp($n_dmnd_hits_non_viral);
+$n_dmnd_hits_non_viral = int($n_dmnd_hits_non_viral);
+print "# Number of contigs (diamond) [non viral]\t".$n_dmnd_hits_non_viral."\n";
+
+# Compute number of contigs (diamond) [no hits]
+my $n_dmnd_no_hits = `grep -c '>' $path_07_dmnd_no_hits_fa`;
+chomp($n_dmnd_no_hits);
+$n_dmnd_no_hits = int($n_dmnd_no_hits);
+print "# Number of contigs (diamond) [no hits]\t".$n_dmnd_no_hits."\n";
+
 # -----------------------------------------------------------------------
 
 $current_time = Time::HiRes::gettimeofday();
@@ -1116,6 +1132,8 @@ $last_time = $current_time;
 
 print STDOUT $time_msg;
 print $time_msg;
+
+# die "\n\n -- END OF TEST -- \n\n";
 
 ######################################################################
 ## Build viral, non viral and no hits indexes ------------------------
@@ -1142,18 +1160,44 @@ print $time_msg;
 `cat $path_07_bN_analize_viral_header_fa $path_07_dmnd_viral_header_fa > $path_07_all_viral_fa`;
 `cat $path_07_bN_analize_non_viral_header_fa $path_07_dmnd_non_viral_header_fa > $path_07_all_non_viral_fa`;
 
+# Compute number of contigs (all) [viral]
+my $n_all_hits_viral = `grep -c '>' $path_07_all_viral_fa`;
+chomp($n_all_hits_viral);
+$n_all_hits_viral = int($n_all_hits_viral);
+print "# Number of contigs (all) [viral]\t".$n_all_hits_viral."\n";
+
+# Compute number of contigs (all) [non viral]
+my $n_all_hits_non_viral = `grep -c '>' $path_07_all_non_viral_fa`;
+chomp($n_all_hits_non_viral);
+$n_all_hits_non_viral = int($n_all_hits_non_viral);
+print "# Number of contigs (all) [non viral]\t".$n_all_hits_non_viral."\n";
+
+# Compute number of contigs (all) [no hits]
+my $n_all_no_hits = `grep -c '>' $path_07_dmnd_no_hits_fa`;
+chomp($n_all_no_hits);
+$n_all_no_hits = int($n_all_no_hits);
+print "# Number of contigs (all) [no hits]\t".$n_all_no_hits."\n";
+
 # Generate indexes for profiling
-my $cmd = "bowtie-build $path_07_all_viral_fa $path_07_all_viral_fa";
-print "\nRunning: '$cmd'...\n";
-`$cmd`;
+my $cmd = "";
 
-$cmd = "bowtie-build $path_07_all_non_viral_fa $path_07_all_non_viral_fa";
-print "\nRunning: '$cmd'...\n";
-`$cmd`;
+if ($n_all_hits_viral) {
+    $cmd = "bowtie-build $path_07_all_viral_fa $path_07_all_viral_fa";
+    print "\nRunning: '$cmd'\n";
+    `$cmd`;
+}
 
-$cmd = "bowtie-build $path_07_dmnd_no_hits_header_fa $path_07_dmnd_no_hits_header_fa";
-print "\nRunning: '$cmd'...\n";
-`$cmd`;
+if ($n_all_hits_non_viral) {
+    $cmd = "bowtie-build $path_07_all_non_viral_fa $path_07_all_non_viral_fa";
+    print "\nRunning: '$cmd'\n";
+    `$cmd`;
+}
+
+if ($n_all_no_hits) {
+    $cmd = "bowtie-build $path_07_dmnd_no_hits_header_fa $path_07_dmnd_no_hits_header_fa";
+    print "\nRunning: '$cmd'\n";
+    `$cmd`;
+}
 
 # -----------------------------------------------------------------------
 
@@ -1163,6 +1207,8 @@ $last_time = $current_time;
 
 print STDOUT $time_msg;
 print $time_msg;
+
+# # die "\n\n -- END OF TEST -- \n\n";
 
 #######################################################################
 ### Align viral, non viral and no hits against unmapped reads ---------
@@ -1176,14 +1222,21 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-print "\nAligning viral hits...\n";
-`bowtie -f -S -k 1 -p $process -v 1 $path_07_all_viral_fa $path_04_unmap_vector_bacters_fa > $path_07_all_viral_sam 2> $path_07_all_viral_log`;
 
-print "\nAligning non viral hits...\n";
-`bowtie -f -S -k 1 -p $process -v 1 $path_07_all_non_viral_fa $path_04_unmap_vector_bacters_fa > $path_07_all_non_viral_sam 2> $path_07_all_non_viral_log`;
+if ($n_all_hits_viral) {
+    print "\nAligning viral hits...\n";
+    `bowtie -f -S -k 1 -p $process -v 1 $path_07_all_viral_fa $path_04_unmap_vector_bacters_fa > $path_07_all_viral_sam 2> $path_07_all_viral_log`;
+}
 
-print "\nAligning 'no hits'...\n";
-`bowtie -f -S -k 1 -p $process -v 1 $path_07_dmnd_no_hits_header_fa $path_04_unmap_vector_bacters_fa > $path_07_dmnd_no_hits_sam 2> $path_07_dmnd_no_hits_log`;
+if ($n_all_hits_non_viral) {
+    print "\nAligning non viral hits...\n";
+    `bowtie -f -S -k 1 -p $process -v 1 $path_07_all_non_viral_fa $path_04_unmap_vector_bacters_fa > $path_07_all_non_viral_sam 2> $path_07_all_non_viral_log`;
+}
+
+if ($n_all_no_hits) {
+    print "\nAligning 'no hits'...\n";
+    `bowtie -f -S -k 1 -p $process -v 1 $path_07_dmnd_no_hits_header_fa $path_04_unmap_vector_bacters_fa > $path_07_dmnd_no_hits_sam 2> $path_07_dmnd_no_hits_log`;
+}
 
 # -----------------------------------------------------------------------
 
@@ -1198,7 +1251,7 @@ print $time_msg;
 ### Extract & sort mapped reads from alignment .sam file results ------
 #######################################################################
 
-$step_name = "1, 2, 3, testando...";
+$step_name = "Extract & sort mapped reads from alignment .sam file results";
 
 $time_msg = getStepTimebBeginMsg($exec_id, $step_name);
 print STDOUT $time_msg;
@@ -1207,21 +1260,26 @@ print $time_msg;
 # -----------------------------------------------------------------------
 
 # Extract & sort from .sam only the mapped reads (those without flag '4')
+if ($n_all_hits_viral) {
+    print "Extracting & sorting reads .sam [viral] \n";
+    `samtools view -S -h -F 4 $path_07_all_viral_sam > $path_07_all_viral_sam_mapped`;
+    `samtools sort -O SAM -o $path_07_all_viral_sam_sort $path_07_all_viral_sam_mapped`;
+    # samtools view -Sb $i > ${i}.bam
+}
 
-print "Extracting & sorting reads .sam [viral]...";
-`samtools view -S -h -F 4 $path_07_all_viral_sam > $path_07_all_viral_sam_mapped`;
-`samtools sort -O SAM -o $path_07_all_viral_sam_sort $path_07_all_viral_sam_mapped`;
-# samtools view -Sb $i > ${i}.bam
+if ($n_all_hits_non_viral) {
+    print "Extracting & sorting reads .sam [non viral] \n";
+    `samtools view -S -h -F 4 $path_07_all_non_viral_sam > $path_07_all_non_viral_sam_mapped`;
+    `samtools sort -O SAM -o $path_07_all_non_viral_sam_sort $path_07_all_non_viral_sam_mapped`;
+    # samtools view -Sb $i > ${i}.bam
+}
 
-print "Extracting & sorting reads .sam [non viral]...";
-`samtools view -S -h -F 4 $path_07_all_non_viral_sam > $path_07_all_non_viral_sam_mapped`;
-`samtools sort -O SAM -o $path_07_all_non_viral_sam_sort $path_07_all_non_viral_sam_mapped`;
-# samtools view -Sb $i > ${i}.bam
-
-print "Extracting & sorting reads .sam [no hit]...";
-`samtools view -S -h -F 4 $path_07_dmnd_no_hits_sam > $path_07_dmnd_no_hits_sam_mapped`;
-`samtools sort -O SAM -o $path_07_dmnd_no_hits_sam_sort $path_07_dmnd_no_hits_sam_mapped`;
-# samtools view -Sb $i > ${i}.bam
+if ($n_all_no_hits) {
+    print "Extracting & sorting reads .sam [no hit] \n";
+    `samtools view -S -h -F 4 $path_07_dmnd_no_hits_sam > $path_07_dmnd_no_hits_sam_mapped`;
+    `samtools sort -O SAM -o $path_07_dmnd_no_hits_sam_sort $path_07_dmnd_no_hits_sam_mapped`;
+    # samtools view -Sb $i > ${i}.bam
+}
 
 # -----------------------------------------------------------------------
 
@@ -1259,16 +1317,24 @@ if (not -e $path_11_profile_no_hits) {
 }
 
 print "\n Running 'plot mapping' for small RNA viral profiles...\n";
-# `plotMappingDataPerBasePreference.pl -sam ${i}_mapped_sort.sam -s 15 -e 35 -fa ${i} -pace 1 -p ${i}_profile --profile --pattern -m 1 --keep`;
 
-print("Plot mapping data per base preferences [viral]...");
-`perl $path_plot_map_data_base_preference -sam $path_07_all_viral_sam_sort -s 18 -e 35 -fa $path_07_all_viral_fa -pace 1 -p $path_11_profile_viral/profile --profile --pattern -m 1 --keep`;
+if ($n_all_hits_viral) {
+    $cmd = "perl $path_plot_map_data_base_preference -sam $path_07_all_viral_sam_sort -s 18 -e 35 -fa $path_07_all_viral_fa -pace 1 -p $path_11_profile_viral/profile --profile --pattern -m 1 --keep";
+    print("Plot mapping data per base preferences [viral] \n\t $cmd \n");
+    `$cmd`;
+}
 
-print("Plot mapping data per base preferences [non viral]...");
-`perl $path_plot_map_data_base_preference -sam $path_07_all_non_viral_sam_sort -s 18 -e 35 -fa $path_07_all_non_viral_fa -pace 1 -p $path_11_profile_non_viral/profile --profile --pattern -m 1 --keep`;
+if ($n_all_hits_non_viral) {
+    $cmd = "perl $path_plot_map_data_base_preference -sam $path_07_all_non_viral_sam_sort -s 18 -e 35 -fa $path_07_all_non_viral_fa -pace 1 -p $path_11_profile_non_viral/profile --profile --pattern -m 1 --keep";
+    print("Plot mapping data per base preferences [non viral] \n\t $cmd \n");
+    `$cmd`;
+}
 
-print("Plot mapping data per base preferences [no hit]...");
-`perl $path_plot_map_data_base_preference -sam $path_07_dmnd_no_hits_sam_sort -s 18 -e 35 -fa $path_07_dmnd_no_hits_header_fa -pace 1 -p $path_11_profile_no_hits/profile --profile --pattern -m 1 --keep`;
+if ($n_all_no_hits) {
+    $cmd = "perl $path_plot_map_data_base_preference -sam $path_07_dmnd_no_hits_sam_sort -s 18 -e 35 -fa $path_07_dmnd_no_hits_header_fa -pace 1 -p $path_11_profile_no_hits/profile --profile --pattern -m 1 --keep";
+    print("Plot mapping data per base preferences [no hit] \n\t $cmd \n");
+    `$cmd`;
+}
 
 # -----------------------------------------------------------------------
 
@@ -1313,31 +1379,49 @@ my $path_12_no_hit_z_out_tab = "$path_12_no_hit_out_prefix.zscore.tab"; # no_hit
 
 my $path_12_feat_matrix = "$step12/Zscore_and_features_matrix.tab";
 
-# 
-# TODO: 2023-06-10 - Print some description for this...
-# 
+my $z_score_feat_args = "";
 
-print('Runnning sam 2 sam [viral]...');
-`perl $path_sam_2_sam_stranded -sam $path_07_all_viral_sam_sort -r $path_04_unmap_vector_bacters_fa -fa $path_07_all_viral_fa -p $path_12_viral_prefix`;
+if ($n_all_hits_viral) {
+    
+    print("Runnning sam 2 sam [viral] \n");
+    `perl $path_sam_2_sam_stranded -sam $path_07_all_viral_sam_sort -r $path_04_unmap_vector_bacters_fa -fa $path_07_all_viral_fa -p $path_12_viral_prefix`;
+    
+    print("Runnning z-score [viral] \n");
+    `perl $path_z_score_both_strands -sam $path_12_viral_k10_sam -fa $path_12_viral_strand_fa -p $path_12_viral_z_out_prefix`;
 
-print('Runnning sam 2 sam [nonviral]...');
-`perl $path_sam_2_sam_stranded -sam $path_07_all_non_viral_sam_sort -r $path_04_unmap_vector_bacters_fa -fa $path_07_all_non_viral_fa -p $path_12_non_viral_prefix`;
+    $z_score_feat_args .= " --viral=$path_12_viral_z_out_tab";
+}
 
-print('Runnning sam 2 sam [nohit]...');
-`perl $path_sam_2_sam_stranded -sam $path_07_dmnd_no_hits_sam_sort -r $path_04_unmap_vector_bacters_fa -fa $path_07_dmnd_no_hits_header_fa -p $path_12_no_hit_prefix`;
+if ($n_all_hits_non_viral) {
+    
+    print("Runnning sam 2 sam [non viral] \n");
+    `perl $path_sam_2_sam_stranded -sam $path_07_all_non_viral_sam_sort -r $path_04_unmap_vector_bacters_fa -fa $path_07_all_non_viral_fa -p $path_12_non_viral_prefix`;
+    
+    print("Runnning z-score [non viral] \n");
+    `perl $path_z_score_both_strands -sam $path_12_non_viral_k10_sam -fa $path_12_non_viral_strand_fa -p $path_12_non_viral_out_prefix`;
 
-print('Runnning z-score [nohit]...');
-`perl $path_z_score_both_strands -sam $path_12_viral_k10_sam -fa $path_12_viral_strand_fa -p $path_12_viral_z_out_prefix`;
+    $z_score_feat_args .= " --nonviral=$path_12_non_viral_z_out_tab";
+}
 
-print('Runnning z-score [nohit]...');
-`perl $path_z_score_both_strands -sam $path_12_non_viral_k10_sam -fa $path_12_non_viral_strand_fa -p $path_12_non_viral_out_prefix`;
+if ($n_all_no_hits) {
+    
+    print("Runnning sam 2 sam [nohit] \n");
+    `perl $path_sam_2_sam_stranded -sam $path_07_dmnd_no_hits_sam_sort -r $path_04_unmap_vector_bacters_fa -fa $path_07_dmnd_no_hits_header_fa -p $path_12_no_hit_prefix`;
 
-print('Runnning z-score [nohit]...');
-`perl $path_z_score_both_strands -sam $path_12_no_hit_k10_sam -fa $path_12_no_hit_strand_fa -p $path_12_no_hit_out_prefix`;
+    print("Runnning z-score [nohit] \n");
+    `perl $path_z_score_both_strands -sam $path_12_no_hit_k10_sam -fa $path_12_no_hit_strand_fa -p $path_12_no_hit_out_prefix`;
 
-print "Generating .tab feature matrices...";
-# R --no-save viral.stranded.out.zscore.tab non_viral.stranded.out.zscore.tab no_hit.stranded.out.zscore.tab < set_Zscore_features_matrix.R > formatiing_log
-`R --no-save $path_12_viral_z_out_tab $path_12_non_viral_z_out_tab $path_12_no_hit_z_out_tab $step12 < $path_z_score_feature > $path_12_z_out_tab_log`;
+    $z_score_feat_args .= " --nohit=$path_12_no_hit_z_out_tab";
+}
+
+if ($z_score_feat_args) {
+    
+    print "Generating .tab feature matrices...";
+    R --no-save viral.stranded.out.zscore.tab non_viral.stranded.out.zscore.tab no_hit.stranded.out.zscore.tab < set_Zscore_features_matrix.R > formatiing_log
+    `R --no-save $path_12_viral_z_out_tab $path_12_non_viral_z_out_tab $path_12_no_hit_z_out_tab $step12 < $path_z_score_feature > $path_12_z_out_tab_log`;
+
+    `Rscript $path_z_score_feature $z_score_feat_args --dir=$step12 > $path_12_z_out_tab_log`;
+}
 
 # -----------------------------------------------------------------------
 
@@ -1347,6 +1431,8 @@ $last_time = $current_time;
 
 print STDOUT $time_msg;
 print $time_msg;
+
+# die "\n\n -- END OF TEST -- \n\n";
 
 #######################################################################
 ### Classifying virus × EVEs ------------------------------------------
