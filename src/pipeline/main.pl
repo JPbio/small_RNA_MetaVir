@@ -257,12 +257,14 @@ print STDOUT $runningDetails . "\n";
 my $step2		="$exec_dir/02_filter_size_gaps_convertion";
 my $step3		="$exec_dir/03_mapping_vector";
 my $step4		="$exec_dir/04_getUnmapped";
-my $step5_fix	="$exec_dir/05_assembleUnmapped_fix";
-my $step5_opt	="$exec_dir/05_assembleUnmapped_opt";
-my $step5_opt_fix="$exec_dir/05_assembleUnmapped_opt_fix";
-my $step5_opt_20to23="$exec_dir/05_assembleUnmapped_opt_20to23";
-my $step5_opt_24to30="$exec_dir/05_assembleUnmapped_opt_24to30";
-my $step5_cap3  = "$exec_dir/05_cap3";
+
+my $step5_1_opt	="$exec_dir/05_1_assembleUnmapped_opt";
+my $step5_2_fix	="$exec_dir/05_2_assembleUnmapped_fix";
+my $step5_3_opt_fix = "$exec_dir/05_3_assembleUnmapped_opt_fix";
+my $step5_4_opt_20to23 = "$exec_dir/05_4_assembleUnmapped_opt_20to23";
+my $step5_5_opt_24to30 = "$exec_dir/05_5_assembleUnmapped_opt_24to30";
+my $step5_6_cap3  = "$exec_dir/05_6_cap3";
+
 my $step6		="$exec_dir/06_blast";
 my $step7		="$exec_dir/07_reportBlast";
 my $step11		="$exec_dir/11_profiles";
@@ -314,23 +316,23 @@ if (not -e $step3) {
 if (not -e $step4) {
     `mkdir $step4`;
 }
-if (not -e $step5_fix) {
-    `mkdir $step5_fix`
+if (not -e $step5_1_opt) {
+    `mkdir $step5_1_opt`;
 }
-if (not -e $step5_opt) {
-    `mkdir $step5_opt`;
+if (not -e $step5_2_fix) {
+    `mkdir $step5_2_fix`
 }
-if (not -e $step5_opt_fix) {
-    `mkdir $step5_opt_fix`;
+if (not -e $step5_3_opt_fix) {
+    `mkdir $step5_3_opt_fix`;
 }
-if (not -e $step5_cap3) {
-    `mkdir $step5_cap3`;
+if (not -e $step5_4_opt_20to23) {
+    `mkdir $step5_4_opt_20to23`;
 }
-if (not -e $step5_opt_20to23) {
-    `mkdir $step5_opt_20to23`;
+if (not -e $step5_5_opt_24to30) {
+    `mkdir $step5_5_opt_24to30`;
 }
-if (not -e $step5_opt_24to30) {
-    `mkdir $step5_opt_24to30`;
+if (not -e $step5_6_cap3) {
+    `mkdir $step5_6_cap3`;
 }
 if (not -e $step6) {
     `mkdir $step6`;
@@ -611,30 +613,30 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_05_opt_contigs_final_fa = "$step5_opt/contigs.final.fasta";
+my $path_05_1_opt_contigs_final_fa = "$step5_1_opt/contigs.final.fasta";
 
-my $path_05_opt_run1_dir = "$step5_opt/run1";
-my $path_05_opt_run1_contigs_fa = "$path_05_opt_run1_dir/contigs.fa"; # $step5_opt/run1/contigs.fa
+my $path_05_1_opt_run1_dir = "$step5_1_opt/run1";
+my $path_05_1_opt_run1_contigs_fa = "$path_05_1_opt_run1_dir/contigs.fa"; # $step5_1_opt/run1/contigs.fa
 
-my $path_05_opt_run2_dir = "$step5_opt/run2";
-my $path_05_opt_run2_scaffolds_fa = "$path_05_opt_run2_dir/scaffolds.fasta"; # $step5_opt/run2/scaffolds.fasta
+my $path_05_1_opt_run2_dir = "$step5_1_opt/run2";
+my $path_05_1_opt_run2_scaffolds_fa = "$path_05_1_opt_run2_dir/scaffolds.fasta"; # $step5_1_opt/run2/scaffolds.fasta
 
 print "\n#[RUNNING VELVET OPTIMIZER]\n";
 print "\t#Running step 6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
 
-my $exec6_1 = "velvetoptimiser --d $path_05_opt_run1_dir --t $process --s 13 --e 19 --f '-short -fasta $path_04_unmap_trim_filter_fa' --a $process 2>>$path_warns";
+my $exec6_1 = "velvetoptimiser --d $path_05_1_opt_run1_dir --t $process --s 13 --e 19 --f '-short -fasta $path_04_unmap_trim_filter_fa' --a $process 2>>$path_warns";
 
 print "\n[STEP 06.1]\n\t $exec6_1\n";
 `$exec6_1`;
 
 print "\t#Running step 6_4 [ SPADES ] \n";
-my $exec6_4 = "spades -s $path_04_unmap_trim_filter_fa --careful --only-assembler -t $process -k 13,15,17,19 -o $path_05_opt_run2_dir";
+my $exec6_4 = "spades -s $path_04_unmap_trim_filter_fa --careful --only-assembler -t $process -k 13,15,17,19 -o $path_05_1_opt_run2_dir";
 
 print "\n[STEP 06.4]\n\t $exec6_4\n";
 `$exec6_4`;
 
 print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_5 = "perl $path_merge_contigs -contig1 $path_05_opt_run1_contigs_fa -contig2 $path_05_opt_run2_scaffolds_fa -output $path_05_opt_contigs_final_fa ";
+my $exec6_5 = "perl $path_merge_contigs -contig1 $path_05_1_opt_run1_contigs_fa -contig2 $path_05_1_opt_run2_scaffolds_fa -output $path_05_1_opt_contigs_final_fa ";
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_5`;
@@ -660,34 +662,34 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_05_fix_contigs_final_fa = "$step5_fix/contigs.final.fasta";
+my $path_05_2_fix_contigs_final_fa = "$step5_2_fix/contigs.final.fasta";
 
-my $path_05_fix_run1_dir = "$step5_fix/run1";
-my $path_05_fix_run1_contigs_fa = "$path_05_fix_run1_dir/contigs.fa"; # $step5_fix/run1/contigs.fa
+my $path_05_2_fix_run1_dir = "$step5_2_fix/run1";
+my $path_05_2_fix_run1_contigs_fa = "$path_05_2_fix_run1_dir/contigs.fa"; # $step5_2_fix/run1/contigs.fa
 
-my $path_05_fix_run2_dir = "$step5_fix/run2";
-my $path_05_fix_run2_scaffolds_fa = "$path_05_fix_run2_dir/scaffolds.fasta"; # $step5_fix/run2/scaffolds.fasta
+my $path_05_2_fix_run2_dir = "$step5_2_fix/run2";
+my $path_05_2_fix_run2_scaffolds_fa = "$path_05_2_fix_run2_dir/scaffolds.fasta"; # $step5_2_fix/run2/scaffolds.fasta
 
 print "\n[RUNNING DEFAULT VELVET]\n";
 print "\t#Running step 6 [ Assemble unmapped 21 nt - velvet hash $hash ]\n";
 
-my $exec6 = "velveth $path_05_fix_run1_dir $hash -fasta -short $path_04_unmap_trim_filter_fa 2>>$path_warns";
+my $exec6 = "velveth $path_05_2_fix_run1_dir $hash -fasta -short $path_04_unmap_trim_filter_fa 2>>$path_warns";
 
 print "\n[STEP 06]\n\t $exec6\n";
 `$exec6`;
 
-`velvetg $path_05_fix_run1_dir -exp_cov auto -cov_cutoff auto 2>$path_warns`;
+`velvetg $path_05_2_fix_run1_dir -exp_cov auto -cov_cutoff auto 2>$path_warns`;
 
-`mkdir $path_05_fix_run2_dir`;
+`mkdir $path_05_2_fix_run2_dir`;
 
 print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-my $exec6_2 = "spades -s $path_04_unmap_trim_filter_fa --careful --only-assembler -t $process  -k $hash -o $path_05_fix_run2_dir";
+my $exec6_2 = "spades -s $path_04_unmap_trim_filter_fa --careful --only-assembler -t $process  -k $hash -o $path_05_2_fix_run2_dir";
 
 print "\n[STEP 06.2]\n\t $exec6_2\n";
 `$exec6_2`;
 
 print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
-$exec6_5 = "perl $path_merge_contigs -contig1 $path_05_fix_run1_contigs_fa -contig2 $path_05_fix_run2_scaffolds_fa -output $path_05_fix_contigs_final_fa";
+$exec6_5 = "perl $path_merge_contigs -contig1 $path_05_2_fix_run1_contigs_fa -contig2 $path_05_2_fix_run2_scaffolds_fa -output $path_05_2_fix_contigs_final_fa";
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_5`;
@@ -713,30 +715,30 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_05_opt_fix_contigs_final_fa = "$step5_opt_fix/contigs.final.fasta";
+my $path_05_3_opt_fix_contigs_final_fa = "$step5_3_opt_fix/contigs.final.fasta";
 
-my $path_05_opt_fix_run1_dir = "$step5_opt_fix/run1";
-my $path_05_opt_fix_run1_contigs_fa = "$path_05_opt_fix_run1_dir/contigs.fa"; # $step5_opt_fix/run1/contigs.fa
+my $path_05_3_opt_fix_run1_dir = "$step5_3_opt_fix/run1";
+my $path_05_3_opt_fix_run1_contigs_fa = "$path_05_3_opt_fix_run1_dir/contigs.fa"; # $step5_3_opt_fix/run1/contigs.fa
 
-my $path_05_opt_fix_run2_dir = "$step5_opt_fix/run2";
-my $path_05_opt_fix_run2_scaffolds_fa = "$path_05_opt_fix_run2_dir/scaffolds.fasta"; # $step5_opt_fix/run2/scaffolds.fasta
+my $path_05_3_opt_fix_run2_dir = "$step5_3_opt_fix/run2";
+my $path_05_3_opt_fix_run2_scaffolds_fa = "$path_05_3_opt_fix_run2_dir/scaffolds.fasta"; # $step5_3_opt_fix/run2/scaffolds.fasta
 
 print "\n[VELVET OPTIMISER HASH ONLY 15]\n";
 print "\t#Running step 6_6 [ Assemble unmapped 21 nt - velvetOptimser.pl ]\n";
-my $exec6_6 = "velvetoptimiser --d $path_05_opt_fix_run1_dir --t $process --s $hash --e $hash --f '-short -fasta $path_04_unmap_trim_filter_fa' --a 2>>$path_warns";
+my $exec6_6 = "velvetoptimiser --d $path_05_3_opt_fix_run1_dir --t $process --s $hash --e $hash --f '-short -fasta $path_04_unmap_trim_filter_fa' --a 2>>$path_warns";
 
 print "\n[STEP 06.1]\n\t $exec6_6\n";
 `$exec6_6`;
 
-`mkdir $step5_opt_fix/run2`;
+`mkdir $path_05_3_opt_fix_run2_dir`;
 print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-my $exec6_6_2 = "spades -s $path_04_unmap_trim_filter_fa --careful --only-assembler -t $process  -k 15 -o $step5_opt_fix/run2 ";
+my $exec6_6_2 = "spades -s $path_04_unmap_trim_filter_fa --careful --only-assembler -t $process  -k 15 -o $path_05_3_opt_fix_run2_dir ";
 
 print "\n[STEP 06.2]\n\t $exec6_2\n";
 `$exec6_6_2`;
 
 print "\t#Running step 6_9 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_9 = "perl $path_merge_contigs -contig1 $path_05_opt_fix_run1_contigs_fa -contig2 $path_05_opt_fix_run2_scaffolds_fa -output $path_05_opt_fix_contigs_final_fa";
+my $exec6_9 = "perl $path_merge_contigs -contig1 $path_05_3_opt_fix_run1_contigs_fa -contig2 $path_05_3_opt_fix_run2_scaffolds_fa -output $path_05_3_opt_fix_contigs_final_fa";
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_9`;
@@ -762,30 +764,30 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_05_opt_20_23_contigs_final_fa = "$step5_opt_20to23/contigs.final.fasta";
+my $path_05_4_opt_20_23_contigs_final_fa = "$step5_4_opt_20to23/contigs.final.fasta";
 
-my $path_05_opt_20_23_run1_dir = "$step5_opt_20to23/run1";
-my $path_05_opt_20_23_run1_contigs_fa = "$path_05_opt_20_23_run1_dir/contigs.fa"; # $step5_opt_20to23/run1/contigs.fa
+my $path_05_4_opt_20_23_run1_dir = "$step5_4_opt_20to23/run1";
+my $path_05_4_opt_20_23_run1_contigs_fa = "$path_05_4_opt_20_23_run1_dir/contigs.fa"; # $step5_4_opt_20to23/run1/contigs.fa
 
-my $path_05_opt_20_23_run2_dir = "$step5_opt_20to23/run2";
-my $path_05_opt_20_23_run2_scaffolds_fa = "$path_05_opt_20_23_run2_dir/scaffolds.fasta"; # $step5_opt_20to23/run2/scaffolds.fasta
+my $path_05_4_opt_20_23_run2_dir = "$step5_4_opt_20to23/run2";
+my $path_05_4_opt_20_23_run2_scaffolds_fa = "$path_05_4_opt_20_23_run2_dir/scaffolds.fasta"; # $step5_4_opt_20to23/run2/scaffolds.fasta
 
 print "\n[VELVET OPTIMISER HASH ONLY 15 - 20-23nt]\n";
 print "\t#Running step 6_10 [ Assemble unmapped 20-23nt nt - velvetOptimser.pl ]\n";
-my $exec6_10 = "velvetoptimiser --d $path_05_opt_20_23_run1_dir --t $process --s $hash --e $hash --f '-short -fasta $path_04_unmap_trim_filter_20_23_fa' --a 2>>$path_warns";
+my $exec6_10 = "velvetoptimiser --d $path_05_4_opt_20_23_run1_dir --t $process --s $hash --e $hash --f '-short -fasta $path_04_unmap_trim_filter_20_23_fa' --a 2>>$path_warns";
 
 print "\n[STEP 06.1]\n\t $exec6_10\n";
 `$exec6_10`;
 
-`mkdir $path_05_opt_20_23_run2_dir`;
+`mkdir $path_05_4_opt_20_23_run2_dir`;
 print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-my $exec6_10_2 = "spades -s $path_04_unmap_trim_filter_20_23_fa  --careful --only-assembler -t $process  -k $hash -o $path_05_opt_20_23_run2_dir";
+my $exec6_10_2 = "spades -s $path_04_unmap_trim_filter_20_23_fa  --careful --only-assembler -t $process  -k $hash -o $path_05_4_opt_20_23_run2_dir";
 
 print "\n[STEP 06.10.2]\n\t $exec6_2\n";
 `$exec6_10_2`;
 
 print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
-my $exec6_13 = "perl $path_merge_contigs -contig1 $path_05_opt_20_23_run1_contigs_fa -contig2 $path_05_opt_20_23_run2_scaffolds_fa -output $path_05_opt_20_23_contigs_final_fa ";
+my $exec6_13 = "perl $path_merge_contigs -contig1 $path_05_4_opt_20_23_run1_contigs_fa -contig2 $path_05_4_opt_20_23_run2_scaffolds_fa -output $path_05_4_opt_20_23_contigs_final_fa ";
 
 print "\n[STEP 06.13]\n\t $exec6_13\n";
 `$exec6_13`;
@@ -811,8 +813,8 @@ print $time_msg;
 
 # # -----------------------------------------------------------------------
 
-my $path_05_cap3_final_24_30_fa = "$step5_opt_24to30/contigs.final.fasta";
-my $path_05_cap3_gt200_fa = "$step5_cap3/contigs_merged.final.gt200.fasta";
+my $path_05_5_cap3_final_24_30_fa = "$step5_5_opt_24to30/contigs.final.fasta";
+my $path_05_5_cap3_gt200_fa = "$step5_6_cap3/contigs_merged.final.gt200.fasta";
 
 #
 # TODO: 2023-05-31 - Test this condition
@@ -823,21 +825,21 @@ my $path_05_cap3_gt200_fa = "$step5_cap3/contigs_merged.final.gt200.fasta";
 #     print "\n[VELVET OPTIMISER - 24-30nt]\n";
 #     print "\t#Running step 6_10 [ Assemble unmapped 24-30nt nt - velvetOptimser.pl ]\n";
     
-#     my $exec62_10 = "velvetoptimiser --d $step5_opt_24to30/run1 --t $process --s 15 --e 17 --f '-short -fasta $path_04_unmap_trim_filter_24_30_fa' --a 2>>$path_warns";
+#     my $exec62_10 = "velvetoptimiser --d $step5_5_opt_24to30/run1 --t $process --s 15 --e 17 --f '-short -fasta $path_04_unmap_trim_filter_24_30_fa' --a 2>>$path_warns";
     
 #     print "\nSTEP62_10\n\t $exec62_10\n";
 #     `$exec62_10`;
 
-#     `mkdir $step5_opt_24to30/run2 `;
+#     `mkdir $step5_5_opt_24to30/run2 `;
 
 #     print "\t#Running SPADES fixed hash  [ SPADES ] \n";
-#     my $exec6_10_3 = "spades -s $path_04_unmap_trim_filter_24_30_fa --careful --only-assembler -t $process  -k 15,17 -o $step5_opt_24to30/run2 ";
+#     my $exec6_10_3 = "spades -s $path_04_unmap_trim_filter_24_30_fa --careful --only-assembler -t $process  -k 15,17 -o $step5_5_opt_24to30/run2 ";
     
 #     print "\n[STEP 06.10_3\n\t $exec6_2\n";
 #     `$exec6_10_3`;
 
 #     print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
-#     my $exec62_13 = "perl $path_merge_contigs -contig1 $step5_opt_24to30/run1/contigs.fa -contig2 $step5_opt_24to30/run2/scaffolds.fasta -output $path_05_cap3_final_24_30_fa ";
+#     my $exec62_13 = "perl $path_merge_contigs -contig1 $step5_5_opt_24to30/run1/contigs.fa -contig2 $step5_5_opt_24to30/run2/scaffolds.fasta -output $path_05_5_cap3_final_24_30_fa ";
 #     print "\nSTEP62_13\n\t $exec62_13\n";
 #     `$exec62_13`;
 # }
@@ -863,37 +865,37 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-my $path_05_cap3_all_fa = "$step5_cap3/all_contigs.fasta";
+my $path_05_6_cap3_all_fa = "$step5_6_cap3/all_contigs.fasta";
 
 if (not defined($deg)) {
-    `touch $path_05_cap3_final_24_30_fa`;
+    `touch $path_05_5_cap3_final_24_30_fa`;
 }
 
 print "\n[MERGING CONTIGS AND RUNNING CAP3]\n";
 print "\t#Running STEP [CAT] Concatenating contigs...\n";
-my $exec_cat = "cat $path_05_opt_20_23_contigs_final_fa $path_05_opt_fix_contigs_final_fa  $path_05_fix_contigs_final_fa $path_05_opt_contigs_final_fa $path_05_cap3_final_24_30_fa > $path_05_cap3_all_fa";
+my $exec_cat = "cat $path_05_4_opt_20_23_contigs_final_fa $path_05_3_opt_fix_contigs_final_fa  $path_05_2_fix_contigs_final_fa $path_05_1_opt_contigs_final_fa $path_05_5_cap3_final_24_30_fa > $path_05_6_cap3_all_fa";
 
 print "\n[STEP 06.CAT] \n\t $exec_cat\n";
 `$exec_cat`;
 
 print "\t#Running step CAP3 [ assembly contigs from different assemblies ] \n";
-my $exec_cap3 = "cap3 $path_05_cap3_all_fa  > $step5_cap3/log.cap3";
+my $exec_cap3 = "cap3 $path_05_6_cap3_all_fa  > $step5_6_cap3/log.cap3";
 print "\nSTEP CAP3\n\t $exec_cap3\n";
 `$exec_cap3`;
 
 print "\t#Running [ Concatenning contigs and singlets from CAP3]\n";
-my $exec_cap3_1 = "cat $path_05_cap3_all_fa.cap.contigs $path_05_cap3_all_fa.cap.singlets > $step5_cap3/contigs_merged.final.fasta";
+my $exec_cap3_1 = "cat $path_05_6_cap3_all_fa.cap.contigs $path_05_6_cap3_all_fa.cap.singlets > $step5_6_cap3/contigs_merged.final.fasta";
 
 print "\n[STEP 06.CAT]\n\t $exec_cap3_1\n";
 `$exec_cap3_1`;
 
 print "\t#Running step 6_7 [ selecting contigs larger than n50 - calcN50.pl ] \n";
-my $step6_7 = "perl $path_fix_cap3_contigs -i $step5_cap3/contigs_merged.final.fasta -s 50  -p $step5_cap3/contigs_merged.final";
+my $step6_7 = "perl $path_fix_cap3_contigs -i $step5_6_cap3/contigs_merged.final.fasta -s 50  -p $step5_6_cap3/contigs_merged.final";
 
 print "\n[STEP 06.7]\n\t $step6_7\n";
 `$step6_7`;
 
-my $countAssembledContigs = `grep -c '>' $step5_cap3/contigs_merged.final.gt50.fasta`;
+my $countAssembledContigs = `grep -c '>' $step5_6_cap3/contigs_merged.final.gt50.fasta`;
 chomp($countAssembledContigs);
 
 # print metrics "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
@@ -901,12 +903,12 @@ chomp($countAssembledContigs);
 print "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
 
 print "[FILTER CONTIGS gt 200 nt]\n";
-my $exec_FC2 = "python3 $path_filter_fasta_by_size $step5_cap3/contigs_merged.final.gt50.fasta 200 1000000 $path_05_cap3_gt200_fa";
+my $exec_FC2 = "python3 $path_filter_fasta_by_size $step5_6_cap3/contigs_merged.final.gt50.fasta 200 1000000 $path_05_5_cap3_gt200_fa";
 
 print "\n[STEP 05.2]\n\t $exec_FC2\n";
 `$exec_FC2`;
 
-$countAssembledContigs = `grep -c '>' $path_05_cap3_gt200_fa`;
+$countAssembledContigs = `grep -c '>' $path_05_5_cap3_gt200_fa`;
 chomp($countAssembledContigs);
 
 # print metrics "# Contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
@@ -988,7 +990,7 @@ my $path_07_aux_non_viral = "$step7/aux_nonviral";
 
 print "\n[BlastN contigs gt 200]\n";
 print "\t#Running step 10_111 [ Blast against NT - blast+ blastn ]\n";
-my $exec10_111 = "blastn -query $path_05_cap3_gt200_fa -db ".REF_BLAST_DB_NT."/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $path_06_blastn_merge_gt200_1e5  -num_threads $process";
+my $exec10_111 = "blastn -query $path_05_5_cap3_gt200_fa -db ".REF_BLAST_DB_NT."/nt -num_descriptions 5 -num_alignments 5 -evalue 1e-5 -out $path_06_blastn_merge_gt200_1e5  -num_threads $process";
 
 print "\nSTEP10_111\n\t $exec10_111\n";
 `$exec10_111`;
@@ -1000,10 +1002,10 @@ print "\nSTEP10_112\n\t $exec10_112\n";
 `$exec10_112`;
 
 print "\n Extracting contigs all Hits blastn 1e-5... \n";
-`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200_fa -q "" -p  $path_07_bN_analyze_prefix > $path_07_blastn_analyse`;
+`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_5_cap3_gt200_fa -q "" -p  $path_07_bN_analyze_prefix > $path_07_blastn_analyse`;
 
 print "\n Extracting contigs viral blastn 1e-5...\n";
-`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_cap3_gt200_fa -q "virus" -p  $path_07_bN_analyse_blastn_prefix > $path_07_blastn_analize_virus`;
+`perl $path_analyse_contigs_blastn -i $path_07_blastn_1e5_report  -f $path_05_5_cap3_gt200_fa -q "virus" -p  $path_07_bN_analyse_blastn_prefix > $path_07_blastn_analize_virus`;
 
 print "\n Extracting contigs nonviral blastn 1e-5...\n";
 `grep -v -i "virus" $path_07_bN_analize_contigs_fa | grep '>' | cut -f1 -d " " >  $path_07_aux_non_viral`;
@@ -1036,7 +1038,7 @@ $n_blastn_hits_non_viral = int($n_blastn_hits_non_viral);
 print "\n# Number of contigs (blastN) [non viral]\t".$n_blastn_hits_non_viral."\n";
 
 print "\n[Extracting contigs no hit blastn 1e-5]\n";
-my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $path_05_cap3_gt200_fa -blast $path_07_blastn_1e5_report -out $path_06_blastn_no_hit_1e5_fa";
+my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $path_05_5_cap3_gt200_fa -blast $path_07_blastn_1e5_report -out $path_06_blastn_no_hit_1e5_fa";
 
 print "\nSTEP10_113\n\t $exec10_113\n";
 `$exec10_113`;
