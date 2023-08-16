@@ -1034,6 +1034,7 @@ my $n_blastn_hits_non_viral = `grep -c '>' $path_07_bN_analize_non_viral_fa`;
 chomp($n_blastn_hits_non_viral);
 $n_blastn_hits_non_viral = int($n_blastn_hits_non_viral);
 print "\n# Number of contigs (blastN) [non viral]\t".$n_blastn_hits_non_viral."\n";
+
 print "\n[Extracting contigs no hit blastn 1e-5]\n";
 my $exec10_113 = "perl $path_extract_seqs_no_hit_blast -seq $path_05_cap3_gt200_fa -blast $path_07_blastn_1e5_report -out $path_06_blastn_no_hit_1e5_fa";
 
@@ -1044,6 +1045,7 @@ my $n_blastn_no_hits = `grep -c '>' $path_06_blastn_no_hit_1e5_fa`;
 chomp($n_blastn_no_hits);
 $n_blastn_no_hits = int($n_blastn_no_hits);
 print "# Number of contigs (blastN) [no hits]\t".$n_blastn_no_hits."\n";
+
 `cat $path_07_bN_analize_viral_fa | perl -pi -e 's/>(\\S+) (\\S+) (\\S+) (\\S+).+/>blastN_\$1_\$2_\$3_\$4/g' > $path_07_blastn_virus_fa`;
 
 # -----------------------------------------------------------------------
@@ -1069,59 +1071,82 @@ print $time_msg;
 
 # -----------------------------------------------------------------------
 
-print "\n[Diamond (BlastX) contigs gt 200]\n";
-print "\t# Running step 9 [ Diamond-Blast against NR ]\n";
+if ($n_blastn_no_hits) {
 
-my $exec9 = "diamond blastx -q $path_06_blastn_no_hit_1e5_fa -d ".REF_DIAMOND_NR." -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $path_07_dmnd_out --un $path_07_dmnd_no_hits_fa --unfmt fasta --al $path_07_dmnd_hits_fa --alfmt fasta 2>  $path_07_dmnd_log";
+    print "\n[Diamond (BlastX) contigs gt 200]\n";
+    print "\t# Running step 9 [ Diamond-Blast against NR ]\n";
 
-print "\nSTEP9\n\t $exec9\n";
-`$exec9`;
+    my $exec9 = "diamond blastx -q $path_06_blastn_no_hit_1e5_fa -d ".REF_DIAMOND_NR." -k 5 -p $process -e 0.001 -f 0 -c 1 -b 20 --very-sensitive -o $path_07_dmnd_out --un $path_07_dmnd_no_hits_fa --unfmt fasta --al $path_07_dmnd_hits_fa --alfmt fasta 2>  $path_07_dmnd_log";
 
-print "\t# Filtering Diamond results... ]\n";   
-my $exec9_11 = "$path_filter_diamond -f $path_07_dmnd_hits_fa -o $path_07_dmnd_out -d $step7";
+    print "\nSTEP9\n\t $exec9\n";
+    `$exec9`;
 
-print "\nSTEP9_11\n\t $exec9_11\n";
-`$exec9_11`;
+    print "\t# Filtering Diamond results... ]\n";   
+    my $exec9_11 = "$path_filter_diamond -f $path_07_dmnd_hits_fa -o $path_07_dmnd_out -d $step7";
 
-# Replace '\t' characters with actual tabs
-`sed -i 's/\\\\t/\\t/g' $path_07_dmnd_no_hits_fa`;
+    print "\nSTEP9_11\n\t $exec9_11\n";
+    `$exec9_11`;
 
-# Make a 'linear' version of 'no hits' fasta (join all pieces for each sequence)
-`fasta_formatter -i $path_07_dmnd_no_hits_fa -o $path_07_dmnd_no_hits_linear_fa`;
-# `rm $path_07_dmnd_no_hits_fa`;
+    # Replace '\t' characters with actual tabs
+    `sed -i 's/\\\\t/\\t/g' $path_07_dmnd_no_hits_fa`;
 
-# Add prefix to all contig names
-`for file in $step7/*.fasta; do
-    if [ -f "\$file" ]; then
-        filename=\$(basename "\$file")
-        filename_without_ext="\${filename%.*}"
-        sed 's/^>/>${lib_prefix}_/' $step7/\$filename > $step7/\${filename_without_ext}.header.fasta
-    fi
-done
-`;
+    # Make a 'linear' version of 'no hits' fasta (join all pieces for each sequence)
+    `fasta_formatter -i $path_07_dmnd_no_hits_fa -o $path_07_dmnd_no_hits_linear_fa`;
+    # `rm $path_07_dmnd_no_hits_fa`;
+
+    # Add prefix to all contig names
+    `for file in $step7/*.fasta; do
+        if [ -f "\$file" ]; then
+            filename=\$(basename "\$file")
+            filename_without_ext="\${filename%.*}"
+            sed 's/^>/>${lib_prefix}_/' $step7/\$filename > $step7/\${filename_without_ext}.header.fasta
+        fi
+    done
+    `;
+}
 
 # Compute number of contigs (diamond) [hits]
+if (not -e $path_07_dmnd_hits_fa) {
+    `touch $path_07_dmnd_hits_fa`;
+}
+
 my $n_dmnd_hits = `grep -c '>' $path_07_dmnd_hits_fa`;
 chomp($n_dmnd_hits);
 $n_dmnd_hits = int($n_dmnd_hits);
+
 print "# Number of contigs (diamond) [hits]\t".$n_dmnd_hits."\n";
 
 # Compute number of contigs (diamond) [viral]
+if (not -e $path_07_dmnd_viral_header_fa) {
+    `touch $path_07_dmnd_viral_header_fa`;
+}
+
 my $n_dmnd_hits_viral = `grep -c '>' $path_07_dmnd_viral_header_fa`;
 chomp($n_dmnd_hits_viral);
 $n_dmnd_hits_viral = int($n_dmnd_hits_viral);
+
 print "# Number of contigs (diamond) [viral]\t".$n_dmnd_hits_viral."\n";
 
 # Compute number of contigs (diamond) [non viral]
+if (not -e $path_07_dmnd_non_viral_header_fa) {
+    `touch $path_07_dmnd_non_viral_header_fa`;
+}
+
 my $n_dmnd_hits_non_viral = `grep -c '>' $path_07_dmnd_non_viral_header_fa`;
 chomp($n_dmnd_hits_non_viral);
 $n_dmnd_hits_non_viral = int($n_dmnd_hits_non_viral);
+
 print "# Number of contigs (diamond) [non viral]\t".$n_dmnd_hits_non_viral."\n";
 
 # Compute number of contigs (diamond) [no hits]
+if (not -e $path_07_dmnd_no_hits_fa) {
+    `touch $path_07_dmnd_no_hits_fa`;
+}
+
 my $n_dmnd_no_hits = `grep -c '>' $path_07_dmnd_no_hits_fa`;
 chomp($n_dmnd_no_hits);
 $n_dmnd_no_hits = int($n_dmnd_no_hits);
+
 print "# Number of contigs (diamond) [no hits]\t".$n_dmnd_no_hits."\n";
 
 # -----------------------------------------------------------------------
@@ -1415,12 +1440,10 @@ if ($n_all_no_hits) {
 }
 
 if ($z_score_feat_args) {
-    
     print "Generating .tab feature matrices...";
-    R --no-save viral.stranded.out.zscore.tab non_viral.stranded.out.zscore.tab no_hit.stranded.out.zscore.tab < set_Zscore_features_matrix.R > formatiing_log
-    `R --no-save $path_12_viral_z_out_tab $path_12_non_viral_z_out_tab $path_12_no_hit_z_out_tab $step12 < $path_z_score_feature > $path_12_z_out_tab_log`;
-
-    `Rscript $path_z_score_feature $z_score_feat_args --dir=$step12 > $path_12_z_out_tab_log`;
+    $cmd = "Rscript $path_z_score_feature $z_score_feat_args --dir=$step12 > $path_12_z_out_tab_log";
+    print("\n\t$cmd");
+    `$cmd`;
 }
 
 # -----------------------------------------------------------------------
