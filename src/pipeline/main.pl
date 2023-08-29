@@ -228,7 +228,7 @@ Start Time: $time_start_str
 > Reference: '$hostgenome';
 > si: '$si';
 > se: '$se';
-> si: hash:'$hash';
+> si: '$hash';
 > Execution ID: '$exec_id';
 > Execution Folder: '$exec_dir';
 > Lib Prefix: '$lib_prefix';
