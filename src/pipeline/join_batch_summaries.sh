@@ -1,8 +1,18 @@
-dir_root_libs="/small-rna-metavir/src/runs"
-dir_summaries="/small-rna-metavir/src/run-summaries"
+#
+# TODO: 23-08-31 - Only keep inside image paths
+#
+dir_root_libs=""
+dir_summaries=""
+path_output="./run-summaries.tar.gz"
 
-min_n=1
-max_n=6
+server_name='aws1'
+
+min_n=5
+max_n=5
+
+if [ ! -d "$dir_summaries" ]; then
+    mkdir $dir_summaries
+fi
 
 # Loop through batches
 for ((i=min_n; i<=max_n; i++))
@@ -28,7 +38,7 @@ do
         fi
 
         # Create sumary dir
-        path_summary_dir="$dir_summaries/$batch_name-$exec_id"
+        path_summary_dir="$dir_summaries/$server_name-$batch_name-$exec_id"
         # echo "path_summary_dir: '$path_summary_dir'"
 
         if [ ! -d "$path_summary_dir" ]; then
@@ -48,3 +58,5 @@ do
         
     done
 done
+
+tar -czvf $path_output $dir_summaries

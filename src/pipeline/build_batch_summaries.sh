@@ -36,7 +36,7 @@ do
         
         echo "" > $path_exec_summary_lines
         echo "batch_name: $batch_name" > $path_exec_summary
-        echo "server_name: $server_name" > $path_exec_summary
+        echo "server_name: $server_name" >> $path_exec_summary
 
         # Grab lines of interest: Execution info
         path_ref_line=`grep "^> Reference:" $path_exec_log | tail -n 1`
@@ -77,7 +77,9 @@ do
 
         # Input lib
         path_input_line=`grep "^> Reads:" $path_exec_log | tail -n 1`
-        path_input=`echo "$path_input_line" | grep -oE "'[^']+'" | awk -F"'" '{print $2}'`
+        path_input_img=`echo "$path_input_line" | grep -oE "'[^']+'" | awk -F"'" '{print $2}'`
+        path_input_base=`echo "$path_input_img" | cut -f 6 -d "/"`
+        path_input="$dir_AUX/$path_input_base"
         echo $path_input_line >> $path_exec_summary_lines
         echo "path_input: $path_input" >> $path_exec_summary
         
