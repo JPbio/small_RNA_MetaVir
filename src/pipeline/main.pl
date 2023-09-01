@@ -26,9 +26,14 @@ sub getTimeDiff {
 }
 
 sub getTimeStr {
-    my $time = $_[0] // Time::HiRes::gettimeofday();
+    
+    my $time = $_[0] or die "Must provide time";
+    my $isFullDate = $_[1] // 1;
+    
     my $time_ms = 1000 * ($time - int($time));
-    my $time_str = strftime("%H:%M:%S", localtime($time)) . sprintf ":%03d", ($time_ms);
+    my $dtTemplate = $isFullDate ? "%Y-%m-%d %H:%M:%S" : "%H:%M:%S";
+    my $time_str = strftime($dtTemplate, localtime($time)) . sprintf ":%03d", ($time_ms);
+    
     return $time_str;
 }
 
@@ -56,7 +61,7 @@ sub getStepTimeEndMsg {
 
     my $t0_str = getTimeStr($t0);
     my $t1_str = getTimeStr($t1);
-    my $time_diff_str = getTimeStr(getTimeDiff($t0, $t1));
+    my $time_diff_str = getTimeStr(getTimeDiff($t0, $t1), 0);
 
     return "
 
@@ -1095,17 +1100,17 @@ if ($n_blastn_no_hits) {
     # Make a 'linear' version of 'no hits' fasta (join all pieces for each sequence)
     `fasta_formatter -i $path_07_dmnd_no_hits_fa -o $path_07_dmnd_no_hits_linear_fa`;
     # `rm $path_07_dmnd_no_hits_fa`;
-
-    # Add prefix to all contig names
-    `for file in $step7/*.fasta; do
-        if [ -f "\$file" ]; then
-            filename=\$(basename "\$file")
-            filename_without_ext="\${filename%.*}"
-            sed 's/^>/>${lib_prefix}_/' $step7/\$filename > $step7/\${filename_without_ext}.header.fasta
-        fi
-    done
-    `;
 }
+
+# Add prefix to all contig names
+`for file in $step7/*.fasta; do
+    if [ -f "\$file" ]; then
+        filename=\$(basename "\$file")
+        filename_without_ext="\${filename%.*}"
+        sed 's/^>/>${lib_prefix}_/' $step7/\$filename > $step7/\${filename_without_ext}.header.fasta
+    fi
+done
+`;
 
 # Compute number of contigs (diamond) [hits]
 if (not -e $path_07_dmnd_hits_fa) {
@@ -1492,7 +1497,7 @@ print $time_msg;
 
 $current_time = Time::HiRes::gettimeofday();
 $time_diff = getTimeDiff($time_start, $current_time);
-my $time_elapsed_str = getTimeStr($time_diff);
+my $time_elapsed_str = getTimeStr($time_diff, 0);
 
 my $msg_finish = "
 
