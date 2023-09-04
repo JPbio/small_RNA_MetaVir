@@ -385,6 +385,8 @@ print $runningDetails;
 
 sub finishSuccesfully {
 
+    my $final_msg = $_[0];
+
     $current_time = Time::HiRes::gettimeofday();
     $time_diff = getTimeDiff($time_start, $current_time);
     my $time_elapsed_str = getTimeStr($time_diff, 0);
@@ -396,10 +398,19 @@ sub finishSuccesfully {
 
     ";
 
+    # Print final messages to log file
+    if (defined($final_msg)) {
+        print $final_msg;
+    }
     print $msg_finish;
     close($LOG_FH);
 
+    # Print final messages to std out
+    if (defined($final_msg)) {
+        print STDOUT "$final_msg \n";
+    }
     print STDOUT "$msg_finish \n";
+    
     exit 0;
 }
 
