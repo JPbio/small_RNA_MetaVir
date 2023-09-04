@@ -385,6 +385,8 @@ print $runningDetails;
 
 sub finishSuccesfully {
 
+    my $final_msg = $_[0];
+
     $current_time = Time::HiRes::gettimeofday();
     $time_diff = getTimeDiff($time_start, $current_time);
     my $time_elapsed_str = getTimeStr($time_diff, 0);
@@ -396,10 +398,19 @@ sub finishSuccesfully {
 
     ";
 
+    # Print final messages to log file
+    if (defined($final_msg)) {
+        print $final_msg;
+    }
     print $msg_finish;
     close($LOG_FH);
 
+    # Print final messages to std out
+    if (defined($final_msg)) {
+        print STDOUT "$final_msg \n";
+    }
     print STDOUT "$msg_finish \n";
+    
     exit 0;
 }
 
@@ -1036,8 +1047,8 @@ if (!$__DONT_USE_it_yet_n_contigs_gt200) {
         ? "No contigs >= 200nt!"
         : "No contigs assembled!";
 
-    print STDOUT "\n\n -- $err_msg --\n -- This means ending execution with NO ERROR! -- \n\n";
-    finishSuccesfully();
+    my $final_msg = "\n\n -- $err_msg --\n -- This means ending execution with NO ERROR! -- \n\n";
+    finishSuccesfully($final_msg);
 }
 
 $countAssembledContigs = $__DONT_USE_it_yet_n_contigs_gt200;
