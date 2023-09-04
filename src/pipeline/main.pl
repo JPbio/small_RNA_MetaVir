@@ -393,10 +393,10 @@ sub finishSuccesfully {
 
     my $msg_finish = "
 
-    -- THE END --
-    Time elapsed: $time_elapsed_str
+-- THE END --
+Time elapsed: $time_elapsed_str
 
-    ";
+";
 
     # Print final messages to log file
     if (defined($final_msg)) {
@@ -1008,7 +1008,7 @@ chomp($countAssembledContigs);
 print "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
 
 # 
-# TODO: 2023-08-31 - Differentiate variables for counts of all conts or conts >= 200 
+# TODO: 2023-08-31 - Differentiate variables for counts of all contigs or contigs >= 200 
 # 
 my $__DONT_USE_it_yet_n_contigs_gt200 = 0;
 
@@ -1020,7 +1020,7 @@ if ($countAssembledContigs) {
     `$exec_FC2`;
 
     # 
-    # TODO: 2023-08-31 - Differentiate variables for counts of all conts or conts >= 200 
+    # TODO: 2023-08-31 - Differentiate variables for counts of all contigs or contigs >= 200 
     # 
     # $countAssembledContigs = `grep -c '>' $path_05_5_cap3_gt200_fa`;
     # chomp($countAssembledContigs);
@@ -1188,8 +1188,6 @@ $last_time = $current_time;
 print STDOUT $time_msg;
 print $time_msg;
 
-# die "\n\n -- END OF TEST -- \n\n";
-
 #######################################################################
 ### DIAMOND (Blastx) --------------------------------------------------
 #######################################################################
@@ -1289,8 +1287,6 @@ $last_time = $current_time;
 print STDOUT $time_msg;
 print $time_msg;
 
-# die "\n\n -- END OF TEST -- \n\n";
-
 ######################################################################
 ## Build viral, non viral and no hits indexes ------------------------
 ######################################################################
@@ -1363,8 +1359,6 @@ $last_time = $current_time;
 
 print STDOUT $time_msg;
 print $time_msg;
-
-# # die "\n\n -- END OF TEST -- \n\n";
 
 #######################################################################
 ### Align viral, non viral and no hits against unmapped reads ---------
@@ -1585,8 +1579,6 @@ $last_time = $current_time;
 
 print STDOUT $time_msg;
 print $time_msg;
-
-# die "\n\n -- END OF TEST -- \n\n";
 
 #######################################################################
 ### Classifying virus × EVEs ------------------------------------------
