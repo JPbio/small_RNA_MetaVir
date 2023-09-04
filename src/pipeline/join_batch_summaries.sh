@@ -19,7 +19,7 @@ if [ ! -d "$dir_summaries" ]; then
 fi
 
 # 
-# TODO: 23-09-04 - Add suport to handle batche numbers >= 10
+# TODO: 23-09-04 - Add suport to handle batch numbers >= 10
 # 
 
 # Loop through batches

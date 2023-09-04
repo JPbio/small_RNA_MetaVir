@@ -10,7 +10,7 @@ min_n=1
 max_n=1
 
 # 
-# TODO: 23-09-04 - Add suport to handle batche numbers >= 10
+# TODO: 23-09-04 - Add suport to handle batch numbers >= 10
 # 
 
 for ((i=min_n; i<=max_n; i++))
