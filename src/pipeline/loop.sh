@@ -2,7 +2,6 @@ skip_libs=("")
 dir_root_libs=""
 dir_root_runs=""
 
-# for file in `ls ${dir_root_libs}/`
 for file in `ls ${dir_root_libs}/*.fasta`
 do
 
@@ -11,16 +10,16 @@ lib_id=`echo $file | cut -f 7 -d "/" | cut -f 1 -d "_"`
 # echo "lib_id: '${lib_id}'"
 
 # Check if the current item should be skipped
-skip=false
+should_skip=false
 
-for skip_lib in "${skip_libs[@]}"; do
-    if [[ "$lib_id" == "$skip_lib" ]]; then
-        skip=true
+for should_skip_lib in "${should_skip_libs[@]}"; do
+    if [[ "$lib_id" == "$should_skip_lib" ]]; then
+        should_skip=true
         break
     fi
 done
 
-if [[ "$skip" == "true" ]]; then
+if [[ "$should_skip" == "true" ]]; then
     continue
 fi
 

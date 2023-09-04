@@ -8,7 +8,7 @@ Rscript this_script.R --viral=path/2/file --nonviral=path/2/file --nohit=path/2/
 "
 
 # =============================================================
-# -- Auxiliary functions declarations -------------------------
+# -- Helper functions -----------------------------------------
 # =============================================================
 
 bind_df <- function(matrix, path, similarity_label) {
