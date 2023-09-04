@@ -7,7 +7,6 @@
 __pycache__
 
 exec_*
-*Logfile.txt
 src/pipeline/runs/*
 run-summaries*
 
@@ -15,6 +14,8 @@ run-summaries*
 # TODO 23-07-11 - Figure this files out
 #
 
+*Logfile.txt
+auto_data*
 idsOriginalSequences
 idsSeqNoHit
 idsWithHit

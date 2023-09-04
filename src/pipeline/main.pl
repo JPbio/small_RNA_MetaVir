@@ -26,9 +26,14 @@ sub getTimeDiff {
 }
 
 sub getTimeStr {
-    my $time = $_[0] // Time::HiRes::gettimeofday();
+    
+    my $time = $_[0] or die "Must provide time";
+    my $isFullDate = $_[1] // 1;
+    
     my $time_ms = 1000 * ($time - int($time));
-    my $time_str = strftime("%H:%M:%S", localtime($time)) . sprintf ":%03d", ($time_ms);
+    my $dtTemplate = $isFullDate ? "%Y-%m-%d %H:%M:%S" : "%H:%M:%S";
+    my $time_str = strftime($dtTemplate, localtime($time)) . sprintf ":%03d", ($time_ms);
+    
     return $time_str;
 }
 
@@ -56,7 +61,7 @@ sub getStepTimeEndMsg {
 
     my $t0_str = getTimeStr($t0);
     my $t1_str = getTimeStr($t1);
-    my $time_diff_str = getTimeStr(getTimeDiff($t0, $t1));
+    my $time_diff_str = getTimeStr(getTimeDiff($t0, $t1), 0);
 
     return "
 
@@ -228,7 +233,7 @@ Start Time: $time_start_str
 > Reference: '$hostgenome';
 > si: '$si';
 > se: '$se';
-> si: hash:'$hash';
+> si: '$hash';
 > Execution ID: '$exec_id';
 > Execution Folder: '$exec_dir';
 > Lib Prefix: '$lib_prefix';
@@ -369,6 +374,45 @@ print "\n\n";
 print "#######################################################################\n";
 print ">> New execution";
 print $runningDetails;
+
+#######################################################################
+### Execution finisher ------------------------------------------------
+#######################################################################
+
+# 
+# TODO: 2023-08-31 - Do it in a better way
+# 
+
+sub finishSuccesfully {
+
+    my $final_msg = $_[0];
+
+    $current_time = Time::HiRes::gettimeofday();
+    $time_diff = getTimeDiff($time_start, $current_time);
+    my $time_elapsed_str = getTimeStr($time_diff, 0);
+
+    my $msg_finish = "
+
+-- THE END --
+Time elapsed: $time_elapsed_str
+
+";
+
+    # Print final messages to log file
+    if (defined($final_msg)) {
+        print $final_msg;
+    }
+    print $msg_finish;
+    close($LOG_FH);
+
+    # Print final messages to std out
+    if (defined($final_msg)) {
+        print STDOUT "$final_msg \n";
+    }
+    print STDOUT "$msg_finish \n";
+    
+    exit 0;
+}
 
 #######################################################################
 ### Handle FASTQ sequences --------------------------------------------
@@ -636,7 +680,22 @@ print "\n[STEP 06.4]\n\t $exec6_4\n";
 `$exec6_4`;
 
 print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
+
+if (not -e $path_05_1_opt_run1_dir) {
+    `mkdir $path_05_1_opt_run1_dir`;
+}
+if (not -e $path_05_1_opt_run1_contigs_fa) {
+    `touch $path_05_1_opt_run1_contigs_fa`;
+}
+if (not -e $path_05_1_opt_run2_scaffolds_fa) {
+    `touch $path_05_1_opt_run2_scaffolds_fa`;
+}
+
 my $exec6_5 = "perl $path_merge_contigs -contig1 $path_05_1_opt_run1_contigs_fa -contig2 $path_05_1_opt_run2_scaffolds_fa -output $path_05_1_opt_contigs_final_fa ";
+
+if (not -e $path_05_1_opt_contigs_final_fa) {
+    `touch $path_05_1_opt_contigs_final_fa`;
+}
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_5`;
@@ -689,7 +748,22 @@ print "\n[STEP 06.2]\n\t $exec6_2\n";
 `$exec6_2`;
 
 print "\t#Running step 6_5 [ merge assemblies - mergeContigs.pl ] \n";
+
+if (not -e $path_05_2_fix_run1_dir) {
+    `mkdir $path_05_2_fix_run1_dir`;
+}
+if (not -e $path_05_2_fix_run1_contigs_fa) {
+    `touch $path_05_2_fix_run1_contigs_fa`;
+}
+if (not -e $path_05_2_fix_run2_scaffolds_fa) {
+    `touch $path_05_2_fix_run2_scaffolds_fa`;
+}
+
 $exec6_5 = "perl $path_merge_contigs -contig1 $path_05_2_fix_run1_contigs_fa -contig2 $path_05_2_fix_run2_scaffolds_fa -output $path_05_2_fix_contigs_final_fa";
+
+if (not -e $path_05_2_fix_contigs_final_fa) {
+    `touch $path_05_2_fix_contigs_final_fa`;
+}
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_5`;
@@ -738,7 +812,22 @@ print "\n[STEP 06.2]\n\t $exec6_2\n";
 `$exec6_6_2`;
 
 print "\t#Running step 6_9 [ merge assemblies - mergeContigs.pl ] \n";
+
+if (not -e $path_05_3_opt_fix_run1_dir) {
+    `mkdir $path_05_3_opt_fix_run1_dir`;
+}
+if (not -e $path_05_3_opt_fix_run1_contigs_fa) {
+    `touch $path_05_3_opt_fix_run1_contigs_fa`;
+}
+if (not -e $path_05_3_opt_fix_run2_scaffolds_fa) {
+    `touch $path_05_3_opt_fix_run2_scaffolds_fa`;
+}
+
 my $exec6_9 = "perl $path_merge_contigs -contig1 $path_05_3_opt_fix_run1_contigs_fa -contig2 $path_05_3_opt_fix_run2_scaffolds_fa -output $path_05_3_opt_fix_contigs_final_fa";
+
+if (not -e $path_05_3_opt_fix_contigs_final_fa) {
+    `touch $path_05_3_opt_fix_contigs_final_fa`;
+}
 
 print "\n[STEP 06.5]\n\t $exec6_5\n";
 `$exec6_9`;
@@ -787,7 +876,22 @@ print "\n[STEP 06.10.2]\n\t $exec6_2\n";
 `$exec6_10_2`;
 
 print "\t#Running step 6_13 [ merge assemblies - mergeContigs.pl ] \n";
+
+if (not -e $path_05_4_opt_20_23_run1_dir) {
+    `mkdir $path_05_4_opt_20_23_run1_dir`;
+}
+if (not -e $path_05_4_opt_20_23_run1_contigs_fa) {
+    `touch $path_05_4_opt_20_23_run1_contigs_fa`;
+}
+if (not -e $path_05_4_opt_20_23_run2_scaffolds_fa) {
+    `touch $path_05_4_opt_20_23_run2_scaffolds_fa`;
+}
+
 my $exec6_13 = "perl $path_merge_contigs -contig1 $path_05_4_opt_20_23_run1_contigs_fa -contig2 $path_05_4_opt_20_23_run2_scaffolds_fa -output $path_05_4_opt_20_23_contigs_final_fa ";
+
+if (not -e $path_05_4_opt_20_23_contigs_final_fa) {
+    `touch $path_05_4_opt_20_23_contigs_final_fa`;
+}
 
 print "\n[STEP 06.13]\n\t $exec6_13\n";
 `$exec6_13`;
@@ -815,6 +919,7 @@ print $time_msg;
 
 my $path_05_5_cap3_final_24_30_fa = "$step5_5_opt_24to30/contigs.final.fasta";
 my $path_05_5_cap3_gt200_fa = "$step5_6_cap3/contigs_merged.final.gt200.fasta";
+my $path_05_5_cap3_gt50_fa = "$step5_6_cap3/contigs_merged.final.gt50.fasta";
 
 #
 # TODO: 2023-05-31 - Test this condition
@@ -895,25 +1000,35 @@ my $step6_7 = "perl $path_fix_cap3_contigs -i $step5_6_cap3/contigs_merged.final
 print "\n[STEP 06.7]\n\t $step6_7\n";
 `$step6_7`;
 
-my $countAssembledContigs = `grep -c '>' $step5_6_cap3/contigs_merged.final.gt50.fasta`;
+my $countAssembledContigs = `grep -c '>' $path_05_5_cap3_gt50_fa`;
 chomp($countAssembledContigs);
 
 # print metrics "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
 # print interest "# Total assembled contigs\t" . $countAssembledContigs . "\n"; # Assembled Contigs
 print "# Total assembled contigs\t" . $countAssembledContigs. "\n"; # Assembled Contigs
 
-print "[FILTER CONTIGS gt 200 nt]\n";
-my $exec_FC2 = "python3 $path_filter_fasta_by_size $step5_6_cap3/contigs_merged.final.gt50.fasta 200 1000000 $path_05_5_cap3_gt200_fa";
+# 
+# TODO: 2023-08-31 - Differentiate variables for counts of all contigs or contigs >= 200 
+# 
+my $__DONT_USE_it_yet_n_contigs_gt200 = 0;
 
-print "\n[STEP 05.2]\n\t $exec_FC2\n";
-`$exec_FC2`;
+if ($countAssembledContigs) {
+    print "[FILTER CONTIGS gt 200 nt]\n";
+    my $exec_FC2 = "python3 $path_filter_fasta_by_size $path_05_5_cap3_gt50_fa 200 1000000 $path_05_5_cap3_gt200_fa";
 
-$countAssembledContigs = `grep -c '>' $path_05_5_cap3_gt200_fa`;
-chomp($countAssembledContigs);
+    print "\n[STEP 05.2]\n\t $exec_FC2\n";
+    `$exec_FC2`;
 
-# print metrics "# Contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
-# print interest "# Contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
-print "# Contigs gt200\t".$countAssembledContigs. "\n"; # Assembled Contigs
+    # 
+    # TODO: 2023-08-31 - Differentiate variables for counts of all contigs or contigs >= 200 
+    # 
+    # $countAssembledContigs = `grep -c '>' $path_05_5_cap3_gt200_fa`;
+    # chomp($countAssembledContigs);
+    
+    $__DONT_USE_it_yet_n_contigs_gt200 = `grep -c '>' $path_05_5_cap3_gt200_fa`;
+    chomp($__DONT_USE_it_yet_n_contigs_gt200);
+    print "# Contigs gt200\t".$__DONT_USE_it_yet_n_contigs_gt200. "\n";
+}
 
 # -----------------------------------------------------------------------
 
@@ -923,6 +1038,20 @@ $last_time = $current_time;
 
 print STDOUT $time_msg;
 print $time_msg;
+
+# -----------------------------------------------------------------------
+
+if (!$__DONT_USE_it_yet_n_contigs_gt200) {
+    
+    my $err_msg = $countAssembledContigs
+        ? "No contigs >= 200nt!"
+        : "No contigs assembled!";
+
+    my $final_msg = "\n\n -- $err_msg --\n -- This means ending execution with NO ERROR! -- \n\n";
+    finishSuccesfully($final_msg);
+}
+
+$countAssembledContigs = $__DONT_USE_it_yet_n_contigs_gt200;
 
 #######################################################################
 ### Blastn ------------------------------------------------------------
@@ -1059,8 +1188,6 @@ $last_time = $current_time;
 print STDOUT $time_msg;
 print $time_msg;
 
-# die "\n\n -- END OF TEST -- \n\n";
-
 #######################################################################
 ### DIAMOND (Blastx) --------------------------------------------------
 #######################################################################
@@ -1095,17 +1222,17 @@ if ($n_blastn_no_hits) {
     # Make a 'linear' version of 'no hits' fasta (join all pieces for each sequence)
     `fasta_formatter -i $path_07_dmnd_no_hits_fa -o $path_07_dmnd_no_hits_linear_fa`;
     # `rm $path_07_dmnd_no_hits_fa`;
-
-    # Add prefix to all contig names
-    `for file in $step7/*.fasta; do
-        if [ -f "\$file" ]; then
-            filename=\$(basename "\$file")
-            filename_without_ext="\${filename%.*}"
-            sed 's/^>/>${lib_prefix}_/' $step7/\$filename > $step7/\${filename_without_ext}.header.fasta
-        fi
-    done
-    `;
 }
+
+# Add prefix to all contig names
+`for file in $step7/*.fasta; do
+    if [ -f "\$file" ]; then
+        filename=\$(basename "\$file")
+        filename_without_ext="\${filename%.*}"
+        sed 's/^>/>${lib_prefix}_/' $step7/\$filename > $step7/\${filename_without_ext}.header.fasta
+    fi
+done
+`;
 
 # Compute number of contigs (diamond) [hits]
 if (not -e $path_07_dmnd_hits_fa) {
@@ -1159,8 +1286,6 @@ $last_time = $current_time;
 
 print STDOUT $time_msg;
 print $time_msg;
-
-# die "\n\n -- END OF TEST -- \n\n";
 
 ######################################################################
 ## Build viral, non viral and no hits indexes ------------------------
@@ -1234,8 +1359,6 @@ $last_time = $current_time;
 
 print STDOUT $time_msg;
 print $time_msg;
-
-# # die "\n\n -- END OF TEST -- \n\n";
 
 #######################################################################
 ### Align viral, non viral and no hits against unmapped reads ---------
@@ -1457,8 +1580,6 @@ $last_time = $current_time;
 print STDOUT $time_msg;
 print $time_msg;
 
-# die "\n\n -- END OF TEST -- \n\n";
-
 #######################################################################
 ### Classifying virus × EVEs ------------------------------------------
 #######################################################################
@@ -1490,18 +1611,5 @@ print $time_msg;
 
 #######################################################################
 
-$current_time = Time::HiRes::gettimeofday();
-$time_diff = getTimeDiff($time_start, $current_time);
-my $time_elapsed_str = getTimeStr($time_diff);
-
-my $msg_finish = "
-
--- THE END --
-Time elapsed: $time_elapsed_str
-
-";
-
-print $msg_finish;
-close($LOG_FH);
-
-print STDOUT "$msg_finish \n";
+# -- THE END --
+finishSuccesfully();
