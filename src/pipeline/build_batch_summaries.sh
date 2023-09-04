@@ -1,9 +1,17 @@
 
+# 
+# TODO: 23-09-04 - Replace this whole thing with a definitive solution
+# 
+
 dir_root_libs=""
 server_name=''
 
 min_n=1
 max_n=1
+
+# 
+# TODO: 23-09-04 - Add suport to handle batche numbers >= 10
+# 
 
 for ((i=min_n; i<=max_n; i++))
 do
@@ -43,6 +51,10 @@ do
         path_ref=`echo "$path_ref_line" | grep -oE "'[^']+'" | awk -F"'" '{print $2}'`
         echo $path_ref_line >> $path_exec_summary_lines
         echo "path_ref: $path_ref" >> $path_exec_summary
+
+        # 
+        # TODO: 23-09-04 - Get 'si' dynamically
+        # 
 
         # si_line=`grep "^> si:" $path_exec_log | tail -n 1`
         # si=`echo $si_line | cut -f 8 -d " "`

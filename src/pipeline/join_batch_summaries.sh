@@ -1,3 +1,7 @@
+# 
+# TODO: 23-09-04 - Replace this whole thing with a definitive solution
+# 
+
 #
 # NOTE Only keep inside image paths
 #
@@ -5,7 +9,7 @@ dir_root_libs=""
 dir_summaries=""
 path_output="./run-summaries.tar.gz"
 
-server_name='aws1'
+server_name=''
 
 min_n=5
 max_n=5
@@ -13,6 +17,10 @@ max_n=5
 if [ ! -d "$dir_summaries" ]; then
     mkdir $dir_summaries
 fi
+
+# 
+# TODO: 23-09-04 - Add suport to handle batche numbers >= 10
+# 
 
 # Loop through batches
 for ((i=min_n; i<=max_n; i++))
