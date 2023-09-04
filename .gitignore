@@ -9,6 +9,7 @@ __pycache__
 exec_*
 *Logfile.txt
 src/pipeline/runs/*
+auto_data_*
 
 #
 # TODO 23-07-11 - Figure this files out

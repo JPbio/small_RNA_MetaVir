@@ -388,6 +388,7 @@ if (defined($profile)) {
 
     # Creating sam files
     my $split = "perl $path_split_chromosome -in $sam -prefix $prefix";
+    print $LOG_FH "[plot mapping data per base preference] Running: '$split' \n";
     `$split`;
 
     # CalcDensityPerBase
