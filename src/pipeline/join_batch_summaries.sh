@@ -1,5 +1,5 @@
 #
-# TODO: 23-08-31 - Only keep inside image paths
+# NOTE Only keep inside image paths
 #
 dir_root_libs=""
 dir_summaries=""

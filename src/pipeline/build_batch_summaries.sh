@@ -1,9 +1,9 @@
 
-dir_root_libs="/small-rna-metavir/src/runs"
-server_name='r2d2'
+dir_root_libs=""
+server_name=''
 
 min_n=1
-max_n=6
+max_n=1
 
 for ((i=min_n; i<=max_n; i++))
 do
