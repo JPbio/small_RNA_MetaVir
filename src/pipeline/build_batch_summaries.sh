@@ -10,8 +10,8 @@ path_output="./run-summaries.tar.gz"
 
 server_name=''
 
-min_n=7
-max_n=7
+min_n=1
+max_n=1
 
 if [ ! -d "$dir_summaries" ]; then
     mkdir $dir_summaries
