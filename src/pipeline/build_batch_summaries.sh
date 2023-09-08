@@ -3,26 +3,39 @@
 # TODO: 23-09-04 - Replace this whole thing with a definitive solution
 # 
 
-dir_root_libs=""
+dir_root_runs=""
+dir_summaries="./run-summaries"
+dir_host_lib_root=""
+path_output="./run-summaries.tar.gz"
+
 server_name=''
 
-min_n=1
-max_n=1
+min_n=7
+max_n=7
 
-# 
-# TODO: 23-09-04 - Add suport to handle batch numbers >= 10
-# 
+if [ ! -d "$dir_summaries" ]; then
+    mkdir $dir_summaries
+fi
 
 for ((i=min_n; i<=max_n; i++))
 do
+
+    # Set batch execution name
+    batch_name=""
+    if [ "$i" -lt 10 ]; then
+        batch_name="batch-0$i"
+    else
+        batch_name="batch-$i"
+    fi
+    # echo "batch_name: '$batch_name'"
+    
     # Check if batch exists
-    batch_name="batch-0$i"
-    batch_dir="${dir_root_libs}/$batch_name"
+    batch_dir="${dir_root_runs}/$batch_name"
 
     if [ ! -d "$batch_dir" ]; then
         continue
     fi
-    # echo $batch_dir
+    echo "Parsing '$batch_name'..."
 
     for exec_id in `ls ${batch_dir}`
     do
@@ -90,15 +103,20 @@ do
         # Input lib
         path_input_line=`grep "^> Reads:" $path_exec_log | tail -n 1`
         path_input_img=`echo "$path_input_line" | grep -oE "'[^']+'" | awk -F"'" '{print $2}'`
-        path_input_base=`echo "$path_input_img" | cut -f 6 -d "/"`
-        path_input="$dir_AUX/$path_input_base"
+        path_input_base=`echo "$path_input_img" | cut -f 7 -d "/"`
+        path_input="$dir_host_lib_root/$batch_name/$path_input_base"
         echo $path_input_line >> $path_exec_summary_lines
         echo "path_input: $path_input" >> $path_exec_summary
         
         # Input size
-        input_size_line=`du $path_input`
-        input_size=`echo $input_size_line | cut -f 1 -d " "`
-        echo $input_size_line >> $path_exec_summary_lines
+        input_size=""
+
+        if [ -f "$path_input" ]; then
+            input_size_line=`du $path_input`
+            input_size=`echo $input_size_line | cut -f 1 -d " "`
+            echo $input_size_line >> $path_exec_summary_lines
+        fi
+
         echo "input_size: $input_size" >> $path_exec_summary
 
         # Output size
@@ -199,6 +217,43 @@ do
         n_contig_all_nohit=`echo $n_contig_all_nohit_line | cut -f 8 -d " "`
         echo $n_contig_all_nohit_line >> $path_exec_summary_lines
         echo "n_contig_all_nohit: $n_contig_all_nohit" >> $path_exec_summary
+
+        # Create summary dir
+        path_summary_dir="$dir_summaries/$server_name-$batch_name-$exec_id"
+        # echo "path_summary_dir: '$path_summary_dir'"
+
+        if [ ! -d "$path_summary_dir" ]; then
+            mkdir $path_summary_dir
+        fi
+
+        # Copy summary files
+        path_exec_csv="$path_exec/13_virus_eve_classif/$exec_id-viral-eve.csv"
+        path_exec_summary_lines="$path_exec/$exec_id.summary.lines"
+        path_exec_summary="$path_exec/$exec_id.summary.yml"
+        path_exec_log="$path_exec/$exec_id.log"
+        path_exec_log_err="$path_exec/$exec_id.err.log"
+
+        # echo "path_exec_csv: '$path_exec_csv'"
+        # echo "path_exec_summary_lines: '$path_exec_summary_lines'"
+        # echo "path_exec_summary: '$path_exec_summary'"
+        # echo "path_exec_log: '$path_exec_log'"
+        # echo "path_exec_log_err: '$path_exec_log_err'"
+
+        cp $path_exec_summary $path_summary_dir/
+        cp $path_exec_summary_lines $path_summary_dir/
+        cp $path_exec_log $path_summary_dir/
+        cp $path_exec_log_err $path_summary_dir/
         
+        if [ -f "$path_exec_csv" ]; then
+            cp $path_exec_csv $path_summary_dir/
+        fi
+
+        # break
     done
+    # break
 done
+
+echo "Creating '$path_output'..."
+tar -czf $path_output $dir_summaries
+
+echo "-- DONE --"
