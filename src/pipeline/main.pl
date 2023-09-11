@@ -1047,7 +1047,7 @@ if (!$__DONT_USE_it_yet_n_contigs_gt200) {
         ? "No contigs >= 200nt!"
         : "No contigs assembled!";
 
-    my $final_msg = "\n\n -- $err_msg --\n -- This means ending execution with NO ERROR! -- \n\n";
+    my $final_msg = "\n\n -- $err_msg -- \n\n";
     finishSuccesfully($final_msg);
 }
 
